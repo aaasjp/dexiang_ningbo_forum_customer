@@ -5,7 +5,7 @@ import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse 
 // const BASE_URL = 'http://10.129.114.106:8000'
 
 // 模拟的gw_session（对中文进行编码以符合 HTTP header 规范）
-const MOCK_SESSION = encodeURIComponent('appid=500883957,name=张三,depatment=人力资源部,orgId=2,jobTitle=管理员, gender=2, status=1,jobNo=staff001')
+const MOCK_SESSION = encodeURIComponent('appid=500883957,name=王十二,depatment=人力资源部,orgId=2,jobTitle=普通员工, gender=2, status=1,jobNo=staff010')
 
 // 统一响应格式
 export interface ApiResponse<T = any> {
