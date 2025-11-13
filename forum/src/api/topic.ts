@@ -8,6 +8,7 @@ export interface Topic {
   description: string
   cover_image?: string
   question_count: number
+  view_count?: number
   create_time: string
   favorite_time?: string
 }

@@ -52,7 +52,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+// import { ElMessage } from 'element-plus'
 import { getUserPoints, type PointRecord } from '../../api/user'
 
 const router = useRouter()

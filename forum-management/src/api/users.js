@@ -70,3 +70,18 @@ export function adjustStaffPoints(staffCode, currentPoints, newPoints) {
   })
 }
 
+/**
+ * 修改员工论坛标签（角色）
+ * @param {string} staffCode - 员工工号
+ * @param {string} forumTag - 论坛标签（普通用户/专家/管理员）
+ */
+export function updateForumTag(staffCode, forumTag) {
+  return request({
+    url: `/admin/staffs/forum-tag/${staffCode}`,
+    method: 'put',
+    params: {
+      forum_tag: forumTag
+    }
+  })
+}
+

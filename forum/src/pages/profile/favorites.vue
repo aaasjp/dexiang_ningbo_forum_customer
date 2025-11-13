@@ -125,7 +125,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, MoreFilled } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+// import { ElMessage } from 'element-plus'
 import { getMyFavorites, type FavoriteItem } from '../../api/question'
 import { getMyFavoriteTopics, type Topic } from '../../api/topic'
 import Avatar from '../../components/common/Avatar.vue'

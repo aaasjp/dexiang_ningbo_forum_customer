@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElLoading } from 'element-plus'
+import { ElLoading } from 'element-plus'
 import { getUserProfile, updateUserProfile } from '../../api/user'
 import { uploadImage } from '../../api/upload'
 

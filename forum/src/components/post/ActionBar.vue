@@ -67,10 +67,6 @@ const formatCount = (count: number): string => {
   return count.toString()
 }
 
-const onAnswer = () => {
-  emit('answer')
-}
-
 const onLike = () => {
   emit('like')
 }

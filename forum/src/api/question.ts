@@ -16,12 +16,15 @@ export interface QuestionDetail {
   is_anonymous: number
   asker_code: string
   asker_name: string
+  asker_avatar?: string
   status: number
   is_featured: number
   view_count: number
   like_count: number
   favorite_count: number
   answer_count: number
+  is_liked?: boolean
+  is_favorited?: boolean
   topics?: TopicInfo[]
   related_dept_ids?: number[]
   related_staff_codes?: string[]
@@ -37,12 +40,15 @@ export interface QuestionItem {
   is_anonymous: number
   asker_name: string
   asker_code?: string
+  asker_avatar?: string
   status: number
   is_featured: number
   view_count: number
   like_count: number
   favorite_count: number
   answer_count: number
+  is_liked?: boolean
+  is_favorited?: boolean
   create_time: string
   topics?: TopicInfo[]
   images?: string[]
@@ -201,6 +207,7 @@ export interface FavoriteItem {
   question_id?: number
   question_title?: string
   answerer_name?: string
+  answerer_avatar?: string
   is_official?: number
   points_awarded?: number
   is_useful?: number

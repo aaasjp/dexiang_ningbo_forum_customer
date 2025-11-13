@@ -60,6 +60,7 @@ export interface Comment {
   likes: number
   like_count?: number  // API返回的点赞数
   liked?: boolean
+  favorited?: boolean  // 是否已收藏
   replies?: CommentReply[]
   answerer_code?: string  // 回答者工号
   answerer_name?: string  // 回答者姓名

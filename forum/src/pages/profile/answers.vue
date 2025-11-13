@@ -64,7 +64,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, MoreFilled } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessageBox } from 'element-plus'
 import { getMyUsefulAnswers, deleteAnswer, type AnswerItem } from '../../api/answer'
 
 const router = useRouter()

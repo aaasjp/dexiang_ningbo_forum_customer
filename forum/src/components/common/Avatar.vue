@@ -31,7 +31,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // 预设的颜色数组 - 多种颜色供随机选择
-const colorPalette = [
+const colorPalette: readonly string[] = [
   '#4A90E2', // 蓝色
   '#5CB85C', // 绿色
   '#F0AD4E', // 橙色
@@ -52,7 +52,7 @@ const colorPalette = [
 
 // 根据名称生成颜色索引（确保同一名称总是得到相同颜色）
 const getColorFromName = (name: string): string => {
-  if (!name) return colorPalette[0]
+  if (!name) return colorPalette[0]!
   
   // 使用简单的哈希函数将名称转换为数字
   let hash = 0
@@ -63,7 +63,7 @@ const getColorFromName = (name: string): string => {
   
   // 使用哈希值选择颜色
   const index = Math.abs(hash) % colorPalette.length
-  return colorPalette[index]
+  return colorPalette[index]!
 }
 
 // 从名称中提取最后两个字
