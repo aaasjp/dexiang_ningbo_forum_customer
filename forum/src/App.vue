@@ -7,7 +7,23 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import Layout from './components/layout/Layout.vue'
+import { useUserStore } from './stores/user'
+
+const userStore = useUserStore()
+
+// 应用初始化时获取用户信息
+onMounted(async () => {
+  try {
+    // 如果 localStorage 中没有用户信息，或者需要刷新，则从服务器获取
+    if (!userStore.userProfile) {
+      await userStore.fetchUserProfile()
+    }
+  } catch (error) {
+    console.error('初始化用户信息失败:', error)
+  }
+})
 </script>
 
 <style>

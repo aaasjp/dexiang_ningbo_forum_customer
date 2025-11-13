@@ -66,11 +66,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Avatar from '../common/Avatar.vue'
 import type { Post } from '../../types/post'
-import { getUserProfile } from '../../api/user'
+import { useUserStore } from '../../stores/user'
 
 interface Props {
   post: Post
@@ -84,21 +84,10 @@ interface Emits {
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 const router = useRouter()
+const userStore = useUserStore()
 
-// 当前用户的工号
-const currentUserStaffCode = ref<string>('')
-
-// 获取当前用户信息
-onMounted(async () => {
-  try {
-    const res = await getUserProfile()
-    if (res.code === 200) {
-      currentUserStaffCode.value = res.data.staff_code
-    }
-  } catch (error) {
-    console.error('获取用户信息失败:', error)
-  }
-})
+// 当前用户的工号 - 从 store 中获取
+const currentUserStaffCode = computed(() => userStore.userProfile?.staff_code || '')
 
 // 处理点赞
 const handleLike = () => {

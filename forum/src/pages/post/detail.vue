@@ -111,17 +111,19 @@ import ActionBar from '../../components/post/ActionBar.vue'
 import ReplyInput from '../../components/post/ReplyInput.vue'
 import { getQuestionDetail, toggleLikeQuestion, toggleFavoriteQuestion, updateQuestionStatus } from '../../api/question'
 import { getAnswersByQuestion, createAnswer, toggleLikeAnswer, markAnswerAsUseful, updateAnswer, deleteAnswer } from '../../api/answer'
-import { toggleFollowUser, getUserProfile } from '../../api/user'
+import { toggleFollowUser } from '../../api/user'
 import { getDepartmentTree } from '../../api/department'
 import { transformQuestionDetailToPost, transformAnswerToComment } from '../../utils/transform'
 import type { Post, Comment, CommentReply } from '../../types/post'
 import type { DepartmentInfo, StaffInfo } from '../../api/department'
+import { useUserStore } from '../../stores/user'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 
-// 当前用户工号
-const currentUserCode = ref('')
+// 当前用户工号 - 从 store 中获取
+const currentUserCode = computed(() => userStore.userProfile?.staff_code || '')
 
 // 是否已关注作者
 const isFollowed = ref(false)
@@ -723,14 +725,9 @@ const handlePageClick = (e: MouseEvent) => {
 
 // 页面加载时检查是否显示引导
 onMounted(async () => {
-  // 先获取当前用户信息
-  try {
-    const userRes = await getUserProfile()
-    if (userRes.code === 200) {
-      currentUserCode.value = userRes.data.staff_code
-    }
-  } catch (error) {
-    console.error('获取用户信息失败:', error)
+  // 确保用户信息已加载
+  if (!userStore.userProfile) {
+    await userStore.fetchUserProfile()
   }
   
   // 先加载部门数据，再加载帖子数据
