@@ -110,7 +110,7 @@ const searchInputRef = ref<HTMLInputElement>()
 const searchKeyword = ref('')
 const isSearching = ref(false)
 const searchResults = ref<Topic[]>([])
-let searchTimer: NodeJS.Timeout | null = null
+let searchTimer: number | null = null
 
 // 搜索历史 - 从 localStorage 加载
 const STORAGE_KEY = 'forum_topic_search_history'

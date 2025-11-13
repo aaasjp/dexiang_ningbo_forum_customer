@@ -66,14 +66,14 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import { Close, Picture } from '@element-plus/icons-vue'
+import { Close } from '@element-plus/icons-vue'
 
 interface Props {
   placeholder?: string
   replyTo?: string  // 回复的用户名
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   placeholder: '快写下你的想法吧！'
 })
 

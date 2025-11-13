@@ -76,7 +76,7 @@ const performSearch = async (keyword: string) => {
   try {
     isSearching.value = true
     const response = await searchTopics(keyword, 1, 20)
-    searchResults.value = response.items
+    searchResults.value = response.data?.items || []
   } catch (error) {
     console.error('搜索话题失败:', error)
     searchResults.value = []

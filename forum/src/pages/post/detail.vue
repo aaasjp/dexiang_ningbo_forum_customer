@@ -114,6 +114,7 @@ const route = useRoute()
 
 // 当前用户工号（模拟）
 const currentUserCode = ref('staff001')
+const currentUserName = ref('张三')
 
 // 是否已关注作者
 const isFollowed = ref(false)

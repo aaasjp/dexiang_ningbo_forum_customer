@@ -41,7 +41,7 @@ export function createRewardRule(data) {
  */
 export function updateRewardRule(ruleId, data) {
   return request({
-    url: `/api/admin/reward-rules/update/${ruleId}`,
+    url: `/admin/reward-rules/update/${ruleId}`,
     method: 'put',
     data
   })
@@ -53,7 +53,7 @@ export function updateRewardRule(ruleId, data) {
  */
 export function deleteRewardRule(ruleId) {
   return request({
-    url: `/api/admin/reward-rules/delete/${ruleId}`,
+    url: `/admin/reward-rules/delete/${ruleId}`,
     method: 'delete'
   })
 }

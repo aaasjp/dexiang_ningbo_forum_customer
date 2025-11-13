@@ -96,7 +96,7 @@ import type { Post } from '../../types/post'
 import { useUserStore } from '../../stores/user'
 
 const router = useRouter()
-const userStore = useUserStore()
+useUserStore()
 
 // 当前激活的 tab
 const activeTab = ref<'questions' | 'answers'>('questions')

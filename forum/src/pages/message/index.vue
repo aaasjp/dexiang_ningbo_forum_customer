@@ -136,14 +136,16 @@ onMounted(() => {
 const officialMessage = computed(() => {
   if (systemMessages.value.length > 0) {
     const msg = systemMessages.value[0]
-    return {
-      id: msg.message_id,
-      type: 'system',
-      avatar: '📢',
-      title: '系统消息',
-      content: msg.content, // 使用 content 字段
-      time: formatTime(msg.create_time),
-      unread: !msg.is_read
+    if (msg) {
+      return {
+        id: msg.message_id,
+        type: 'system',
+        avatar: '📢',
+        title: '系统消息',
+        content: msg.content, // 使用 content 字段
+        time: formatTime(msg.create_time),
+        unread: !msg.is_read
+      }
     }
   }
   return null
@@ -153,14 +155,16 @@ const officialMessage = computed(() => {
 const departmentMessage = computed(() => {
   if (departmentMessages.value.length > 0) {
     const msg = departmentMessages.value[0]
-    return {
-      id: msg.message_id,
-      type: 'department',
-      avatar: '🏢',
-      title: '部门消息',
-      content: msg.content, // 使用 content 字段
-      time: formatTime(msg.create_time),
-      unread: !msg.is_read
+    if (msg) {
+      return {
+        id: msg.message_id,
+        type: 'department',
+        avatar: '🏢',
+        title: '部门消息',
+        content: msg.content, // 使用 content 字段
+        time: formatTime(msg.create_time),
+        unread: !msg.is_read
+      }
     }
   }
   return null
@@ -248,12 +252,14 @@ const goToDepartmentMessages = async () => {
   // 标记部门消息为已读（如果有第一条消息）
   if (departmentMessages.value.length > 0) {
     const firstMsg = departmentMessages.value[0]
-    try {
-      await markMessageAsRead(firstMsg.message_id)
-      // 标记成功后，更新本地状态，移除红点
-      firstMsg.is_read = true
-    } catch (error) {
-      console.error('标记部门消息已读失败:', error)
+    if (firstMsg) {
+      try {
+        await markMessageAsRead(firstMsg.message_id)
+        // 标记成功后，更新本地状态，移除红点
+        firstMsg.is_read = true
+      } catch (error) {
+        console.error('标记部门消息已读失败:', error)
+      }
     }
   }
   

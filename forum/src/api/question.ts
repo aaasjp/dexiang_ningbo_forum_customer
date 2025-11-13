@@ -1,4 +1,4 @@
-import { get, post, put, del } from './request'
+import { get, post, put } from './request'
 
 // 话题类型
 export interface TopicInfo {

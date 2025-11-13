@@ -675,7 +675,7 @@ export const getMessages = (): Message[] => {
 }
 
 // 根据 ID 获取消息详情
-export const getMessageDetail = (id: string, type: string): MessageDetail | undefined => {
+export const getMessageDetail = (_id: string, type: string): MessageDetail | undefined => {
   if (type === 'official') {
     return mockOfficialMessages
   } else if (type === 'department') {

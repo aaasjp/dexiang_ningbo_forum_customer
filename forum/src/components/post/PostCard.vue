@@ -63,7 +63,6 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { ChatDotRound, Star, StarFilled } from '@element-plus/icons-vue'
 import type { Post } from '../../types/post'
 
 interface Props {

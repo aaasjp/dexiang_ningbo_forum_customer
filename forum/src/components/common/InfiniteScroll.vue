@@ -154,7 +154,7 @@ const handleTouchStart = (e: TouchEvent) => {
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop
   
   // 只有在页面顶部才能触发下拉刷新
-  if (scrollTop === 0) {
+  if (scrollTop === 0 && e.touches[0]) {
     startY.value = e.touches[0].clientY
     isPulling.value = true
   }
@@ -162,7 +162,7 @@ const handleTouchStart = (e: TouchEvent) => {
 
 // 下拉刷新 - 触摸移动
 const handleTouchMove = (e: TouchEvent) => {
-  if (!props.enablePullRefresh || !isPulling.value) return
+  if (!props.enablePullRefresh || !isPulling.value || !e.touches[0]) return
   
   const currentY = e.touches[0].clientY
   const distance = currentY - startY.value

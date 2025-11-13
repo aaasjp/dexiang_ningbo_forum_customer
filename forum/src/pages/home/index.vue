@@ -137,7 +137,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import PostCard from '../../components/post/PostCard.vue'
 import InfiniteScroll from '../../components/common/InfiniteScroll.vue'
 import type { Post, CategoryOption } from '../../types/post'

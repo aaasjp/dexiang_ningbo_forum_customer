@@ -223,7 +223,7 @@ const clearSearch = () => {
 }
 
 // 处理搜索输入 - 使用防抖
-let searchTimer: NodeJS.Timeout | null = null
+let searchTimer: number | null = null
 const handleSearch = () => {
   if (searchTimer) {
     clearTimeout(searchTimer)
@@ -258,27 +258,27 @@ const highlightKeyword = (text: string) => {
   return text.replace(regex, '<span class="highlight">$1</span>')
 }
 
-// 获取问题状态文本
-const getStatusText = (status: number) => {
-  const statusMap: Record<number, string> = {
-    0: '待解决',
-    1: '已解决',
-    2: '未解决',
-    3: '已关闭'
-  }
-  return statusMap[status] || '未知'
-}
+// 获取问题状态文本（保留供未来使用）
+// const getStatusText = (status: number) => {
+//   const statusMap: Record<number, string> = {
+//     0: '待解决',
+//     1: '已解决',
+//     2: '未解决',
+//     3: '已关闭'
+//   }
+//   return statusMap[status] || '未知'
+// }
 
-// 获取问题状态样式类
-const getStatusClass = (status: number) => {
-  const classMap: Record<number, string> = {
-    0: 'status-pending',
-    1: 'status-solved',
-    2: 'status-unsolved',
-    3: 'status-closed'
-  }
-  return classMap[status] || ''
-}
+// 获取问题状态样式类（保留供未来使用）
+// const getStatusClass = (status: number) => {
+//   const classMap: Record<number, string> = {
+//     0: 'status-pending',
+//     1: 'status-solved',
+//     2: 'status-unsolved',
+//     3: 'status-closed'
+//   }
+//   return classMap[status] || ''
+// }
 
 // 点击搜索结果
 const handleResultClick = (item: QuestionItem) => {

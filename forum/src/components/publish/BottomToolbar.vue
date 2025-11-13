@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-import { Picture, PriceTag } from '@element-plus/icons-vue'
 
 interface Props {
   isKeyboardActive: boolean

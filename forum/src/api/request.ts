@@ -40,8 +40,8 @@ instance.interceptors.request.use(
 
 // 响应拦截器
 instance.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
-    const { code, message, data } = response.data
+  (response: AxiosResponse<ApiResponse>): any => {
+    const { code, message } = response.data
     
     // 成功响应
     if (code === 200) {

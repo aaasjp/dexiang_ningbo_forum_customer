@@ -120,7 +120,9 @@ const loadUserQuestions = async () => {
       // 从第一个问题获取用户信息
       if (res.data.items.length > 0) {
         const firstQuestion = res.data.items[0]
-        userInfo.value.name = firstQuestion.asker_name
+        if (firstQuestion && firstQuestion.asker_name) {
+          userInfo.value.name = firstQuestion.asker_name
+        }
       }
     } else {
       ElMessage.error(res.message || '获取提问失败')
@@ -144,7 +146,9 @@ const loadUserAnswers = async () => {
       // 从第一个回答获取用户信息
       if (res.data.items.length > 0) {
         const firstAnswer = res.data.items[0]
-        userInfo.value.name = firstAnswer.answerer_name
+        if (firstAnswer && firstAnswer.answerer_name) {
+          userInfo.value.name = firstAnswer.answerer_name
+        }
       }
     } else {
       ElMessage.error(res.message || '获取回答失败')
