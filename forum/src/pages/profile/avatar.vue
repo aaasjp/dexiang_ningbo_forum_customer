@@ -1,5 +1,20 @@
 <template>
   <div class="avatar-edit-page">
+    <!-- 顶部导航栏 -->
+    <div class="top-nav">
+      <div class="nav-left" @click="handleCancel">
+        <el-icon :size="24">
+          <ArrowLeft />
+        </el-icon>
+      </div>
+      <div class="nav-title">设置头像</div>
+      <div class="nav-right" @click="showActionSheet">
+        <el-icon :size="24">
+          <More />
+        </el-icon>
+      </div>
+    </div>
+
     <!-- 头像预览区 -->
     <div class="avatar-preview-container">
       <div class="avatar-preview">
@@ -8,24 +23,35 @@
           :src="avatarUrl" 
           alt="头像" 
           class="avatar-image"
-          :style="{ transform: `rotate(${rotation}deg)` }"
+          :style="{ 
+            width: placeholderSize + 'px', 
+            height: placeholderSize + 'px',
+            transform: `rotate(${rotation}deg)` 
+          }"
         />
-        <div v-else class="avatar-placeholder" @click="showActionSheet"></div>
+        <div 
+          v-else 
+          class="avatar-placeholder" 
+          :style="{ width: placeholderSize + 'px', height: placeholderSize + 'px' }"
+          @click="showActionSheet"
+        >
+          <span class="placeholder-text">{{ userNameLastTwo }}</span>
+        </div>
       </div>
-      
-      <!-- 圆形孔洞蒙层 -->
-      <div class="circular-mask">
-        <svg width="100%" height="100%" :viewBox="`0 0 ${maskWidth} ${maskHeight}`">
-          <defs>
-            <mask id="circleMask">
-              <rect width="100%" height="100%" fill="white"/>
-              <circle :cx="maskWidth / 2" :cy="maskHeight / 2" :r="circleRadius" fill="black"/>
-            </mask>
-          </defs>
-          <rect width="100%" height="100%" fill="rgba(0, 0, 0, 0.7)" mask="url(#circleMask)"/>
-          <circle :cx="maskWidth / 2" :cy="maskHeight / 2" :r="circleRadius" fill="none" stroke="white" stroke-width="3"/>
-        </svg>
-      </div>
+    </div>
+    
+    <!-- 圆形孔洞蒙层 -->
+    <div class="circular-mask">
+      <svg width="100%" height="100%" :viewBox="`0 0 ${maskWidth} ${maskHeight}`" preserveAspectRatio="none">
+        <defs>
+          <mask id="circleMask">
+            <rect width="100%" height="100%" fill="white"/>
+            <circle :cx="circleCenterX" :cy="circleCenterY" :r="circleRadius" fill="black"/>
+          </mask>
+        </defs>
+        <rect width="100%" height="100%" fill="rgba(0, 0, 0, 0.7)" mask="url(#circleMask)"/>
+        <circle :cx="circleCenterX" :cy="circleCenterY" :r="circleRadius" fill="none" stroke="white" stroke-width="3"/>
+      </svg>
     </div>
 
     <!-- 底部操作按钮 -->
@@ -66,10 +92,13 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElLoading } from 'element-plus'
+import { ArrowLeft, More } from '@element-plus/icons-vue'
 import { getUserProfile, updateUserProfile } from '../../api/user'
 import { uploadImage } from '../../api/upload'
+import { useUserStore } from '../../stores/user'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 // 头像数据
 const avatarUrl = ref('')
@@ -79,10 +108,35 @@ const fileInput = ref<HTMLInputElement>()
 const rotation = ref(0)
 const selectedFile = ref<File | null>(null)
 
+// 用户名后两位
+const userNameLastTwo = computed(() => {
+  const name = userStore.userProfile?.nickname || userStore.userProfile?.name || '用户'
+  return name.slice(-2)
+})
+
 // 蒙层尺寸
 const maskWidth = ref(375)
 const maskHeight = ref(812)
-const circleRadius = computed(() => maskWidth.value / 2)
+const circleRadius = computed(() => {
+  // PC端限制圆形区域大小
+  const isPC = window.innerWidth > 768
+  if (isPC) {
+    return 150 // PC端固定半径150px
+  }
+  return maskWidth.value / 2 // 移动端为屏幕宽度的一半
+})
+
+// 圆心位置
+const circleCenterX = computed(() => maskWidth.value / 2)
+const circleCenterY = computed(() => {
+  const navHeight = 44
+  // 圆心位置：考虑导航栏，图片实际显示在 44px 下方区域的中心
+  // 图片中心 = 44 + (视口高度 - 44) / 2
+  return navHeight + (maskHeight.value - navHeight) / 2
+})
+
+// 占位符大小（等于圆的直径）
+const placeholderSize = computed(() => circleRadius.value * 2)
 
 // 加载当前头像
 const loadAvatar = async () => {
@@ -264,6 +318,7 @@ const rotateImage = (file: File, degrees: number): Promise<File> => {
 
 // 更新蒙层尺寸
 const updateMaskSize = () => {
+  // 蒙层始终覆盖整个viewport
   maskWidth.value = window.innerWidth
   maskHeight.value = window.innerHeight
 }
@@ -290,48 +345,112 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
+/* 顶部导航栏 */
+.top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 44px;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.nav-left,
+.nav-right {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  color: #FFFFFF;
+}
+
+.nav-left:active,
+.nav-right:active {
+  opacity: 0.6;
+}
+
+.nav-title {
+  flex: 1;
+  text-align: center;
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 500;
+  font-size: 17px;
+  color: #FFFFFF;
+}
+
 /* 头像预览区 */
 .avatar-preview-container {
-  flex: 1;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  position: relative;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #000;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .avatar-preview {
-  width: 100%;
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+  background: transparent;
+  transform: translateY(22px);
 }
 
 .avatar-image {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
+  flex-shrink: 0;
 }
 
 .avatar-placeholder {
-  width: 100%;
-  height: 100%;
-  background: #1a1a1a;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.placeholder-text {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 500;
+  font-size: 80px;
+  color: #FFFFFF;
+  user-select: none;
+}
+
+/* PC端调整占位符文字大小 */
+@media (min-width: 768px) {
+  .placeholder-text {
+    font-size: 60px;
+  }
 }
 
 /* 圆形孔洞蒙层 */
 .circular-mask {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
   z-index: 10;
 }
@@ -463,7 +582,7 @@ onUnmounted(() => {
 }
 
 .action-btn:first-child {
-  margin-top: 16px;
+  margin-top: 8px;
   border-radius: 12px 12px 0 0;
 }
 

@@ -38,6 +38,7 @@
         class="image-item"
         :class="`image-count-${post.images.length}`"
         :src="image" alt="帖子图片"
+        @click.stop="handleImageClick(image)"
       />
     </div>
 
@@ -51,7 +52,7 @@
     <div class="post-footer">
       <span class="post-time">{{ post.time }}</span>
       <div class="post-stats">
-        <div class="stat-item" :class="{ active: post.commented }" @click.stop>
+        <div class="stat-item" :class="{ active: post.commented }">
           <img src="../../assets/images/icon/answer.png" alt="评论" class="action-image" width="16" height="16"/>
           <span class="stat-text">{{ post.comments > 0 ? formatNumber(post.comments) : '评论' }}</span>
         </div>
@@ -71,6 +72,7 @@ import { useRouter } from 'vue-router'
 import Avatar from '../common/Avatar.vue'
 import type { Post } from '../../types/post'
 import { useUserStore } from '../../stores/user'
+import { useImageViewerStore } from '../../stores/imageViewer'
 
 interface Props {
   post: Post
@@ -85,6 +87,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 const router = useRouter()
 const userStore = useUserStore()
+const imageViewerStore = useImageViewerStore()
 
 // 当前用户的工号 - 从 store 中获取
 const currentUserStaffCode = computed(() => userStore.userProfile?.staff_code || '')
@@ -92,6 +95,11 @@ const currentUserStaffCode = computed(() => userStore.userProfile?.staff_code ||
 // 处理点赞
 const handleLike = () => {
   emit('like', props.post)
+}
+
+// 处理图片点击
+const handleImageClick = (imageUrl: string) => {
+  imageViewerStore.open(imageUrl)
 }
 
 // 获取分类名称

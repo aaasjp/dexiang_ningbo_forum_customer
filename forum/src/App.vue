@@ -3,12 +3,14 @@
     <Layout>
       <router-view />
     </Layout>
+    <ImageViewer />
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import Layout from './components/layout/Layout.vue'
+import ImageViewer from './components/common/ImageViewer.vue'
 import { useUserStore } from './stores/user'
 
 const userStore = useUserStore()

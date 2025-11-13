@@ -36,6 +36,7 @@
               :class="`image-count-${answer.images.length}`"
               :src="image" 
               alt="回答图片"
+              @click="handleImageClick(image)"
             />
           </div>
 
@@ -66,8 +67,10 @@ import { useRouter } from 'vue-router'
 import { ArrowLeft, MoreFilled } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { getMyUsefulAnswers, deleteAnswer, type AnswerItem } from '../../api/answer'
+import { useImageViewerStore } from '../../stores/imageViewer'
 
 const router = useRouter()
+const imageViewerStore = useImageViewerStore()
 
 // 被采纳的回答数据
 const acceptedAnswers = ref<AnswerItem[]>([])
@@ -149,6 +152,11 @@ const handleDelete = async (answer: AnswerItem) => {
       //ElMessage.error('删除失败')
     }
   }
+}
+
+// 处理图片点击
+const handleImageClick = (imageUrl: string) => {
+  imageViewerStore.open(imageUrl)
 }
 </script>
 

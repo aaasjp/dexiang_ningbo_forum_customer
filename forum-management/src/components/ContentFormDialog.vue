@@ -7,26 +7,26 @@
     @close="handleClose"
   >
     <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
-      <!-- 选择部门 - 使用树形选择器 -->
-      <el-form-item label="@部门" prop="departments">
+      <!-- 选择部门/人员 -->
+      <el-form-item label="@部门/人员" prop="departments">
         <el-tree-select
-          v-model="selectedDepartmentIds"
-          :data="departmentTreeData"
+          v-model="selectedDepartmentStaffIds"
+          :data="departmentTreeWithStaff"
           multiple
           filterable
           check-strictly
           show-checkbox
           :render-after-expand="false"
-          placeholder="请选择部门"
+          placeholder="请选择部门/人员"
           style="width: 100%"
           :max-collapse-tags="3"
           collapse-tags
           collapse-tags-tooltip
-          node-key="dept_id"
+          node-key="id"
           :props="{ 
-            label: 'dept_name', 
+            label: 'name', 
             children: 'children',
-            value: 'dept_id'
+            value: 'id'
           }"
         />
       </el-form-item>
@@ -65,13 +65,13 @@
       </span>
     </template>
   </el-dialog>
+
 </template>
 
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { getDepartmentTree } from '@/api/department'
 import { getTopicsList } from '@/api/topics'
-import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   modelValue: {
@@ -95,9 +95,9 @@ const formData = ref({
   topics: []
 })
 
-// 部门相关
-const selectedDepartmentIds = ref([])
+// 部门人员选择相关
 const departmentTreeData = ref([])
+const selectedDepartmentStaffIds = ref([])
 
 // 话题相关
 const selectedTopicIds = ref([])
@@ -117,14 +117,52 @@ watch(visible, (newVal) => {
   emit('update:modelValue', newVal)
 })
 
+// 将部门树数据转换为包含人员的树形结构
+const transformDepartmentTree = (depts) => {
+  return depts.map(dept => {
+    const node = {
+      id: `dept_${dept.dept_id}`,
+      name: dept.dept_name,
+      type: 'department',
+      dept_id: dept.dept_id,
+      children: []
+    }
+    
+    // 添加人员节点
+    if (dept.staffs && dept.staffs.length > 0) {
+      const staffNodes = dept.staffs.map(staff => ({
+        id: `staff_${dept.dept_id}_${staff.staff_code}`,
+        name: staff.name,
+        type: 'staff',
+        dept_id: dept.dept_id,
+        staff_code: staff.staff_code
+      }))
+      node.children.push(...staffNodes)
+    }
+    
+    // 递归处理子部门
+    if (dept.children && dept.children.length > 0) {
+      const childDepts = transformDepartmentTree(dept.children)
+      node.children.push(...childDepts)
+    }
+    
+    return node
+  })
+}
+
+// 计算包含人员的部门树
+const departmentTreeWithStaff = computed(() => {
+  return transformDepartmentTree(departmentTreeData.value)
+})
+
 // 初始化表单数据
 const initFormData = () => {
   if (props.data) {
-    // 初始化部门
+    // 初始化部门（只显示部门ID）
     if (props.data.related_depts && props.data.related_depts.length > 0) {
-      selectedDepartmentIds.value = props.data.related_depts.map(d => d.dept_id)
+      selectedDepartmentStaffIds.value = props.data.related_depts.map(d => `dept_${d.dept_id}`)
     } else {
-      selectedDepartmentIds.value = []
+      selectedDepartmentStaffIds.value = []
     }
 
     // 初始化话题
@@ -145,7 +183,6 @@ const loadDepartments = async () => {
     }
   } catch (error) {
     console.error('获取部门列表失败:', error)
-    //ElMessage.error('获取部门列表失败')
   }
 }
 
@@ -158,14 +195,34 @@ const loadTopics = async () => {
     }
   } catch (error) {
     console.error('获取话题列表失败:', error)
-    //ElMessage.error('获取话题列表失败')
   }
+}
+
+// 从选中的ID中提取部门ID列表
+const extractDepartmentIds = () => {
+  const deptIds = new Set()
+  
+  selectedDepartmentStaffIds.value.forEach(id => {
+    if (id.startsWith('dept_')) {
+      // 部门节点
+      const deptId = parseInt(id.replace('dept_', ''))
+      deptIds.add(deptId)
+    } else if (id.startsWith('staff_')) {
+      // 人员节点，提取部门ID
+      const parts = id.split('_')
+      if (parts.length >= 2) {
+        const deptId = parseInt(parts[1])
+        deptIds.add(deptId)
+      }
+    }
+  })
+  
+  return Array.from(deptIds)
 }
 
 // 处理话题选择变化
 const handleTopicChange = (value) => {
   if (value.length > 3) {
-    //ElMessage.warning('最多只能选择3个话题')
     selectedTopicIds.value = value.slice(0, 3)
   }
 }
@@ -175,11 +232,11 @@ const formRules = {
   departments: [
     { 
       required: true, 
-      message: '请至少选择一个部门', 
+      message: '请至少选择一个部门/人员', 
       trigger: 'change',
       validator: (rule, value, callback) => {
-        if (selectedDepartmentIds.value.length === 0) {
-          callback(new Error('请至少选择一个部门'))
+        if (selectedDepartmentStaffIds.value.length === 0) {
+          callback(new Error('请至少选择一个部门/人员'))
         } else {
           callback()
         }
@@ -209,7 +266,7 @@ const handleConfirm = async () => {
   await formRef.value.validate((valid) => {
     if (valid) {
       const result = {
-        dept_ids: selectedDepartmentIds.value,
+        dept_ids: extractDepartmentIds(),
         topic_ids: selectedTopicIds.value
       }
       emit('confirm', result)
@@ -226,7 +283,7 @@ const handleCancel = () => {
 // 关闭时重置
 const handleClose = () => {
   formRef.value?.resetFields()
-  selectedDepartmentIds.value = []
+  selectedDepartmentStaffIds.value = []
   selectedTopicIds.value = []
 }
 </script>

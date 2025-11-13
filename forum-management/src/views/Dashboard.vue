@@ -69,6 +69,7 @@
             <div class="topic-heat" :class="getHeatClass(topic.rank)">
               {{ topic.heat }}
             </div>
+            <div style="width: 40%;"></div>
           </div>
         </div>
       </div>

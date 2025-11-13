@@ -39,7 +39,7 @@
           :key="index"
           class="image-preview-item"
         >
-          <img :src="image" alt="预览图" />
+          <img :src="image" alt="预览图" @click.stop="handleImageClick(image)" />
           <div class="image-remove" @click="removeImage(index)">
             <el-icon :size="14">
               <Close />
@@ -71,6 +71,7 @@
 import { ref, computed, nextTick } from 'vue'
 import { Close } from '@element-plus/icons-vue'
 import { uploadImages } from '../../api/upload'
+import { useImageViewerStore } from '../../stores/imageViewer'
 
 interface Props {
   placeholder?: string
@@ -90,6 +91,7 @@ const emit = defineEmits<{
   'blur': []
 }>()
 
+const imageViewerStore = useImageViewerStore()
 const textareaRef = ref<HTMLTextAreaElement>()
 const inputValue = ref('')
 const uploadedImages = ref<string[]>([])
@@ -172,6 +174,11 @@ const uploadImage = () => {
 // 删除图片
 const removeImage = (index: number) => {
   uploadedImages.value.splice(index, 1)
+}
+
+// 处理图片点击
+const handleImageClick = (imageUrl: string) => {
+  imageViewerStore.open(imageUrl)
 }
 
 // 发送
@@ -325,15 +332,15 @@ defineExpose({
   /* margin-bottom: 12px; */
 }
 .input-box textarea {
-
+  display: block;
   background: #FFF;
 }
 
 .text-input {
   width: 100%;
   padding: 0;
-  min-height: 36px;
-  max-height: 30px;
+  min-height: 30px;
+  /* max-height: 30px; */
   background: #F7F7F7;
   border: none;
   border-radius: 8px;
@@ -357,6 +364,7 @@ defineExpose({
   gap: 8px;
   flex-wrap: wrap;
   /* margin-bottom: 12px; */
+  padding: 0 16px 12px 16px;
 }
 
 .image-preview-item {

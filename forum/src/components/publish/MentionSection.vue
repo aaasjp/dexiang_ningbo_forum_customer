@@ -8,7 +8,7 @@
       <div v-else class="mention-list-wrapper">
         <div class="mention-list">
           <span v-for="user in mentionedUsers" :key="user" class="mention-tag">
-            {{ user }}
+            @{{ user }}
           </span>
         </div>
         <div class="mention-arrow">
@@ -80,6 +80,7 @@ defineEmits<{
   gap: 8px;
   overflow: hidden;
   position: relative;
+  justify-content: flex-start;
 }
 
 .mention-list::after {
@@ -94,7 +95,7 @@ defineEmits<{
 }
 
 .mention-tag {
-  padding: 2px 8px;
+  padding: 2px 6px;
   /* background: #F7F7F7; */
   border-radius: 12px;
   font-family: PingFang SC, PingFang SC;

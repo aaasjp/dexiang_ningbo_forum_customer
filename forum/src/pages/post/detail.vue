@@ -24,8 +24,8 @@
       :images="postData.images"
       :topic="postData.topic"
       :solved="postData.solved"
-      :show-solve-status="dataLoaded && postData.category === 'help'"
-      :can-change-solve-status="isOwnPost && postData.category === 'help'"
+      :show-solve-status="dataLoaded && postData.category !== 'question'"
+      :can-change-solve-status="isOwnPost && postData.category !== 'question'"
       :show-follow-btn="!isOwnPost"
       :is-followed="isFollowed"
       :is-anonymous="postData.is_anonymous === 1"
@@ -183,9 +183,9 @@ const isOwnPost = computed(() => {
 const getCategoryName = (category: string): string => {
   const categoryMap: Record<string, string> = {
     'suggest': '建议',
-    'help': '提问',
+    'help': '求助',
     'complain': '吐槽',
-    'select': '精选'
+    'question': '自由提问'
   }
   return categoryMap[category] || '帖子'
 }
@@ -367,7 +367,7 @@ const handleSolveClick = () => {
 const confirmSolve = async () => {
   try {
     const questionId = postData.value.question_id || Number(route.query.id || route.params.id)
-    const newStatus = postData.value.status === 1 ? 0 : 1  // 1已解决, 0待解决
+    const newStatus = postData.value.status === 1 ? 2 : 1  // 1已解决, 0待解决
     
     await updateQuestionStatus(questionId, newStatus)
     

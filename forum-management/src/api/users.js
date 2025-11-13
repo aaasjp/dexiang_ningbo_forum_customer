@@ -77,3 +77,13 @@ export function updateForumTag(staffCode, forumTag) {
   })
 }
 
+/**
+ * 获取当前用户信息
+ */
+export function getCurrentUserProfile() {
+  return request({
+    url: '/user/profile',
+    method: 'get'
+  })
+}
+

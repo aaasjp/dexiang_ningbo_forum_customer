@@ -11,11 +11,11 @@
     label-position="top"
   >
     <template #form="{ formData }">
-      <el-form-item label="行为" prop="action" class="vertical-form-item" label-position="top">
+      <el-form-item label="行为" class="vertical-form-item" label-position="top">
         <el-input 
           v-model="formData.action" 
           placeholder="请输入行为"
-          clearable
+          disabled
         />
       </el-form-item>
       
@@ -69,9 +69,6 @@ watch(visible, (newVal) => {
 })
 
 const formRules = {
-  action: [
-    { required: true, message: '请输入行为', trigger: 'blur' }
-  ],
   points: [
     { required: true, message: '请输入积分值', trigger: 'blur' },
     { type: 'number', message: '积分值必须是数字', trigger: 'blur' }

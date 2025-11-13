@@ -49,8 +49,9 @@ defineEmits<{
 
 .category-tabs {
   display: flex;
-  gap: 6px;
+  /* gap: 6px; */
   flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .category-tab {
@@ -58,7 +59,7 @@ defineEmits<{
   height: 32px;
   background: #F7F7F7;
   border: 1px solid transparent;
-  border-radius: 16px;
+  border-radius: 8px;
   font-family: PingFang SC, PingFang SC;
   font-weight: 400;
   font-size: 14px;

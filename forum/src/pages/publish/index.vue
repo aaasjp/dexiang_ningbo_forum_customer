@@ -31,8 +31,9 @@
             ref="titleInput"
             v-model="title"
             class="title-input"
-            placeholder="请输入标题"
-            rows="2"
+            placeholder="请输入问题"
+            rows="1"
+            max-rows="2"
             maxlength="100"
             @focus="handleInputFocus"
             @blur="handleInputBlur"
@@ -45,7 +46,7 @@
             ref="contentInput"
             v-model="content"
             class="content-input"
-            placeholder="请输入内容"
+            placeholder="对问题补充说明，更好的获得答案（选填）"
             rows="4"
             @focus="handleInputFocus"
             @blur="handleInputBlur"
@@ -58,7 +59,7 @@
               :key="index"
               class="image-item"
             >
-              <img :src="image" alt="上传的图片" />
+              <img :src="image" alt="上传的图片" @click.stop="handleImageClick(image)" />
               <div class="image-remove" @click="removeImage(index)">
                 <el-icon :size="16">
                   <Close />
@@ -67,10 +68,21 @@
             </div>
           </div>
 
-          <!-- 字数统计 -->
-          <div class="char-count">
-            <span :class="{ 'over-limit': content.length > 200 }">{{ content.length }}</span>
-            <span class="limit-text">/200</span>
+          <!-- 工具栏和字数统计 -->
+          <div class="bottom-actions">
+            <div class="toolbar-actions">
+              <div class="toolbar-item" @click="uploadImage">
+                <img src="../../assets/images/icon/image.png" alt="上传图片" class="action-icon" width="20" height="20" />
+              </div>
+              <div class="toolbar-item" @click="openTopicModal">
+                <img src="../../assets/images/icon/subject.png" alt="添加话题" class="action-icon" width="20" height="20" />
+              </div>
+            </div>
+            
+            <div class="char-count">
+              <span :class="{ 'over-limit': content.length > 200 }">{{ content.length }}</span>
+              <span class="limit-text">/200</span>
+            </div>
           </div>
         </div>
       </div>
@@ -117,13 +129,6 @@
       </div>
     </div>
 
-    <!-- 底部固定区域 -->
-    <BottomToolbar 
-      :is-keyboard-active="isKeyboardActive"
-      @upload-image="uploadImage"
-      @open-topic-modal="openTopicModal"
-    />
-
     <!-- @提及弹窗 -->
     <MentionModal
       :show="showMentionModal"
@@ -149,18 +154,19 @@ import { useRouter, useRoute } from 'vue-router'
 import { 
   Close
 } from '@element-plus/icons-vue'
-import CategorySelector from '@/components/publish/CategorySelector.vue'
-import MentionSection from '@/components/publish/MentionSection.vue'
-import BottomToolbar from '@/components/publish/BottomToolbar.vue'
-import MentionModal from '@/components/publish/MentionModal.vue'
-import TopicModal from '@/components/publish/TopicModal.vue'
-import { getDepartmentTree, type DepartmentInfo } from '@/api/department'
-import { getTopicList, type Topic } from '@/api/topic'
-import { createQuestion, updateQuestion, getQuestionDetail, type CreateQuestionData, type UpdateQuestionData } from '@/api/question'
-import { uploadImages } from '@/api/upload'
+import CategorySelector from '../../components/publish/CategorySelector.vue'
+import MentionSection from '../../components/publish/MentionSection.vue'
+import MentionModal from '../../components/publish/MentionModal.vue'
+import TopicModal from '../../components/publish/TopicModal.vue'
+import { getDepartmentTree, type DepartmentInfo } from '../../api/department'
+import { getTopicList, type Topic } from '../../api/topic'
+import { createQuestion, updateQuestion, getQuestionDetail, type CreateQuestionData, type UpdateQuestionData } from '../../api/question'
+import { uploadImages } from '../../api/upload'
+import { useImageViewerStore } from '../../stores/imageViewer'
 
 const router = useRouter()
 const route = useRoute()
+const imageViewerStore = useImageViewerStore()
 
 // 编辑模式
 const isEditMode = ref(false)
@@ -323,6 +329,11 @@ const uploadImage = () => {
 const removeImage = (index: number) => {
   uploadedImages.value.splice(index, 1)
   imageFiles.value.splice(index, 1)
+}
+
+// 处理图片点击
+const handleImageClick = (imageUrl: string) => {
+  imageViewerStore.open(imageUrl)
 }
 
 // 完成@提及选择
@@ -615,7 +626,7 @@ onUnmounted(() => {
   min-height: 100vh;
   background: #F5F5F5;
   overflow-x: hidden;
-  padding-bottom: 80px;
+  padding-bottom: 20px;
 }
 
 /* 顶部导航 */
@@ -704,6 +715,9 @@ onUnmounted(() => {
   color: #1A1A1A;
   line-height: 1.5;
   resize: none;
+  padding: 0;
+  margin: 0;
+  display: block;
 }
 
 .title-input::placeholder {
@@ -769,6 +783,34 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
+/* 底部操作栏 */
+.bottom-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.toolbar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+  transition: opacity 0.2s;
+}
+
+.toolbar-item:active {
+  opacity: 0.6;
+}
+
 /* 字数统计 */
 .char-count {
   text-align: right;
@@ -776,6 +818,7 @@ onUnmounted(() => {
   font-weight: 400;
   font-size: 12px;
   color: #999;
+  flex-shrink: 0;
 }
 
 .char-count .over-limit {
@@ -823,9 +866,9 @@ onUnmounted(() => {
 
 /* 话题标签区域 */
 .topic-tags-wrapper {
-  padding: 0 16px;
+  /* padding: 0 16px; */
   margin-top: 12px;
-  margin-bottom: 80px;
+  margin-bottom: 20px;
 }
 
 .topic-tags-scroll {

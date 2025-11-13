@@ -8,7 +8,7 @@
       <!-- 标题和操作按钮 -->
       <div class="header-section">
         <h3 class="section-title">积分列表</h3>
-        <div class="create-points-btn" @click="handleAdd">新增</div>
+        <!-- <div class="create-points-btn" @click="handleAdd">新增</div> -->
       </div>
 
       <!-- 表格 -->
@@ -127,11 +127,11 @@ watch([currentPage, pageSize], () => {
 })
 
 // 新增
-const handleAdd = () => {
-  isEdit.value = false
-  currentEditData.value = {}
-  showFormDialog.value = true
-}
+// const handleAdd = () => {
+//   isEdit.value = false
+//   currentEditData.value = {}
+//   showFormDialog.value = true
+// }
 
 // 编辑
 const handleEdit = (row) => {

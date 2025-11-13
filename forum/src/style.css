@@ -108,7 +108,7 @@ body {
 img {
   -webkit-user-drag: none;
   user-select: none;
-  pointer-events: none;
+  /* pointer-events: none; 注释掉以支持图片点击放大功能 */
   }
 
 /* 可点击元素添加触摸反馈 */

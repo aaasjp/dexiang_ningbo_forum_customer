@@ -1,25 +1,19 @@
 <template>
   <div class="points-page">
-    <!-- 顶部导航 -->
-    <div class="header">
-      <div class="back-btn" @click="goBack">
-        <el-icon :size="20">
-          <ArrowLeft />
-        </el-icon>
+    <!-- 顶部导航和积分卡片合并 -->
+    <div class="header-banner">
+      <div class="header">
+        <div class="back-btn" @click="goBack">
+          <el-icon :size="20">
+            <ArrowLeft />
+          </el-icon>
+        </div>
+        <div class="header-title">积分</div>
+        <div class="rules-link" @click="goToRules">积分规则</div>
       </div>
-      <div class="header-title">积分</div>
-      <div class="rules-link" @click="goToRules">积分规则</div>
-    </div>
-
-    <!-- 积分卡片 -->
-    <div class="points-banner">
-      <div class="points-label">我的积分</div>
-      <div class="points-value">{{ totalPoints }}</div>
-      <div class="points-decoration">
-        <!-- 装饰图案 -->
-        <div class="coin coin-1">🪙</div>
-        <div class="coin coin-2">🪙</div>
-        <div class="star">⭐</div>
+      <div class="points-content">
+        <div class="points-label">我的积分</div>
+        <div class="points-value">{{ totalPoints }}</div>
       </div>
     </div>
 
@@ -109,23 +103,28 @@ const formatDate = (dateStr: string) => {
 <style scoped>
 .points-page {
   width: 100%;
-  
   min-height: 100vh;
   background: #F5F5F5;
   overflow-x: hidden;
 }
 
-/* 顶部导航 */
-.header {
-  background: #fff;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* 顶部导航和积分卡片合并 */
+.header-banner {
+  background-image: url('/src/assets/images/point-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 12px 16px 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 1px solid #F5F5F5;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
 }
 
 .back-btn {
@@ -133,7 +132,7 @@ const formatDate = (dateStr: string) => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #333;
+  color: #1A1A1A;
   flex-shrink: 0;
 }
 
@@ -150,81 +149,47 @@ const formatDate = (dateStr: string) => {
   font-family: PingFang SC, PingFang SC;
   font-weight: 400;
   font-size: 14px;
-  color: #666;
+  color: #1A1A1A;
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .rules-link:active {
-  color: #333;
+  opacity: 0.8;
 }
 
-/* 积分卡片 */
-.points-banner {
-  background: linear-gradient(135deg, #FFE8B3 0%, #FFD88A 100%);
-  padding: 40px 20px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 16px;
+/* 积分内容 */
+.points-content {
+  /* text-align: center; */
+  padding: 20px 0 20px 40px;
 }
 
 .points-label {
   font-family: PingFang SC, PingFang SC;
   font-weight: 400;
-  font-size: 16px;
-  color: #8B6914;
-  margin-bottom: 12px;
+  font-size: 15px;
+  color: #1A1A1A;
+  margin-bottom: 4px;
 }
 
 .points-value {
   font-family: PingFang SC, PingFang SC;
   font-weight: 700;
-  font-size: 56px;
+  font-size: 38px;
   color: #1A1A1A;
   letter-spacing: 2px;
-}
-
-.points-decoration {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-}
-
-.coin {
-  position: absolute;
-  font-size: 32px;
-  opacity: 0.6;
-}
-
-.coin-1 {
-  top: 20px;
-  right: 40px;
-  transform: rotate(15deg);
-}
-
-.coin-2 {
-  bottom: 30px;
-  left: 30px;
-  transform: rotate(-20deg);
-}
-
-.star {
-  position: absolute;
-  top: 50%;
-  right: 60px;
-  transform: translateY(-50%) rotate(20deg);
-  font-size: 48px;
-  opacity: 0.5;
 }
 
 /* 积分记录列表 */
 .points-records {
   background: #fff;
   padding: 0;
+  border-radius: 16px 16px 0 0;
+  margin-top: -2px;
+  position: relative;
+  z-index: 10;
+  min-height: calc(100vh - 200px);
+  padding-bottom: 20px;
 }
 
 .record-item {
@@ -233,6 +198,10 @@ const formatDate = (dateStr: string) => {
   align-items: center;
   padding: 16px;
   border-bottom: 1px solid #F5F5F5;
+}
+
+.record-item:first-child {
+  padding-top: 20px;
 }
 
 .record-item:last-child {

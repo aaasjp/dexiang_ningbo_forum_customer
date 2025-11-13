@@ -13,6 +13,7 @@ export interface UserProfile {
   birthday?: string
   forum_gender?: number
   self_introduction?: string
+  job_title?: string // 岗位
   is_followed?: boolean // 是否已关注（仅在查看他人主页时有此字段）
 }
 

@@ -58,6 +58,7 @@
               :src="image"
               alt="评论图片"
               class="comment-image"
+              @click="handleImageClick(image)"
             />
           </div>
           
@@ -104,6 +105,7 @@
                     :src="image"
                     alt="回复图片"
                     class="reply-image"
+                    @click="handleImageClick(image)"
                   />
                 </div>
                 
@@ -138,10 +140,13 @@
 import { ref } from 'vue'
 import Avatar from '../common/Avatar.vue'
 import type { Comment, CommentReply } from '../../types/post'
+import { useImageViewerStore } from '../../stores/imageViewer'
 
 defineOptions({
   name: 'CommentList'
 })
+
+const imageViewerStore = useImageViewerStore()
 
 interface Props {
   comments: Comment[]
@@ -222,6 +227,11 @@ const onReplyToReply = (reply: CommentReply, comment: Comment) => {
 
 const onLikeReply = (reply: CommentReply, comment: Comment) => {
   emit('like-reply', reply, comment)
+}
+
+// 处理图片点击
+const handleImageClick = (imageUrl: string) => {
+  imageViewerStore.open(imageUrl)
 }
 </script>
 

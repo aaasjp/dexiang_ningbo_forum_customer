@@ -48,6 +48,7 @@
         :alt="`图片${index + 1}`"
         class="post-image"
         :class="`image-count-${images.length}`"
+        @click="handleImageClick(image)"
       />
     </div>
 
@@ -62,7 +63,7 @@
       <div 
         ref="solveStatusBtn"
         class="solve-status" 
-        :class="{ clickable: canChangeSolveStatus }"
+        :class="{ 'solve-solved': solved }"
         @click="canChangeSolveStatus && onSolveClick()"
       >
         <span :class="['status-text', { solved: solved }]">
@@ -77,10 +78,13 @@
 import { ref } from 'vue'
 import Avatar from '../common/Avatar.vue'
 import type { Author } from '../../types/post'
+import { useImageViewerStore } from '../../stores/imageViewer'
 
 defineOptions({
   name: 'PostContent'
 })
+
+const imageViewerStore = useImageViewerStore()
 
 // 解决状态按钮ref
 const solveStatusBtn = ref<HTMLElement>()
@@ -133,6 +137,11 @@ const onSolveClick = () => {
 
 const onFollowClick = () => {
   emit('follow-click')
+}
+
+// 处理图片点击
+const handleImageClick = (imageUrl: string) => {
+  imageViewerStore.open(imageUrl)
 }
 
 // 暴露给父组件使用
@@ -356,6 +365,9 @@ defineExpose({
   margin-top: 8px;
 
 }
+.solve-solved{
+  background: #ECF8ED;
+}
 
 .solve-status.clickable {
   cursor: pointer;
@@ -372,6 +384,7 @@ defineExpose({
   font-size: 12px;
   color: #FF0D04;
   line-height: 1;
+  background: #FFF3F2;
 }
 
 .status-text.solved {

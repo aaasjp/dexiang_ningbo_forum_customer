@@ -38,18 +38,20 @@
       <!-- 头部 -->
       <el-header class="header">
         <div class="header-right">
-          <el-dropdown>
+          <el-dropdown @command="handleCommand">
             <div class="user-info">
-              <el-avatar :size="32" class="user-avatar">
-                <el-icon><User /></el-icon>
-              </el-avatar>
-              <span class="username">李某某</span>
+              <Avatar 
+                :src="userInfo.forum_avatar" 
+                :name="userInfo.name"
+                :size="32"
+                class="user-avatar"
+              />
+              <span class="username">{{ userInfo.name || '加载中...' }}</span>
               <el-icon class="arrow-down"><ArrowDown /></el-icon>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>个人中心</el-dropdown-item>
-                <el-dropdown-item>退出登录</el-dropdown-item>
+                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -65,8 +67,9 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import {
   DataAnalysis,
   Document,
@@ -76,15 +79,45 @@ import {
   ArrowDown,
   OfficeBuilding
 } from '@element-plus/icons-vue'
+import Avatar from './Avatar.vue'
+import { getCurrentUserProfile } from '@/api/users'
 
 const router = useRouter()
 const route = useRoute()
 
 const activeMenu = ref(route.path)
+const userInfo = ref({
+  name: '',
+  forum_avatar: '',
+  staff_code: ''
+})
 
 const currentTitle = computed(() => {
   return route.meta.title || ''
 })
+
+// 获取用户信息
+const fetchUserInfo = async () => {
+  try {
+    const response = await getCurrentUserProfile()
+    if (response.code === 200 && response.data) {
+      userInfo.value = response.data
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+    ElMessage.error('获取用户信息失败')
+  }
+}
+
+// 处理下拉菜单命令
+const handleCommand = (command) => {
+  if (command === 'logout') {
+    // 这里可以添加退出登录的逻辑
+    ElMessage.success('退出登录成功')
+    // 可以跳转到登录页或清除token等
+    // router.push('/login')
+  }
+}
 
 watch(() => route.path, (newPath) => {
   activeMenu.value = newPath
@@ -93,6 +126,10 @@ watch(() => route.path, (newPath) => {
 const handleMenuSelect = (index) => {
   router.push(index)
 }
+
+onMounted(() => {
+  fetchUserInfo()
+})
 </script>
 
 <style scoped>
@@ -166,7 +203,7 @@ const handleMenuSelect = (index) => {
 }
 
 .user-avatar {
-  background: #e0e0e0;
+  flex-shrink: 0;
 }
 
 .username {

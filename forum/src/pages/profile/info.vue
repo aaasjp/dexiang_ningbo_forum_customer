@@ -19,7 +19,9 @@
           alt="头像" 
           class="avatar-image"
         />
-        <div v-else class="avatar-placeholder"></div>
+        <div v-else class="avatar-placeholder">
+          <span class="placeholder-text">{{ userNameLastTwo }}</span>
+        </div>
         <div class="avatar-edit-icon">
           <img src="../../assets/images/profile/edit.png" alt="edit" />
         </div>
@@ -55,14 +57,11 @@
       <!-- 第三组：性别、生日、岗位 -->
       <div class="form-group">
         <!-- 性别 -->
-        <div class="form-item" @click="showGenderPicker">
+        <div class="form-item form-item-disabled">
           <div class="form-label">性别</div>
           <div class="form-value-left">
             <span class="value-text">{{ genderText }}</span>
           </div>
-          <el-icon :size="16" class="arrow-icon">
-            <ArrowRight />
-          </el-icon>
         </div>
 
         <!-- 生日 -->
@@ -77,14 +76,11 @@
         </div>
 
         <!-- 岗位 -->
-        <div class="form-item" @click="startEditPosition">
+        <div class="form-item form-item-disabled">
           <div class="form-label">岗位</div>
           <div class="form-value-left">
-            <span class="value-text">{{ position || '请输入岗位' }}</span>
+            <span class="value-text">{{ position || '未设置' }}</span>
           </div>
-          <el-icon :size="16" class="arrow-icon">
-            <Edit />
-          </el-icon>
         </div>
       </div>
     </div>
@@ -216,7 +212,7 @@ const avatarUrl = ref('')
 
 // 底部编辑输入框
 const showBottomEdit = ref(false)
-const editType = ref<'intro' | 'position'>('intro')
+const editType = ref<'intro'>('intro')
 const editTitle = ref('')
 const editPlaceholder = ref('')
 const editValue = ref('')
@@ -245,6 +241,10 @@ const genderText = computed(() => {
   return gender.value === 2 ? '女' : '男'
 })
 
+const userNameLastTwo = computed(() => {
+  return username.value ? username.value.slice(-2) : '用户'
+})
+
 const years = computed(() => {
   const currentYear = new Date().getFullYear()
   const result = []
@@ -270,8 +270,7 @@ const loadUserProfile = async () => {
       gender.value = res.data.forum_gender && res.data.forum_gender !== 0 ? res.data.forum_gender : 1
       birthday.value = res.data.birthday || ''
       avatarUrl.value = res.data.forum_avatar || ''
-      // 岗位信息可能需要从其他字段获取
-      position.value = '' // 根据实际API字段调整
+      position.value = res.data.job_title || ''
     }
   } catch (error: any) {
     //ElMessage.error(error.message || '加载用户资料失败')
@@ -315,28 +314,11 @@ const startEditIntro = () => {
   showBottomEdit.value = true
 }
 
-// 岗位编辑
-const startEditPosition = () => {
-  editType.value = 'position'
-  editTitle.value = '岗位'
-  editPlaceholder.value = '请输入岗位'
-  editValue.value = position.value
-  editMaxLength.value = 20
-  showBottomEdit.value = true
-}
-
 // 处理编辑确认
 const handleEditConfirm = async (value: string) => {
   if (editType.value === 'intro') {
     if (value !== intro.value) {
       await updateProfile({ self_introduction: value })
-    }
-  } else if (editType.value === 'position') {
-    if (value !== position.value) {
-      // 注意：API中没有岗位字段，这里可能需要使用其他字段或扩展API
-      // 暂时使用 nickname 字段作为示例
-      position.value = value
-      //ElMessage.warning('岗位字段暂未对接API，请联系后端添加')
     }
   }
 }
@@ -568,11 +550,18 @@ onMounted(() => {
 }
 
 .avatar-placeholder {
-  background: #E5E5E5;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 60px;
+}
+
+.avatar-placeholder .placeholder-text {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 500;
+  font-size: 24px;
+  color: #FFFFFF;
+  user-select: none;
 }
 
 .avatar-edit-icon {
@@ -617,6 +606,15 @@ onMounted(() => {
 
 .form-item:active {
   background: #FAFAFA;
+}
+
+.form-item-disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-item-disabled:active {
+  background: transparent;
 }
 
 .form-label {

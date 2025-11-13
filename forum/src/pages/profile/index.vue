@@ -298,7 +298,7 @@ const handlePostLike = async (post: Post) => {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
+  /* margin-bottom: 8px; */
   margin-top: 43px; /* header height (padding + content) */
 }
 

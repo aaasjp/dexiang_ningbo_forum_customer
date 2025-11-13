@@ -64,7 +64,16 @@
       <div class="table-section">
       <el-table :data="contentList" style="width: 100%" class="content-table">
         <el-table-column prop="sequence" label="序号" width="80" align="center" />
-        <el-table-column prop="title" label="标题" min-width="200" />
+        <el-table-column label="标题" min-width="200">
+          <template #default="{ row }">
+            <div class="title-content">
+              <span class="title-text">{{ row.title }}</span>
+              <span v-if="row.resolveStatus" :class="['resolve-status', `status-${row.resolveStatus}`]">
+                {{ row.resolveStatus === 1 ? '已解决' : '未解决' }}
+              </span>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="author" label="作者" width="120" />
         <el-table-column prop="department" label="@部门" width="180">
           <template #default="{ row }">
@@ -276,6 +285,7 @@ const fetchQuestionsList = async () => {
         createTime: new Date(item.create_time).toLocaleString('zh-CN'),
         status: item.is_offline === 1 ? 'offline' : 'online',
         is_featured: item.is_featured || 0,
+        resolveStatus: item.status, // 添加解决状态字段，1=已解决，2=未解决
         questionData: item // 保存原始数据
       }))
       
@@ -509,6 +519,39 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* 标题内容样式 */
+.title-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resolve-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.status-1 {
+  color: #52C41A;
+  background: #F6FFED;
+}
+
+.status-2 {
+  color: #FF4D4F;
+  background: #FFF1F0;
 }
 
 .pagination {
