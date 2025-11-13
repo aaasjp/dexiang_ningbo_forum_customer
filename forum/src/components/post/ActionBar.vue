@@ -8,16 +8,18 @@
     />
     
     <div class="action-buttons">
-      <div class="action-btn" @click="onAnswer">
+      <!-- <div class="action-btn" @click="onAnswer">
         <img src="../../assets/images/detail/answer.png" alt="回答" class="action-image">
         <span>回答</span>
-      </div>
+      </div> -->
       <div class="action-btn" :class="{ active: liked }" @click="onLike">
-        <img src="../../assets/images/detail/support.png" alt="点赞" class="action-image">
+        <img src="../../assets/images/detail/support.png" alt="点赞" v-if="!liked" class="action-image">
+        <img src="../../assets/images/icon/like-active.png" alt="点赞" v-else class="action-image">
         <span>{{ formatCount(likes) }}</span>
       </div>
       <div class="action-btn" :class="{ active: collected }" @click="onCollect">
-        <img src="../../assets/images/detail/collect.png" alt="收藏" class="action-image">
+        <img src="../../assets/images/detail/collect.png" alt="收藏" v-if="!collected" class="action-image">
+        <img src="../../assets/images/icon/collect-active.png" alt="收藏" v-else class="action-image">
         <span>{{ formatCount(collects) }}</span>
       </div>
     </div>
@@ -90,8 +92,10 @@ const onCommentSubmit = (text: string) => {
 .action-bar {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
   background: #fff;
   padding: 8px 16px;
   border-top: 1px solid #F5F5F5;

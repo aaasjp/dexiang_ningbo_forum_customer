@@ -2,8 +2,12 @@
   <div class="post-content">
     <!-- 用户信息 -->
     <div class="post-header">
-      <div class="author" @click="onAuthorClick">
-        <div class="author-avatar">{{ author.avatar }}</div>
+      <div 
+        class="author" 
+        :class="{ 'not-clickable': isAnonymous }"
+        @click="onAuthorClick"
+      >
+        <Avatar :src="author.forum_avatar" :name="author.name" :size="48" />
         <div class="author-info">
           <div class="author-name">{{ author.name }}</div>
           <div class="post-time">{{ time }}</div>
@@ -22,6 +26,13 @@
       </div>
     </div>
 
+    <!-- @部门和人员 (显示在标题上方) -->
+    <div v-if="relatedMentions && relatedMentions.length > 0" class="related-mentions">
+      <span v-for="(mention, index) in relatedMentions" :key="index" class="related-mention-item">
+        @{{ mention }}<span v-if="index < relatedMentions.length - 1"> </span>
+      </span>
+    </div>
+
     <!-- 标题 -->
     <div class="post-title">{{ title }}</div>
 
@@ -37,6 +48,7 @@
     <!-- 解决状态按钮 (提问类型都显示，但只有自己的才能点击) -->
     <div v-if="showSolveStatus" class="solve-status-container">
       <div 
+        ref="solveStatusBtn"
         class="solve-status" 
         :class="{ clickable: canChangeSolveStatus }"
         @click="canChangeSolveStatus && onSolveClick()"
@@ -50,16 +62,22 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import Avatar from '../common/Avatar.vue'
 import type { Author } from '../../types/post'
 
 defineOptions({
   name: 'PostContent'
 })
 
+// 解决状态按钮ref
+const solveStatusBtn = ref<HTMLElement>()
+
 interface Props {
   author: Author
   time: string
   mentions?: string[]
+  relatedMentions?: string[]  // @的部门和人员
   title: string
   content: string
   topic?: string
@@ -68,6 +86,7 @@ interface Props {
   canChangeSolveStatus?: boolean  // 是否可以修改解决状态（只有自己的才能修改）
   showFollowBtn?: boolean  // 是否显示关注按钮（查看他人帖子时显示）
   isFollowed?: boolean  // 是否已关注
+  isAnonymous?: boolean  // 是否匿名
 }
 
 interface Emits {
@@ -76,17 +95,22 @@ interface Emits {
   (e: 'follow-click'): void
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   solved: false,
   showSolveStatus: false,
   canChangeSolveStatus: false,
   showFollowBtn: false,
-  isFollowed: false
+  isFollowed: false,
+  isAnonymous: false
 })
 
 const emit = defineEmits<Emits>()
 
 const onAuthorClick = () => {
+  // 如果是匿名帖子，不触发点击事件
+  if (props.isAnonymous) {
+    return
+  }
   emit('author-click')
 }
 
@@ -97,6 +121,11 @@ const onSolveClick = () => {
 const onFollowClick = () => {
   emit('follow-click')
 }
+
+// 暴露给父组件使用
+defineExpose({
+  solveStatusBtn
+})
 </script>
 
 <style scoped>
@@ -120,16 +149,9 @@ const onFollowClick = () => {
   flex: 1;
 }
 
-.author-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #F7F7F7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  flex-shrink: 0;
+/* 匿名用户不可点击 */
+.author.not-clickable {
+  cursor: default;
 }
 
 .author-info {
@@ -171,6 +193,24 @@ const onFollowClick = () => {
   font-size: 12px;
   color: #FF9500;
   line-height: 1;
+}
+
+/* @部门和人员 (在标题上方) */
+.related-mentions {
+  margin-bottom: 8px;
+  line-height: 22px;
+}
+
+.related-mention-item {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 500;
+  font-size: 16px;
+  color: #FFBF00;
+  text-align: left;
+  font-style: normal;
+  text-transform: none;
+  height: 22px;
+  line-height: 22px;
 }
 
 /* 标题 */
@@ -266,14 +306,16 @@ const onFollowClick = () => {
   align-items: center;
   padding: 4px 12px;
   height: 28px;
-  background: #F5F5F5;
+  background: #FFF3F2;
   border-radius: 14px;
   transition: all 0.2s;
   margin-top: 8px;
+
 }
 
 .solve-status.clickable {
   cursor: pointer;
+  background: #ECF8ED;
 }
 
 .solve-status.clickable:active {
@@ -284,12 +326,12 @@ const onFollowClick = () => {
   font-family: PingFang SC, PingFang SC;
   font-weight: 400;
   font-size: 12px;
-  color: #999999;
+  color: #FF0D04;
   line-height: 1;
 }
 
 .status-text.solved {
-  color: #2EC84F;
+  color: #1DAD13;
 }
 </style>
 

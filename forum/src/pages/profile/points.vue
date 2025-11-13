@@ -71,11 +71,11 @@ const loadPoints = async () => {
       totalPoints.value = res.data.total_points
       pointRecords.value = res.data.records
     } else {
-      ElMessage.error(res.message || '获取积分失败')
+      //ElMessage.error(res.message || '获取积分失败')
     }
   } catch (error) {
     console.error('获取积分失败:', error)
-    ElMessage.error('获取积分失败')
+    //ElMessage.error('获取积分失败')
   } finally {
     loading.value = false
   }

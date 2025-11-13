@@ -2,6 +2,7 @@
 export interface Author {
   name: string
   avatar: string
+  forum_avatar?: string  // 头像URL
   badge?: string
   staff_code?: string
 }
@@ -52,6 +53,7 @@ export interface Comment {
   answer_id?: number  // API返回的ID
   author: string
   avatar: string
+  forum_avatar?: string  // 头像URL
   content: string
   time: string
   create_time?: string  // API返回的创建时间
@@ -78,6 +80,7 @@ export interface CommentReply {
   answer_id?: number  // API返回的ID
   author: string
   avatar: string
+  forum_avatar?: string  // 头像URL
   replyTo: string  // 回复给谁
   content: string
   time: string

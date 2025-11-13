@@ -43,6 +43,7 @@
         :key="post.id"
         :post="post"
         @click="handlePostClick(post)"
+        @like="handlePostLike"
       />
       
       <!-- 空状态 -->
@@ -61,6 +62,7 @@ import { ArrowLeft, Search } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import PostCard from '../../components/post/PostCard.vue'
 import { getTopicDetail, getTopicQuestions, toggleFavoriteTopic } from '../../api/topic'
+import { toggleLikeQuestion } from '../../api/question'
 import { transformQuestionToPost } from '../../utils/transform'
 import type { Topic } from '../../api/topic'
 import type { Post } from '../../types/post'
@@ -110,7 +112,7 @@ const loadTopicDetail = async () => {
     topicData.value = response.data
   } catch (error) {
     console.error('加载话题详情失败:', error)
-    ElMessage.error('加载话题详情失败')
+    //ElMessage.error('加载话题详情失败')
   }
 }
 
@@ -122,7 +124,7 @@ const loadTopicQuestions = async () => {
     topicPosts.value = response.data.items.map(transformQuestionToPost)
   } catch (error) {
     console.error('加载问题列表失败:', error)
-    ElMessage.error('加载问题列表失败')
+    //ElMessage.error('加载问题列表失败')
   } finally {
     loading.value = false
   }
@@ -145,13 +147,13 @@ const toggleCollect = async () => {
     isCollected.value = response.data.favorited
     
     if (isCollected.value) {
-      ElMessage.success('收藏成功')
+      //ElMessage.success('收藏成功')
     } else {
-      ElMessage.info('取消收藏')
+      //ElMessage.info('取消收藏')
     }
   } catch (error) {
     console.error('收藏操作失败:', error)
-    ElMessage.error('操作失败')
+    //ElMessage.error('操作失败')
   }
 }
 
@@ -163,6 +165,30 @@ const goBack = () => {
 // 处理帖子点击
 const handlePostClick = (post: Post) => {
   router.push(`/post/${post.question_id || post.id}`)
+}
+
+// 处理帖子点赞
+const handlePostLike = async (post: Post) => {
+  try {
+    const questionId = post.question_id || Number(post.id)
+    const response = await toggleLikeQuestion(questionId)
+    
+    // 更新帖子的点赞状态
+    const postIndex = topicPosts.value.findIndex(p => p.id === post.id)
+    if (postIndex !== -1) {
+      topicPosts.value[postIndex].liked = response.data.liked
+      if (response.data.liked) {
+        topicPosts.value[postIndex].likes++
+      } else {
+        topicPosts.value[postIndex].likes--
+      }
+    }
+    
+    //ElMessage.success(response.data.liked ? '点赞成功' : '取消点赞')
+  } catch (error) {
+    console.error('点赞失败:', error)
+    //ElMessage.error('操作失败')
+  }
 }
 
 // 组件挂载时加载数据

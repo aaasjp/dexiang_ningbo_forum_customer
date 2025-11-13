@@ -19,9 +19,9 @@
         
         <el-select v-model="selectedRole" placeholder="选择角色" style="width: 200px; margin-left: 16px; height: 44px" class="custom-select">
           <el-option label="选择角色" value="" />
-          <el-option label="普通用户" value="user" />
-          <el-option label="专家" value="expert" />
-          <el-option label="管理员" value="admin" />
+          <el-option label="普通用户" value="普通用户" />
+          <el-option label="专家" value="专家" />
+          <el-option label="管理员" value="管理员" />
         </el-select>
 
         <el-input
@@ -41,12 +41,12 @@
       <div class="table-section">
         <el-table :data="usersList" style="width: 100%" class="content-table">
           <el-table-column prop="sequence" label="序号" width="80" align="center" />
-          <el-table-column prop="nickname" label="姓名" width="150" />
+          <el-table-column prop="name" label="姓名" width="150" />
           <el-table-column prop="department" label="部门" width="150" />
           <el-table-column prop="points" label="积分" width="120" align="center" />
           <el-table-column label="角色" width="200">
             <template #default="{ row }">
-              <el-select v-model="row.role" size="small">
+              <el-select v-model="row.role" size="small" @change="handleRoleChange(row)">
                 <el-option label="普通用户" value="普通用户" />
                 <el-option label="专家" value="专家" />
                 <el-option label="管理员" value="管理员" />
@@ -81,7 +81,7 @@
               >
                 <el-switch
                   v-model="row.isAdmin"
-                  style="--el-switch-on-color: #52c41a"
+                  style="--el-switch-on-color: #fa8c16"
                   @change="handleAdminChange(row)"
                 />
               </el-tooltip>
@@ -115,7 +115,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
-import { getUsersList, updateForbiddenStatus, updateDeptAdminStatus, adjustStaffPoints } from '@/api/users'
+import { getUsersList, updateForbiddenStatus, updateDeptAdminStatus, adjustStaffPoints, updateForumTag } from '@/api/users'
 import { getDepartmentTree } from '@/api/department'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -186,7 +186,7 @@ const fetchUsersList = async () => {
         id: item.staff_id,
         sequence: (currentPage.value - 1) * pageSize.value + index + 1,
         staffCode: item.staff_code,
-        nickname: item.nickname || item.name,
+        name: item.name,
         department: item.departments && item.departments.length > 0 
           ? item.departments[0].dept_name 
           : '-',
@@ -201,7 +201,7 @@ const fetchUsersList = async () => {
     }
   } catch (error) {
     console.error('获取用户列表失败:', error)
-    ElMessage.error('获取用户列表失败')
+    //ElMessage.error('获取用户列表失败')
   } finally {
     loading.value = false
   }
@@ -223,7 +223,7 @@ const handleStatusChange = async (row) => {
   try {
     const isForbidden = row.status === 'inactive' ? 1 : 0
     await updateForbiddenStatus(row.staffCode, isForbidden)
-    ElMessage.success(isForbidden === 1 ? '已禁用' : '已启用')
+    //ElMessage.success(isForbidden === 1 ? '已禁用' : '已启用')
     fetchUsersList()
   } catch (error) {
     console.error('更新状态失败:', error)
@@ -240,10 +240,10 @@ const handleAdminChange = async (row) => {
       const deptId = row.originalData.departments[0].dept_id
       const status = row.isAdmin ? 1 : 0
       await updateDeptAdminStatus(row.staffCode, deptId, status)
-      ElMessage.success(row.isAdmin ? '已设为管理员' : '已取消管理员权限')
+      //ElMessage.success(row.isAdmin ? '已设为管理员' : '已取消管理员权限')
       fetchUsersList()
     } else {
-      ElMessage.error('用户没有所属部门')
+      //ElMessage.error('用户没有所属部门')
       row.isAdmin = !row.isAdmin
     }
   } catch (error) {
@@ -253,25 +253,74 @@ const handleAdminChange = async (row) => {
   }
 }
 
+// 处理角色变更
+const handleRoleChange = async (row) => {
+  const oldRole = row.originalData.forum_tag || '普通用户'
+  const newRole = row.role
+  
+  if (oldRole === newRole) {
+    return
+  }
+  
+  try {
+    console.log('修改用户角色：', {
+      staffCode: row.staffCode,
+      oldRole,
+      newRole
+    })
+    
+    await updateForumTag(row.staffCode, newRole)
+    //ElMessage.success(`角色已修改为：${newRole}`)
+    
+    // 更新原始数据
+    row.originalData.forum_tag = newRole
+  } catch (error) {
+    console.error('修改角色失败:', error)
+    //ElMessage.error(error.message || '修改角色失败，请重试')
+    
+    // 恢复原角色
+    row.role = oldRole
+  }
+}
+
 // 处理积分调整
 const handleAdjustPoints = async (row) => {
   try {
-    const { value: newPoints } = await ElMessageBox.prompt('请输入新的积分值', '调整积分', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputPattern: /^\d+$/,
-      inputErrorMessage: '请输入有效的积分值'
-    })
+    const currentPoints = row.originalData.total_points || 0
+    const { value: newPoints } = await ElMessageBox.prompt(
+      `当前积分：${currentPoints}，请输入新的积分值`, 
+      '调整积分', 
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /^\d+$/,
+        inputErrorMessage: '请输入有效的积分值',
+        inputValue: String(currentPoints)
+      }
+    )
     
-    if (newPoints) {
-      const currentPoints = row.originalData.total_points || 0
-      await adjustStaffPoints(row.staffCode, currentPoints, parseInt(newPoints))
-      ElMessage.success('积分调整成功')
-      fetchUsersList()
+    if (newPoints && newPoints !== String(currentPoints)) {
+      try {
+        console.log('调用积分调整接口：', {
+          staffCode: row.staffCode,
+          currentPoints,
+          newPoints: parseInt(newPoints)
+        })
+        
+        await adjustStaffPoints(row.staffCode, currentPoints, parseInt(newPoints))
+        //ElMessage.success('积分调整成功')
+        await fetchUsersList()
+      } catch (apiError) {
+        console.error('积分调整接口调用失败:', apiError)
+        //ElMessage.error(apiError.message || '积分调整失败，请重试')
+      }
+    } else if (newPoints === String(currentPoints)) {
+      //ElMessage.info('积分未变化')
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('积分调整失败:', error)
+      console.error('积分调整操作失败:', error)
+      //ElMessage.error('操作失败')
     }
   }
 }

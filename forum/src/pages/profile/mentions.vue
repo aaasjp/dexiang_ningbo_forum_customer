@@ -19,30 +19,32 @@
         v-for="question in invitedQuestions"
         :key="question.question_id"
         class="mention-card"
-        @click="handleMentionClick(question)"
       >
-        <!-- 用户信息 -->
+        <!-- 左侧内容区 -->
         <div class="mention-header">
-          <div class="user-avatar">👤</div>
+          <Avatar :src="question.asker_avatar" :name="question.asker_name" :size="40" />
           <div class="user-info">
             <div class="user-name">{{ question.asker_name }}</div>
             <div class="mention-action">邀请你回答 · {{ formatTime(question.create_time) }}</div>
           </div>
         </div>
+        <div class="mention-content" @click="handleMentionClick(question)">
+          <!-- 用户信息 -->
+          <!-- 问题内容 -->
+          <div class="question-content">
+            {{ question.title }}
+          </div>
 
-        <!-- 问题内容 -->
-        <div class="question-content">
-          {{ question.title }}
+          <!-- 统计信息 -->
+          <div class="question-stats">
+            <span class="stat-item">{{ question.view_count }}浏览量</span>
+            <span class="stat-item">{{ question.answer_count }}回答</span>
+          </div>
+          <!-- 右侧按钮 -->
+          <button class="answer-btn" @click="handleAnswer(question, $event)">写回答</button>
         </div>
 
-        <!-- 统计信息 -->
-        <div class="question-stats">
-          <span class="stat-item">{{ question.view_count }}浏览量</span>
-          <span class="stat-item">{{ question.answer_count }}回答</span>
-        </div>
-
-        <!-- 写回答按钮 -->
-        <button class="answer-btn" @click="handleAnswer(question, $event)">写回答</button>
+        
       </div>
     </div>
   </div>
@@ -54,6 +56,7 @@ import { useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getMyInvitedQuestions, type QuestionItem } from '../../api/question'
+import Avatar from '../../components/common/Avatar.vue'
 
 const router = useRouter()
 
@@ -69,11 +72,11 @@ const loadInvitedQuestions = async () => {
     if (res.code === 200) {
       invitedQuestions.value = res.data.items
     } else {
-      ElMessage.error(res.message || '获取邀请失败')
+      //ElMessage.error(res.message || '获取邀请失败')
     }
   } catch (error) {
     console.error('获取邀请失败:', error)
-    ElMessage.error('获取邀请失败')
+    //ElMessage.error('获取邀请失败')
   } finally {
     loading.value = false
   }
@@ -120,9 +123,8 @@ const handleAnswer = (question: QuestionItem, event: Event) => {
 <style scoped>
 .mentions-page {
   width: 100%;
-  
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #FFFFFF;
   overflow-x: hidden;
 }
 
@@ -164,17 +166,29 @@ const handleAnswer = (question: QuestionItem, event: Event) => {
 }
 
 .mention-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
+  /* background: #F7F7F7; */
+  /* border-radius: 12px; */
+  /* padding: 16px; */
+  /* margin-bottom: 12px; */
+  /* display: flex; */
+  padding: 12px 0 16px 0;
+  gap: 12px;
+  align-items: stretch;
+  border-bottom: 1px solid #F5F5F5;
 }
 
-.mention-card:active {
-  transform: scale(0.98);
-  background: #FAFAFA;
+.mention-content {
+  margin-top: 12px;
+  /* height: 88px; */
+  background: #F7F7F7;
+  border-radius: 4px 4px 4px 4px;
+  padding: 12px;
+  position: relative;
+  /* margin-bottom: 16px; */
+}
+
+.mention-content:active {
+  opacity: 0.8;
 }
 
 /* 用户信息 */
@@ -183,18 +197,6 @@ const handleAnswer = (question: QuestionItem, event: Event) => {
   align-items: center;
   gap: 12px;
   margin-bottom: 12px;
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #F7F7F7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  flex-shrink: 0;
 }
 
 .user-info {
@@ -225,13 +227,13 @@ const handleAnswer = (question: QuestionItem, event: Event) => {
   color: #1A1A1A;
   line-height: 1.5;
   margin-bottom: 12px;
+  word-break: break-word;
 }
 
 /* 统计信息 */
 .question-stats {
   display: flex;
   gap: 16px;
-  margin-bottom: 12px;
 }
 
 .stat-item {
@@ -243,17 +245,13 @@ const handleAnswer = (question: QuestionItem, event: Event) => {
 
 /* 写回答按钮 */
 .answer-btn {
-  width: 100%;
-  height: 46px;
+  width: 70px;
+  height: 32px;
   background: #FFDD00;
-  border: none;
-  border-radius: 23px;
-  font-family: PingFang SC, PingFang SC;
-  font-weight: 500;
-  font-size: 15px;
-  color: #1A1A1A;
-  cursor: pointer;
-  transition: all 0.2s;
+  border-radius: 16px 16px 16px 16px;
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
 }
 
 .answer-btn:active {

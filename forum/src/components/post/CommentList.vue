@@ -20,10 +20,13 @@
         :key="comment.id"
         class="comment-item"
       >
-        <div class="comment-avatar">{{ comment.avatar }}</div>
+        <Avatar :src="comment.forum_avatar" :name="comment.author" :size="40" />
         <div class="comment-content">
           <div class="comment-header">
-            <span class="comment-author">{{ comment.author }}</span>
+            <div class="author-info">
+              <span class="comment-author">{{ comment.author }}</span>
+              <span v-if="comment.is_useful === 1" class="useful-badge">有用</span>
+            </div>
             <div class="action-item more-btn" @click.stop="toggleMoreMenu(comment.id)">
               <img src="../../assets/images/icon/more.png" alt="更多" class="action-image" width="16" height="16"/>
             </div>
@@ -31,11 +34,33 @@
           
           <!-- 更多菜单 -->
           <div v-if="showMoreMenuId === comment.id" class="comment-more-menu">
+            <!-- 帖子作者看到的选项 -->
+            <div v-if="isOwnPost" class="menu-item" @click="handleUseful(comment)">
+              {{ comment.is_useful ? '取消有用' : '有用' }}
+            </div>
+            
+            <!-- 回答作者看到的选项 -->
+            <div v-if="isOwnComment(comment)" class="menu-item" @click="handleEdit(comment)">修改回答</div>
+            <div v-if="isOwnComment(comment)" class="menu-item" @click="handleDelete(comment)">删除回答</div>
+            
+            <!-- 所有人看到的选项 -->
             <div class="menu-item" @click="handleShare(comment)">分享</div>
-            <div class="menu-item" @click="handleReport(comment)">举报</div>
+            <div v-if="!isOwnComment(comment)" class="menu-item" @click="handleReport(comment)">举报</div>
           </div>
           
           <div class="comment-text">{{ comment.content }}</div>
+          
+          <!-- 评论图片 -->
+          <div v-if="comment.images && comment.images.length > 0" class="comment-images">
+            <img
+              v-for="(image, index) in comment.images"
+              :key="index"
+              :src="image"
+              alt="评论图片"
+              class="comment-image"
+            />
+          </div>
+          
           <div class="comment-footer">
             <span class="comment-time">回复于 {{ comment.time }}</span>
             <div class="comment-actions">
@@ -62,7 +87,7 @@
               :key="reply.id"
               class="reply-item"
             >
-              <div class="reply-avatar">{{ reply.avatar }}</div>
+              <Avatar :src="reply.forum_avatar" :name="reply.author" :size="18" />
               <div class="reply-content">
                 <div class="reply-header">
                   <span class="reply-author">{{ reply.author }}</span>
@@ -70,6 +95,18 @@
                   <span class="reply-to">{{ reply.replyTo }}</span>
                 </div>
                 <div class="reply-text">{{ reply.content }}</div>
+                
+                <!-- 回复图片 -->
+                <div v-if="reply.images && reply.images.length > 0" class="reply-images">
+                  <img
+                    v-for="(image, index) in reply.images"
+                    :key="index"
+                    :src="image"
+                    alt="回复图片"
+                    class="reply-image"
+                  />
+                </div>
+                
                 <div class="reply-footer">
                   <span class="reply-time">回复于 {{ reply.time }}</span>
                   <div class="reply-actions">
@@ -99,6 +136,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import Avatar from '../common/Avatar.vue'
 import type { Comment, CommentReply } from '../../types/post'
 
 defineOptions({
@@ -107,6 +145,8 @@ defineOptions({
 
 interface Props {
   comments: Comment[]
+  isOwnPost?: boolean  // 是否是自己的帖子
+  currentUserCode?: string  // 当前用户工号
 }
 
 interface Emits {
@@ -117,9 +157,15 @@ interface Emits {
   (e: 'like-reply', reply: CommentReply, comment: Comment): void
   (e: 'share', comment: Comment): void
   (e: 'report', comment: Comment): void
+  (e: 'useful', comment: Comment): void
+  (e: 'edit', comment: Comment): void
+  (e: 'delete', comment: Comment): void
 }
 
-defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  isOwnPost: false,
+  currentUserCode: ''
+})
 const emit = defineEmits<Emits>()
 
 const showMoreMenuId = ref<string | null>(null)
@@ -132,12 +178,32 @@ const toggleMoreMenu = (commentId: string) => {
   }
 }
 
+// 判断是否是自己的评论
+const isOwnComment = (comment: Comment) => {
+  return props.currentUserCode && comment.answerer_code === props.currentUserCode
+}
+
 const onReply = (comment: Comment) => {
   emit('reply', comment)
 }
 
 const onLike = (comment: Comment) => {
   emit('like', comment)
+}
+
+const handleUseful = (comment: Comment) => {
+  showMoreMenuId.value = null
+  emit('useful', comment)
+}
+
+const handleEdit = (comment: Comment) => {
+  showMoreMenuId.value = null
+  emit('edit', comment)
+}
+
+const handleDelete = (comment: Comment) => {
+  showMoreMenuId.value = null
+  emit('delete', comment)
 }
 
 const handleShare = (comment: Comment) => {
@@ -172,7 +238,10 @@ const onLikeReply = (reply: CommentReply, comment: Comment) => {
   left: 0;
   right: 0;
   bottom: 0;
+  background: rgba(0, 0, 0, 0);
   z-index: 100;
+  cursor: default;
+  pointer-events: auto;
 }
 
 .comments-header {
@@ -218,18 +287,6 @@ const onLikeReply = (reply: CommentReply, comment: Comment) => {
   position: relative;
 }
 
-.comment-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #F7F7F7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  flex-shrink: 0;
-}
-
 .comment-content {
   flex: 1;
 }
@@ -242,12 +299,29 @@ const onLikeReply = (reply: CommentReply, comment: Comment) => {
   position: relative;
 }
 
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
 .comment-author {
   font-family: PingFang SC, PingFang SC;
   font-weight: 500;
   font-size: 14px;
   color: #1A1A1A;
-  flex: 1;
+}
+
+.useful-badge {
+  padding: 2px 8px;
+  background: linear-gradient(135deg, #FFDD00 0%, #FFB800 100%);
+  border-radius: 10px;
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 500;
+  font-size: 12px;
+  color: #1A1A1A;
+  white-space: nowrap;
 }
 
 .comment-text {
@@ -259,10 +333,33 @@ const onLikeReply = (reply: CommentReply, comment: Comment) => {
   margin-bottom: 8px;
 }
 
+/* 评论图片 */
+.comment-images {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.comment-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.comment-image:active {
+  transform: scale(0.95);
+}
+
 .comment-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .comment-time {
@@ -288,6 +385,9 @@ const onLikeReply = (reply: CommentReply, comment: Comment) => {
   font-weight: 400;
   font-size: 12px;
   transition: color 0.2s;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  position: relative;
 }
 
 .action-item:active {
@@ -350,18 +450,6 @@ const onLikeReply = (reply: CommentReply, comment: Comment) => {
   padding: 12px 0;
 }
 
-.reply-avatar {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #F7F7F7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
 .reply-content {
   flex: 1;
 }
@@ -401,10 +489,33 @@ const onLikeReply = (reply: CommentReply, comment: Comment) => {
   margin-bottom: 6px;
 }
 
+/* 回复图片 */
+.reply-images {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.reply-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.reply-image:active {
+  transform: scale(0.95);
+}
+
 .reply-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .reply-time {

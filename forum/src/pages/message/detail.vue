@@ -97,11 +97,11 @@ const loadMessages = async () => {
     if (res.code === 200) {
       messages.value = res.data.items
     } else {
-      ElMessage.error(res.message || '获取消息失败')
+      //ElMessage.error(res.message || '获取消息失败')
     }
   } catch (error) {
     console.error('获取消息失败:', error)
-    ElMessage.error('获取消息失败')
+    //ElMessage.error('获取消息失败')
   } finally {
     loading.value = false
   }

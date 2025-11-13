@@ -4,26 +4,22 @@
     :title="title"
     :form-data="formData"
     :rules="formRules"
+    width="680px"
     @confirm="handleConfirm"
     @cancel="handleCancel"
     @close="handleClose"
+    label-position="top"
   >
     <template #form="{ formData }">
-      <el-form-item label="行为" prop="action">
-        <el-select 
+      <el-form-item label="行为" prop="action" class="vertical-form-item" label-position="top">
+        <el-input 
           v-model="formData.action" 
-          placeholder="被评为精选问答"
+          placeholder="请输入行为"
           clearable
-        >
-          <el-option label="发布问题" value="发布问题" />
-          <el-option label="发布回复" value="发布回复" />
-          <el-option label="被评为精选问答" value="被评为精选问答" />
-          <el-option label="点赞" value="点赞" />
-          <el-option label="收藏" value="收藏" />
-        </el-select>
+        />
       </el-form-item>
       
-      <el-form-item label="积分值" prop="points">
+      <el-form-item label="积分值" prop="points" class="vertical-form-item" label-position="top">
         <el-input 
           v-model.number="formData.points" 
           placeholder="请输入积分"
@@ -74,7 +70,7 @@ watch(visible, (newVal) => {
 
 const formRules = {
   action: [
-    { required: true, message: '请选择行为', trigger: 'change' }
+    { required: true, message: '请输入行为', trigger: 'blur' }
   ],
   points: [
     { required: true, message: '请输入积分值', trigger: 'blur' },
@@ -97,6 +93,30 @@ const handleClose = () => {
   }
 }
 </script>
+
+<style scoped>
+/* 垂直布局的表单项 */
+.vertical-form-item :deep(.el-form-item__label) {
+  display: block;
+  text-align: left;
+  margin-bottom: 8px;
+  line-height: 22px;
+}
+
+.vertical-form-item :deep(.el-form-item__content) {
+  margin-left: 0 !important;
+}
+
+/* 确保输入框高度为 44px */
+.vertical-form-item :deep(.el-input__wrapper) {
+  height: 44px;
+}
+
+.vertical-form-item :deep(.el-input__inner) {
+  height: 44px;
+  line-height: 44px;
+}
+</style>
 
 
 

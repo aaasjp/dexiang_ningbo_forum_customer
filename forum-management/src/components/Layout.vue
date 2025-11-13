@@ -3,10 +3,7 @@
     <!-- 侧边栏 -->
     <el-aside width="200px" class="sidebar">
       <div class="logo">
-        <div class="logo-img">
-          <el-icon :size="24"><OfficeBuilding /></el-icon>
-        </div>
-        <span class="logo-text">宁波银行</span>
+        <img src="../assets/logo.png" alt="logo" class="logo-img">
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -113,25 +110,16 @@ const handleMenuSelect = (index) => {
 .logo {
   display: flex;
   align-items: center;
-  padding: 20px 16px;
-  gap: 10px;
+  width: 98px;
+  height: 32px;
+  margin: 12px 16px;
+
 }
 
 .logo-img {
-  width: 32px;
+  width: 98px;
   height: 32px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fa8c16;
-  color: #ffffff;
-}
-
-.logo-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
+  display: block;
 }
 
 .sidebar-menu {
@@ -146,8 +134,7 @@ const handleMenuSelect = (index) => {
 }
 
 .sidebar-menu .el-menu-item.is-active {
-  background: #fff7e6;
-  color: #fa8c16;
+  color: #FF7800;
 }
 
 .header {

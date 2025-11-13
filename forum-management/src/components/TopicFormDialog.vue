@@ -8,10 +8,11 @@
     @confirm="handleConfirm"
     @cancel="handleCancel"
     @close="handleClose"
+    label-position="top"
   >
     <template #form="{ formData }">
-      <el-form-item label="封面图片" prop="coverImage">
-        <div class="upload-area">
+      <el-form-item label="封面图片" prop="coverImage" class="vertical-form-item" label-position="top">
+        <div class="upload-container">
           <el-upload
             class="cover-uploader"
             :show-file-list="false"
@@ -27,27 +28,25 @@
               <el-icon class="upload-icon"><Plus /></el-icon>
             </div>
           </el-upload>
-          <div class="upload-tips">
-            图片≤5MB，格式为png/jpg
+          <div class="upload-tips-container">
+              <div class="upload-tips">
+              图片≤<i>5MB</i>，格式为<i>png/jpg</i>
+            </div>
           </div>
+          
         </div>
       </el-form-item>
       
-      <el-form-item label="话题名称" prop="topicName">
-        <el-select 
+      <el-form-item label="话题名称" prop="topicName" class="vertical-form-item" label-position="top">
+        <el-input 
           v-model="formData.topicName" 
-          placeholder="请选择部门"
+          placeholder="请输入话题名称"
           clearable
-          filterable
-        >
-          <el-option label="技术交流" value="技术交流" />
-          <el-option label="产品讨论" value="产品讨论" />
-          <el-option label="运营推广" value="运营推广" />
-          <el-option label="行业动态" value="行业动态" />
-        </el-select>
+          maxlength="50"
+        />
       </el-form-item>
       
-      <el-form-item label="话题描述" prop="description">
+      <el-form-item label="话题描述" prop="description" class="vertical-form-item" label-position="top">
         <el-input 
           v-model="formData.description" 
           type="textarea"
@@ -104,7 +103,7 @@ watch(visible, (newVal) => {
 
 const formRules = {
   topicName: [
-    { required: true, message: '请选择话题名称', trigger: 'change' }
+    { required: true, message: '请输入话题名称', trigger: 'blur' }
   ],
   description: [
     { required: true, message: '请输入话题描述', trigger: 'blur' }
@@ -116,11 +115,11 @@ const beforeUpload = (file) => {
   const isLt5M = file.size / 1024 / 1024 < 5
 
   if (!isImage) {
-    ElMessage.error('只能上传 PNG/JPG 格式的图片！')
+    //ElMessage.error('只能上传 PNG/JPG 格式的图片！')
     return false
   }
   if (!isLt5M) {
-    ElMessage.error('图片大小不能超过 5MB！')
+    //ElMessage.error('图片大小不能超过 5MB！')
     return false
   }
   
@@ -135,7 +134,7 @@ const beforeUpload = (file) => {
 }
 
 const handleUploadSuccess = () => {
-  ElMessage.success('上传成功')
+  //ElMessage.success('上传成功')
 }
 
 const handleConfirm = (data) => {
@@ -156,12 +155,27 @@ const handleClose = () => {
 </script>
 
 <style scoped>
-.upload-area {
-  width: 100%;
+/* 垂直布局的表单项 */
+.vertical-form-item :deep(.el-form-item__label) {
+  display: block;
+  text-align: left;
+  margin-bottom: 8px;
+  line-height: 22px;
+}
+
+.vertical-form-item :deep(.el-form-item__content) {
+  margin-left: 0 !important;
+}
+
+/* 图片上传容器 - 横向布局 */
+.upload-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 .cover-uploader {
-  width: 100%;
+  flex-shrink: 0;
 }
 
 .upload-placeholder {
@@ -198,12 +212,22 @@ const handleClose = () => {
   height: 100%;
   object-fit: cover;
 }
-
+.upload-tips-container{
+  display: flex;
+  align-items: flex-end;
+height: 120px;
+}
 .upload-tips {
-  margin-top: 8px;
   font-size: 12px;
   color: #999999;
+  line-height: 22px;
+  padding-top: 2px;
+  
 }
+.upload-tips i{
+    color: #1A1A1A;
+    font-style: normal;
+  }
 </style>
 
 

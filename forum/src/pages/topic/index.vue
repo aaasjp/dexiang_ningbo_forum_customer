@@ -1,5 +1,8 @@
 <template>
   <div class="topic-page">
+    <!-- 顶部渐变装饰 -->
+    <div class="header-gradient"></div>
+    
     <!-- 顶部导航 -->
     <div class="header">
       <div class="header-title">话题广场</div>
@@ -89,7 +92,7 @@ const loadTopics = async () => {
     allTopics.value = response.data.items
   } catch (error) {
     console.error('加载话题列表失败:', error)
-    ElMessage.error('加载话题列表失败')
+    //ElMessage.error('加载话题列表失败')
   } finally {
     loading.value = false
   }
@@ -128,6 +131,20 @@ onMounted(() => {
   min-height: 100vh;
   background: #F5F5F5;
   overflow-x: hidden;
+  position: relative;
+}
+
+/* 顶部渐变装饰 */
+.header-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(90deg, #FBFFED 0%, #ffffff 100%);
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* 顶部导航 */
@@ -137,9 +154,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 100;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  z-index: 1000;
 }
 
 .header-title {
@@ -157,8 +178,14 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  position: relative;
+  position: fixed;
+  top: 42px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
   cursor: pointer;
+  z-index: 999;
 }
 
 .search-icon {
@@ -190,6 +217,9 @@ onMounted(() => {
 .content {
   background: #fff;
   padding: 0;
+  position: relative;
+  z-index: 1;
+  margin-top: 98px; /* header(42px) + search-bar(56px) */
 }
 
 /* 话题项 */

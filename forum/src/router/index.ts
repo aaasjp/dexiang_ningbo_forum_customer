@@ -108,6 +108,18 @@ const routes = [
     meta: { showTabBar: false }
   },
   {
+    path: '/profile/user',
+    name: 'UserProfileDetail',
+    component: () => import('../pages/profile/user.vue'),
+    meta: { showTabBar: false }
+  },
+  {
+    path: '/users',
+    name: 'UserList',
+    component: () => import('../pages/profile/users.vue'),
+    meta: { showTabBar: false }
+  },
+  {
     path: '/post',
     name: 'PostList',
     component: () => import('../pages/post/index.vue'),

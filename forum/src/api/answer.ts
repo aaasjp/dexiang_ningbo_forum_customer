@@ -9,6 +9,7 @@ export interface AnswerItem {
   images?: string[]
   answerer_code: string
   answerer_name: string
+  answerer_avatar?: string
   is_official: number
   is_pinned: number
   points_awarded: number
@@ -16,6 +17,8 @@ export interface AnswerItem {
   like_count: number
   view_count: number
   favorite_count: number
+  is_liked: boolean
+  is_favorited: boolean
   create_time: string
   replies?: AnswerItem[]
 }

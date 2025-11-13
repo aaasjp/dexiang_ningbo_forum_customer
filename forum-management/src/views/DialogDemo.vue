@@ -95,6 +95,7 @@
     <!-- 删除确认弹框 -->
     <DeleteConfirmDialog
       v-model="dialogStates.deleteConfirm"
+      title="删除任务"
       message="确定删除该任务吗？"
       @confirm="handleDeleteConfirm"
     />

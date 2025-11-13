@@ -338,8 +338,10 @@ const handleComplete = () => {
 .modal-overlay {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;

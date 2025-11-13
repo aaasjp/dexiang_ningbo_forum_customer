@@ -242,11 +242,11 @@ const loadDepartments = async () => {
     if (res.code === 200) {
       departments.value = res.data.departments
     } else {
-      ElMessage.error(res.message || '获取部门数据失败')
+      //ElMessage.error(res.message || '获取部门数据失败')
     }
   } catch (error) {
     console.error('获取部门数据失败:', error)
-    ElMessage.error('获取部门数据失败')
+    //ElMessage.error('获取部门数据失败')
   }
 }
 
@@ -257,11 +257,11 @@ const loadTopics = async () => {
     if (res.code === 200) {
       topics.value = res.data.items
     } else {
-      ElMessage.error(res.message || '获取话题列表失败')
+      //ElMessage.error(res.message || '获取话题列表失败')
     }
   } catch (error) {
     console.error('获取话题列表失败:', error)
-    ElMessage.error('获取话题列表失败')
+    //ElMessage.error('获取话题列表失败')
   }
 }
 // 是否可以发布
@@ -292,13 +292,13 @@ const uploadImage = () => {
     if (files) {
       Array.from(files).forEach(file => {
         if (uploadedImages.value.length >= 9) {
-          ElMessage.warning('最多只能上传9张图片')
+          //ElMessage.warning('最多只能上传9张图片')
           return
         }
         
         // 验证文件大小（最大5MB）
         if (file.size > 5 * 1024 * 1024) {
-          ElMessage.error(`图片 ${file.name} 超过5MB限制`)
+          //ElMessage.error(`图片 ${file.name} 超过5MB限制`)
           return
         }
         
@@ -422,12 +422,12 @@ const loadEditData = async (questionId: number) => {
         selectedMembers.value = newSelectedMembers
       }
     } else {
-      ElMessage.error(res.message || '加载问题数据失败')
+      //ElMessage.error(res.message || '加载问题数据失败')
       router.back()
     }
   } catch (error) {
     console.error('加载问题数据失败:', error)
-    ElMessage.error('加载问题数据失败')
+    //ElMessage.error('加载问题数据失败')
     router.back()
   }
 }
@@ -467,7 +467,7 @@ const handleSubmit = async () => {
         if (uploadRes.code === 200 && uploadRes.data.image_urls) {
           imageUrls = [...existingUrls, ...uploadRes.data.image_urls]
         } else {
-          ElMessage.error('图片上传失败')
+          //ElMessage.error('图片上传失败')
           return
         }
       } else {
@@ -480,7 +480,7 @@ const handleSubmit = async () => {
         if (uploadRes.code === 200 && uploadRes.data.image_urls) {
           imageUrls = uploadRes.data.image_urls
         } else {
-          ElMessage.error('图片上传失败')
+          //ElMessage.error('图片上传失败')
           return
         }
       }
@@ -524,12 +524,12 @@ const handleSubmit = async () => {
       
       const res = await updateQuestion(editQuestionId.value, updateData)
       if (res.code === 200) {
-        ElMessage.success('保存成功！')
+        //ElMessage.success('保存成功！')
         // 直接返回上一页（详情页），而不是跳转到新的详情页
         // 这样历史栈中不会有重复的详情页
         router.back()
       } else {
-        ElMessage.error(res.message || '保存失败')
+        //ElMessage.error(res.message || '保存失败')
       }
     } else {
       // 新建模式
@@ -546,16 +546,16 @@ const handleSubmit = async () => {
 
       const res = await createQuestion(questionData)
       if (res.code === 200) {
-        ElMessage.success('发布成功！')
+        //ElMessage.success('发布成功！')
         // 跳转到首页
         router.push(`/home`)
       } else {
-        ElMessage.error(res.message || '发布失败')
+        //ElMessage.error(res.message || '发布失败')
       }
     }
   } catch (error) {
     console.error(isEditMode.value ? '保存失败:' : '发布失败:', error)
-    ElMessage.error(isEditMode.value ? '保存失败，请稍后重试' : '发布失败，请稍后重试')
+    //ElMessage.error(isEditMode.value ? '保存失败，请稍后重试' : '发布失败，请稍后重试')
   } finally {
     isSubmitting.value = false
   }

@@ -9,9 +9,11 @@
       <div class="filter-section">
         <el-select v-model="timeRange" placeholder="请选择时间" style="width: 200px; height: 44px" class="custom-select">
           <el-option label="全部时间" value="all" />
-          <el-option label="今天" value="today" />
-          <el-option label="本周" value="week" />
-          <el-option label="本月" value="month" />
+          <el-option label="一周" value="一周" />
+          <el-option label="一个月" value="一个月" />
+          <el-option label="3个月" value="3个月" />
+          <el-option label="半年" value="半年" />
+          <el-option label="一年" value="一年" />
         </el-select>
       </div>
 
@@ -165,7 +167,7 @@ const fetchDashboardData = async () => {
     }
   } catch (error) {
     console.error('获取 Dashboard 数据失败:', error)
-    ElMessage.error('获取数据失败')
+    //ElMessage.error('获取数据失败')
   } finally {
     loading.value = false
   }
@@ -336,8 +338,8 @@ const getTopicItemClass = (rank) => {
 }
 
 .topic-rank {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -34,6 +34,12 @@ const routes = [
     name: 'Points',
     component: () => import('../views/Points.vue'),
     meta: { title: '积分规则' }
+  },
+  {
+    path: '/logs-test',
+    name: 'LogsTest',
+    component: () => import('../views/LogsTest.vue'),
+    meta: { title: 'API 测试' }
   }
 ]
 

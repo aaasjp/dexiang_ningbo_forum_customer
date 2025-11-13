@@ -17,7 +17,8 @@ export function transformQuestionToPost(question: QuestionItem): Post {
     question_id: question.question_id,
     author: {
       name: question.asker_name || '匿名用户',
-      avatar: '👤',
+      avatar: question.asker_avatar || '',
+      forum_avatar: question.asker_avatar || '',
       badge: question.is_featured ? '精选' : '',
       staff_code: question.asker_code
     },
@@ -33,8 +34,10 @@ export function transformQuestionToPost(question: QuestionItem): Post {
     answer_count: question.answer_count,
     likes: question.like_count,
     like_count: question.like_count,
+    liked: question.is_liked,
     collects: question.favorite_count,
     favorite_count: question.favorite_count,
+    collected: question.is_favorited,
     view_count: question.view_count,
     solved: question.status === 1,
     status: question.status,
@@ -54,7 +57,8 @@ export function transformQuestionDetailToPost(question: QuestionDetail): Post {
     question_id: question.question_id,
     author: {
       name: question.asker_name || '匿名用户',
-      avatar: '👤',
+      avatar: question.asker_avatar || '',
+      forum_avatar: question.asker_avatar || '',
       badge: question.is_featured ? '精选' : '',
       staff_code: question.asker_code
     },
@@ -70,8 +74,10 @@ export function transformQuestionDetailToPost(question: QuestionDetail): Post {
     answer_count: question.answer_count,
     likes: question.like_count,
     like_count: question.like_count,
+    liked: question.is_liked,
     collects: question.favorite_count,
     favorite_count: question.favorite_count,
+    collected: question.is_favorited,
     view_count: question.view_count,
     solved: question.status === 1,
     status: question.status,
@@ -92,14 +98,15 @@ export function transformAnswerToComment(answer: AnswerItem): Comment {
     id: String(answer.answer_id),
     answer_id: answer.answer_id,
     author: answer.answerer_name,
-    avatar: '👤',
+    avatar: answer.answerer_avatar || '',
+    forum_avatar: answer.answerer_avatar || '',
     content: answer.content,
     time: formatTime(answer.create_time),
     create_time: answer.create_time,
     likes: answer.like_count,
     like_count: answer.like_count,
-    liked: false,
-    replies: answer.replies?.map(transformAnswerToCommentReply) || [],
+    liked: answer.is_liked,
+    replies: answer.replies?.map(reply => transformAnswerToCommentReply(reply, answer.answerer_name)) || [],
     answerer_code: answer.answerer_code,
     answerer_name: answer.answerer_name,
     is_official: answer.is_official,
@@ -108,6 +115,7 @@ export function transformAnswerToComment(answer: AnswerItem): Comment {
     is_useful: answer.is_useful,
     view_count: answer.view_count,
     favorite_count: answer.favorite_count,
+    favorited: answer.is_favorited,
     images: answer.images,
     parent_answer_id: answer.parent_answer_id,
     question_id: answer.question_id
@@ -116,20 +124,23 @@ export function transformAnswerToComment(answer: AnswerItem): Comment {
 
 /**
  * 将API的AnswerItem转换为CommentReply类型
+ * @param answer - 回答数据
+ * @param parentAnswererName - 父评论作者名字
  */
-export function transformAnswerToCommentReply(answer: AnswerItem): CommentReply {
+export function transformAnswerToCommentReply(answer: AnswerItem, parentAnswererName: string = ''): CommentReply {
   return {
     id: String(answer.answer_id),
     answer_id: answer.answer_id,
     author: answer.answerer_name,
-    avatar: '👤',
-    replyTo: '', // 需要从parent_answer_id获取
+    avatar: answer.answerer_avatar || '',
+    forum_avatar: answer.answerer_avatar || '',
+    replyTo: parentAnswererName,
     content: answer.content,
     time: formatTime(answer.create_time),
     create_time: answer.create_time,
     likes: answer.like_count,
     like_count: answer.like_count,
-    liked: false,
+    liked: answer.is_liked,
     answerer_code: answer.answerer_code,
     answerer_name: answer.answerer_name,
     is_official: answer.is_official,

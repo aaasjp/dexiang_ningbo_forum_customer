@@ -96,6 +96,13 @@ const goBack = () => {
   display: flex;
   align-items: center;
   gap: 15px;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  z-index: 1000;
 }
 
 .back-btn {
@@ -117,6 +124,7 @@ const goBack = () => {
   padding: 30px 20px;
   text-align: center;
   border-bottom: 1px solid #e5e5e5;
+  margin-top: 58px; /* header height (padding + content + border) */
 }
 
 .avatar {

@@ -13,6 +13,7 @@ export interface UserProfile {
   birthday?: string
   forum_gender?: number
   self_introduction?: string
+  is_followed?: boolean // 是否已关注（仅在查看他人主页时有此字段）
 }
 
 // 积分记录类型
@@ -35,6 +36,7 @@ export interface FollowedUser {
   staff_code: string
   name: string
   nickname?: string
+  forum_avatar?: string
   forum_tag?: string
   follow_time: string
 }
@@ -45,10 +47,18 @@ export interface FollowedUsersResponse {
 }
 
 /**
- * 获取用户主页信息
+ * 获取用户主页信息（当前用户）
  */
 export function getUserProfile() {
   return get<UserProfile>('/api/user/profile')
+}
+
+/**
+ * 获取他人主页信息
+ * @param staffCode 用户工号
+ */
+export function getOtherUserProfile(staffCode: string) {
+  return get<UserProfile>(`/api/user/profile/${staffCode}`)
 }
 
 /**
@@ -90,7 +100,7 @@ export interface UpdateProfileData {
 }
 
 export function updateUserProfile(data: UpdateProfileData) {
-  return put<UserProfile>('/api/user/profile', data)
+  return put<UserProfile>('/api/user/profile-update', data)
 }
 
 /**
@@ -104,5 +114,41 @@ export interface SignInResponse {
 
 export function signIn() {
   return post<SignInResponse>('/api/auth/sign-in')
+}
+
+/**
+ * 用户列表项类型
+ */
+export interface UserListItem {
+  staff_code: string
+  name: string
+  nickname?: string
+  forum_avatar?: string
+  forum_tag?: string
+  question_count: number
+  answer_count: number
+  total_points: number
+  follower_count: number
+  is_followed: boolean
+  self_introduction?: string
+}
+
+/**
+ * 用户列表响应
+ */
+export interface UserListResponse {
+  items: UserListItem[]
+  total: number
+}
+
+/**
+ * 获取用户列表（按被关注数量排序）
+ */
+export function getUserList(page = 1, pageSize = 20, keyword = '') {
+  return get<UserListResponse>('/api/user/list', {
+    page,
+    page_size: pageSize,
+    keyword
+  })
 }
 

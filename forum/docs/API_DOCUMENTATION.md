@@ -1,26 +1,16 @@
 # 问答社区系统 API 接口文档
 
-## 基础信息
+## 基本信息
 
-- **基础URL**: `http://10.129.114.106:8000`
-- **API版本**: v1.0.0
-- **认证方式**: SSO认证（通过 `gw_session` 请求头）
+- **API 版本**: 1.0.0
+- **基础路径**: `/api`
+- **认证方式**: SSO登录（通过 `gw_session` 请求头）
+- **响应格式**: JSON
 
+## 通用响应格式
 
+所有接口统一返回以下格式：
 
-## 通用说明
-
-### 请求头
-所有需要认证的接口都需要在请求头中携带 `gw_session`：
-暂时使用模拟数据 gw_session: 'appid=500883957,name=张三,depatment=人力资源部,orgId=2,jobTitle=管理员, gender=2, status=1,jobNo=staff001'
-
-
-```bash
--H "gw_session: <your_session_token>"
-```
-
-### 响应格式
-所有接口统一返回格式：
 ```json
 {
   "code": 200,
@@ -29,65 +19,24 @@
 }
 ```
 
----
+### 响应字段说明
 
-## 1. 认证相关接口（这个接口暂时无用，登陆走统一Nginx网关）
-
-### 1.1 SSO登录
-**接口**: `POST /api/auth/sso-login`
-
-**说明**: 从gw_session请求头中解析用户信息，同步到数据库
-
-**请求头**:
-```
-gw_session: <your_session_token>
-```
-
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/auth/sso-login" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "登录成功",
-  "data": {
-    "staff_code": "001",
-    "name": "张三",
-    "job_title": "经理",
-    "department": "技术部",
-    "org_id": "1",
-    "dept_info": {
-      "dept_id": 1,
-      "dept_name": "技术部",
-      "full_name": "技术部"
-    }
-  }
-}
-```
+- `code`: 响应码，200表示成功
+- `message`: 响应消息
+- `data`: 响应数据（可选）
 
 ---
 
-### 1.2 每日签到
-**接口**: `POST /api/auth/sign-in`
+## 1. 认证相关 (`/api/auth`)
 
-**说明**: 每天只能签到一次，签到成功会获得积分奖励
+### 1.1 每日签到
+
+**接口地址**: `POST /api/auth/sign-in`
+
+**接口描述**: 每日签到接口，每天只能签到一次，签到成功会获得积分奖励
 
 **请求头**:
-```
-gw_session: <your_session_token>
-```
-
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/auth/sign-in" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -104,18 +53,16 @@ curl -X POST "http://localhost:8000/api/auth/sign-in" \
 
 ---
 
-## 2. 用户相关接口
+## 2. 用户相关 (`/api/user`)
 
 ### 2.1 我的主页
-**接口**: `GET /api/user/profile`
 
-**说明**: 获取当前用户的主页信息，包括提问数、回答数、总积分等
+**接口地址**: `GET /api/user/profile`
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/user/profile" \
-  -H "gw_session: your_session_token_here"
-```
+**接口描述**: 获取当前用户的主页信息
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -128,27 +75,27 @@ curl -X GET "http://localhost:8000/api/user/profile" \
     "forum_avatar": "http://example.com/avatar.jpg",
     "nickname": "小张",
     "forum_tag": "普通用户",
-    "question_count": 5,
-    "answer_count": 10,
-    "total_points": 150
+    "self_introduction": "自我介绍",
+    "birthday": "1990-01-01",
+    "job_title": "经理",
+    "question_count": 10,
+    "answer_count": 20,
+    "total_points": 500
   }
 }
 ```
 
----
+### 2.2 查看他人主页
 
-### 2.2 我的积分
-**接口**: `GET /api/user/points`
+**接口地址**: `GET /api/user/profile/{staff_code}`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认50
+**接口描述**: 查看指定用户的主页信息
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/user/points?page=1&page_size=50" \
-  -H "gw_session: your_session_token_here"
-```
+**路径参数**:
+- `staff_code`: 员工工号
+
+**请求头**:
+- `gw_session`: SSO会话标识（可选，用于判断是否关注）
 
 **响应示例**:
 ```json
@@ -156,7 +103,42 @@ curl -X GET "http://localhost:8000/api/user/points?page=1&page_size=50" \
   "code": 200,
   "message": "success",
   "data": {
-    "total_points": 150,
+    "staff_code": "002",
+    "name": "李四",
+    "forum_avatar": "http://example.com/avatar2.jpg",
+    "nickname": "小李",
+    "forum_tag": "专家",
+    "self_introduction": "自我介绍",
+    "birthday": "1991-01-01",
+    "job_title": "主管",
+    "question_count": 5,
+    "answer_count": 15,
+    "total_points": 300,
+    "is_followed": true
+  }
+}
+```
+
+### 2.3 我的积分
+
+**接口地址**: `GET /api/user/points`
+
+**接口描述**: 获取当前用户的积分明细
+
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认50）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "total_points": 500,
     "records": [
       {
         "record_id": 1,
@@ -170,22 +152,17 @@ curl -X GET "http://localhost:8000/api/user/points?page=1&page_size=50" \
 }
 ```
 
----
+### 2.4 关注/取消关注用户
 
-### 2.3 关注/取消关注用户
-**接口**: `POST /api/user/follow/{target_code}`
+**接口地址**: `POST /api/user/follow/{target_code}`
 
-**说明**: 切换关注状态（如果已关注则取消关注，如果未关注则关注）
+**接口描述**: 关注或取消关注指定用户（切换方式）
 
 **路径参数**:
-- `target_code` (string): 目标用户工号
+- `target_code`: 目标用户工号
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/user/follow/002" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -198,20 +175,18 @@ curl -X POST "http://localhost:8000/api/user/follow/002" \
 }
 ```
 
----
+### 2.5 我关注的用户列表
 
-### 2.4 我关注的用户列表
-**接口**: `GET /api/user/followed-users`
+**接口地址**: `GET /api/user/followed-users`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**接口描述**: 获取当前用户关注的用户列表
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/user/followed-users?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -224,7 +199,8 @@ curl -X GET "http://localhost:8000/api/user/followed-users?page=1&page_size=20" 
         "staff_code": "002",
         "name": "李四",
         "nickname": "小李",
-        "forum_tag": "普通用户",
+        "forum_avatar": "http://example.com/avatar2.jpg",
+        "forum_tag": "专家",
         "follow_time": "2024-01-01T10:00:00"
       }
     ]
@@ -232,12 +208,53 @@ curl -X GET "http://localhost:8000/api/user/followed-users?page=1&page_size=20" 
 }
 ```
 
----
+### 2.6 用户列表
 
-### 2.5 编辑用户资料
-**接口**: `PUT /api/user/profile`
+**接口地址**: `GET /api/user/list`
 
-**说明**: 可修改昵称、生日、性别、自我介绍、头像
+**接口描述**: 获取用户列表（按被关注数量排序）
+
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+- `keyword`: 关键词搜索（工号或姓名，可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "staff_code": "001",
+        "name": "张三",
+        "nickname": "小张",
+        "forum_avatar": "http://example.com/avatar.jpg",
+        "forum_tag": "普通用户",
+        "job_title": "经理",
+        "follow_count": 10,
+        "answer_count": 20,
+        "question_count": 5,
+        "total_points": 500,
+        "is_followed": false
+      }
+    ],
+    "total": 100,
+    "page": 1,
+    "page_size": 20
+  }
+}
+```
+
+### 2.7 更新用户资料
+
+**接口地址**: `PUT /api/user/profile-update`
+
+**接口描述**: 编辑用户资料（可修改昵称、生日、性别、自我介绍、头像）
 
 **请求体**:
 ```json
@@ -245,23 +262,20 @@ curl -X GET "http://localhost:8000/api/user/followed-users?page=1&page_size=20" 
   "nickname": "新昵称",
   "birthday": "1990-01-01",
   "forum_gender": 2,
-  "self_introduction": "这是我的自我介绍",
-  "forum_avatar": "http://example.com/avatar.jpg"
+  "self_introduction": "新的自我介绍",
+  "forum_avatar": "http://example.com/new_avatar.jpg"
 }
 ```
 
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/user/profile" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nickname": "新昵称",
-    "birthday": "1990-01-01",
-    "forum_gender": 2,
-    "self_introduction": "这是我的自我介绍"
-  }'
-```
+**字段说明**:
+- `nickname`: 昵称（可选）
+- `birthday`: 生日，格式：YYYY-MM-DD（可选）
+- `forum_gender`: 论坛上的性别，0未知；1女；2男；3未说明（可选）
+- `self_introduction`: 自我介绍（可选）
+- `forum_avatar`: 论坛个人头像URL（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -273,66 +287,21 @@ curl -X PUT "http://localhost:8000/api/user/profile" \
     "nickname": "新昵称",
     "birthday": "1990-01-01",
     "forum_gender": 2,
-    "self_introduction": "这是我的自我介绍",
-    "forum_avatar": "http://example.com/avatar.jpg"
+    "self_introduction": "新的自我介绍",
+    "forum_avatar": "http://example.com/new_avatar.jpg"
   }
 }
 ```
 
 ---
 
-## 3. 部门相关接口
+## 3. 问题相关 (`/api/questions`)
 
-### 3.1 查询部门组织和人员
-**接口**: `GET /api/department/tree`
+### 3.1 发布提问
 
-**参数**:
-- `dept_id` (int, 可选): 部门ID，如果不提供则查询所有部门
-- `include_children` (bool, 可选): 是否包括子部门，默认true
+**接口地址**: `POST /api/questions/create`
 
-**curl示例**:
-```bash
-# 查询所有部门
-curl -X GET "http://localhost:8000/api/department/tree" \
-  -H "gw_session: your_session_token_here"
-
-# 查询指定部门
-curl -X GET "http://localhost:8000/api/department/tree?dept_id=1&include_children=true" \
-  -H "gw_session: your_session_token_here"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "查询成功",
-  "data": {
-    "departments": [
-      {
-        "dept_id": 1,
-        "dept_name": "技术部",
-        "full_name": "技术部",
-        "staffs": [
-          {
-            "staff_code": "001",
-            "name": "张三"
-          }
-        ],
-        "children": []
-      }
-    ],
-    "total_departments": 1,
-    "total_staffs": 1
-  }
-}
-```
-
----
-
-## 4. 问题相关接口
-
-### 4.1 发布提问
-**接口**: `POST /api/questions/create`
+**接口描述**: 发布新问题
 
 **请求体**:
 ```json
@@ -343,27 +312,23 @@ curl -X GET "http://localhost:8000/api/department/tree?dept_id=1&include_childre
   "category": "求助类",
   "is_anonymous": 0,
   "related_dept_ids": [1, 2],
-  "related_staff_codes": ["002"],
+  "related_staff_codes": ["001", "002"],
   "topic_ids": [1, 2]
 }
 ```
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/questions/create" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "问题标题",
-    "content": "问题内容",
-    "images": ["http://example.com/image1.jpg"],
-    "category": "求助类",
-    "is_anonymous": 0,
-    "related_dept_ids": [1, 2],
-    "related_staff_codes": ["002"],
-    "topic_ids": [1, 2]
-  }'
-```
+**字段说明**:
+- `title`: 问题标题（必需）
+- `content`: 问题内容（必需）
+- `images`: 图片URL列表（可选）
+- `category`: 问题分类，可选值：`求助类`、`建议类`、`吐槽类`（必需）
+- `is_anonymous`: 是否匿名，0否，1是（默认0）
+- `related_dept_ids`: 关联部门ID列表（可选）
+- `related_staff_codes`: 关联员工工号列表（可选）
+- `topic_ids`: 话题ID列表（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -376,37 +341,19 @@ curl -X POST "http://localhost:8000/api/questions/create" \
 }
 ```
 
----
+### 3.2 修改提问
 
-### 4.2 修改提问
-**接口**: `PUT /api/questions/update/{question_id}`
+**接口地址**: `PUT /api/questions/update/{question_id}`
+
+**接口描述**: 修改已发布的问题（只能修改自己发布的问题）
 
 **路径参数**:
-- `question_id` (int): 问题ID
+- `question_id`: 问题ID
 
-**请求体** (所有字段可选):
-```json
-{
-  "title": "新标题",
-  "content": "新内容",
-  "images": ["http://example.com/image2.jpg"],
-  "category": "建议类",
-  "related_dept_ids": [1],
-  "related_staff_codes": ["003"],
-  "topic_ids": [1]
-}
-```
+**请求体**: 同发布提问，所有字段可选
 
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/questions/update/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "新标题",
-    "content": "新内容"
-  }'
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -419,19 +366,17 @@ curl -X PUT "http://localhost:8000/api/questions/update/1" \
 }
 ```
 
----
+### 3.3 获取问题详情
 
-### 4.3 获取问题详情
-**接口**: `GET /api/questions/detail/{question_id}`
+**接口地址**: `GET /api/questions/detail/{question_id}`
+
+**接口描述**: 获取问题的详细信息
 
 **路径参数**:
-- `question_id` (int): 问题ID
+- `question_id`: 问题ID
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/questions/detail/1" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -447,42 +392,47 @@ curl -X GET "http://localhost:8000/api/questions/detail/1" \
     "is_anonymous": 0,
     "asker_code": "001",
     "asker_name": "张三",
+    "asker_avatar": "http://example.com/avatar.jpg",
     "status": 0,
+    "status_change_time": "2024-01-01T10:00:00",
     "is_featured": 0,
-    "view_count": 10,
-    "like_count": 5,
-    "favorite_count": 3,
-    "answer_count": 2,
+    "is_offline": 0,
+    "view_count": 100,
+    "like_count": 10,
+    "favorite_count": 5,
+    "answer_count": 3,
+    "is_president": 0,
+    "deadline": "2024-01-04T10:00:00",
+    "create_time": "2024-01-01T10:00:00",
+    "update_time": "2024-01-01T10:00:00",
     "topics": [
       {
         "topic_id": 1,
-        "title": "话题1"
+        "title": "话题标题"
       }
     ],
     "related_dept_ids": [1, 2],
-    "related_staff_codes": ["002"],
-    "create_time": "2024-01-01T10:00:00"
+    "related_staff_codes": ["001", "002"]
   }
 }
 ```
 
----
+### 3.4 获取问题列表
 
-### 4.4 获取问题列表
-**接口**: `GET /api/questions/list`
+**接口地址**: `GET /api/questions/list`
 
-**参数**:
-- `category` (string, 可选): 问题分类
-- `status` (int, 可选): 状态（0待解决，1已解决，2未解决，3已关闭）
-- `keyword` (string, 可选): 关键词搜索
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**接口描述**: 获取问题列表，支持多种筛选和排序方式
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/questions/list?category=求助类&page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `category`: 问题分类，可选值：`求助类`、`建议类`、`吐槽类`（可选）
+- `status`: 问题状态，0待解决，1已解决，2未解决，3已关闭（可选）
+- `keyword`: 关键词搜索（可选）
+- `interest_type`: 兴趣类型，可选值：`推荐`、`关注`（可选）
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+
+**请求头**:
+- `gw_session`: SSO会话标识（可选，使用推荐或关注功能时需要）
 
 **响应示例**:
 ```json
@@ -497,37 +447,37 @@ curl -X GET "http://localhost:8000/api/questions/list?category=求助类&page=1&
       {
         "question_id": 1,
         "title": "问题标题",
-        "content": "问题内容...",
+        "content": "问题内容（前200字）",
+        "images": ["http://example.com/image1.jpg"],
         "category": "求助类",
         "is_anonymous": 0,
         "asker_name": "张三",
+        "asker_avatar": "http://example.com/avatar.jpg",
         "status": 0,
         "is_featured": 0,
-        "view_count": 10,
-        "like_count": 5,
-        "favorite_count": 3,
-        "answer_count": 2,
-        "create_time": "2024-01-01T10:00:00"
+        "view_count": 100,
+        "like_count": 10,
+        "favorite_count": 5,
+        "answer_count": 3,
+        "create_time": "2024-01-01T10:00:00",
+        "interest_type": null
       }
     ]
   }
 }
 ```
 
----
+### 3.5 收藏/取消收藏问题
 
-### 4.5 收藏/取消收藏问题
-**接口**: `POST /api/questions/favorite/{question_id}`
+**接口地址**: `POST /api/questions/favorite/{question_id}`
+
+**接口描述**: 收藏或取消收藏问题（切换方式）
 
 **路径参数**:
-- `question_id` (int): 问题ID
+- `question_id`: 问题ID
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/questions/favorite/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -540,22 +490,20 @@ curl -X POST "http://localhost:8000/api/questions/favorite/1" \
 }
 ```
 
----
+### 3.6 更新问题状态
 
-### 4.6 更新问题状态
-**接口**: `PUT /api/questions/update-status/{question_id}`
+**接口地址**: `PUT /api/questions/update-status/{question_id}`
+
+**接口描述**: 更新问题状态（已解决、未解决、关闭），只能由提问人操作
 
 **路径参数**:
-- `question_id` (int): 问题ID
+- `question_id`: 问题ID
 
 **查询参数**:
-- `status` (int): 状态值（1已解决，2未解决，3已关闭）
+- `status`: 状态值，1已解决，2未解决，3已关闭
 
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/questions/update-status/1?status=1" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -565,20 +513,17 @@ curl -X PUT "http://localhost:8000/api/questions/update-status/1?status=1" \
 }
 ```
 
----
+### 3.7 点赞/取消点赞问题
 
-### 4.7 点赞/取消点赞问题
-**接口**: `POST /api/questions/like/{question_id}`
+**接口地址**: `POST /api/questions/like/{question_id}`
+
+**接口描述**: 点赞或取消点赞问题（切换方式）
 
 **路径参数**:
-- `question_id` (int): 问题ID
+- `question_id`: 问题ID
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/questions/like/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -591,20 +536,18 @@ curl -X POST "http://localhost:8000/api/questions/like/1" \
 }
 ```
 
----
+### 3.8 我的提问
 
-### 4.8 我的提问
-**接口**: `GET /api/questions/my-ask`
+**接口地址**: `GET /api/questions/my-ask`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**接口描述**: 获取当前用户发布的问题列表
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/questions/my-ask?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -616,13 +559,15 @@ curl -X GET "http://localhost:8000/api/questions/my-ask?page=1&page_size=20" \
       {
         "question_id": 1,
         "title": "问题标题",
-        "content": "问题内容...",
+        "content": "问题内容（前200字）",
+        "images": ["http://example.com/image1.jpg"],
         "category": "求助类",
         "status": 0,
-        "view_count": 10,
-        "like_count": 5,
-        "favorite_count": 3,
-        "answer_count": 2,
+        "asker_avatar": "http://example.com/avatar.jpg",
+        "view_count": 100,
+        "like_count": 10,
+        "favorite_count": 5,
+        "answer_count": 3,
         "create_time": "2024-01-01T10:00:00"
       }
     ]
@@ -630,65 +575,36 @@ curl -X GET "http://localhost:8000/api/questions/my-ask?page=1&page_size=20" \
 }
 ```
 
----
+### 3.9 查看某个人的问题列表
 
-### 4.9 查看某个人的问题列表
-**接口**: `GET /api/questions/list/by-user/{target_user_code}`
+**接口地址**: `GET /api/questions/list/by-user/{target_user_code}`
+
+**接口描述**: 查看指定用户发布的问题列表
 
 **路径参数**:
-- `target_user_code` (string): 目标用户工号
+- `target_user_code`: 目标用户工号
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/questions/list/by-user/002?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "items": [
-      {
-        "question_id": 1,
-        "title": "问题标题",
-        "content": "问题内容...",
-        "category": "求助类",
-        "is_anonymous": 0,
-        "asker_code": "002",
-        "asker_name": "李四",
-        "status": 0,
-        "view_count": 10,
-        "like_count": 5,
-        "favorite_count": 3,
-        "answer_count": 2,
-        "create_time": "2024-01-01T10:00:00"
-      }
-    ]
-  }
-}
-```
+**响应示例**: 同"我的提问"
 
----
+### 3.10 我收藏的问题和回答
 
-### 4.10 我收藏的问题和回答
-**接口**: `GET /api/questions/my-favorites`
+**接口地址**: `GET /api/questions/my-favorites`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**接口描述**: 获取当前用户收藏的问题和回答列表（混合类型）
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/questions/my-favorites?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -701,13 +617,15 @@ curl -X GET "http://localhost:8000/api/questions/my-favorites?page=1&page_size=2
         "type": "question",
         "id": 1,
         "title": "问题标题",
-        "content": "问题内容...",
+        "content": "问题内容（前200字）",
+        "images": ["http://example.com/image1.jpg"],
         "category": "求助类",
         "status": 0,
-        "view_count": 10,
-        "like_count": 5,
-        "favorite_count": 3,
-        "answer_count": 2,
+        "asker_avatar": "http://example.com/avatar.jpg",
+        "view_count": 100,
+        "like_count": 10,
+        "favorite_count": 5,
+        "answer_count": 3,
         "create_time": "2024-01-01T10:00:00",
         "favorite_time": "2024-01-01T11:00:00"
       },
@@ -716,14 +634,14 @@ curl -X GET "http://localhost:8000/api/questions/my-favorites?page=1&page_size=2
         "id": 1,
         "question_id": 1,
         "question_title": "问题标题",
-        "content": "回答内容...",
+        "content": "回答内容（前200字）",
         "answerer_name": "李四",
         "is_official": 0,
         "points_awarded": 10,
-        "is_useful": 0,
-        "like_count": 3,
-        "view_count": 5,
-        "favorite_count": 1,
+        "is_useful": 1,
+        "like_count": 5,
+        "view_count": 50,
+        "favorite_count": 2,
         "create_time": "2024-01-01T12:00:00",
         "favorite_time": "2024-01-01T13:00:00"
       }
@@ -732,92 +650,45 @@ curl -X GET "http://localhost:8000/api/questions/my-favorites?page=1&page_size=2
 }
 ```
 
----
+### 3.11 我收藏的问题
 
-### 4.11 我收藏的问题
-**接口**: `GET /api/questions/my-favorite`
+**接口地址**: `GET /api/questions/my-favorite`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**接口描述**: 获取当前用户收藏的问题列表
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/questions/my-favorite?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "items": [
-      {
-        "question_id": 1,
-        "title": "问题标题",
-        "content": "问题内容...",
-        "category": "求助类",
-        "status": 0,
-        "view_count": 10,
-        "like_count": 5,
-        "favorite_count": 3,
-        "answer_count": 2,
-        "create_time": "2024-01-01T10:00:00"
-      }
-    ]
-  }
-}
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**: 同"我的提问"
+
+### 3.12 邀请我的问题
+
+**接口地址**: `GET /api/questions/my-invited`
+
+**接口描述**: 获取邀请当前用户的问题列表（包括直接关联用户和关联用户所在部门的问题）
+
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**: 同"我的提问"
 
 ---
 
-### 4.12 邀请我的问题
-**接口**: `GET /api/questions/my-invited`
+## 4. 回答相关 (`/api/answers`)
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+### 4.1 回答问题或回复回答
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/questions/my-invited?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**接口地址**: `POST /api/answers/create`
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "items": [
-      {
-        "question_id": 1,
-        "title": "问题标题",
-        "content": "问题内容...",
-        "category": "求助类",
-        "is_anonymous": 0,
-        "asker_name": "张三",
-        "status": 0,
-        "view_count": 10,
-        "like_count": 5,
-        "favorite_count": 3,
-        "answer_count": 2,
-        "create_time": "2024-01-01T10:00:00"
-      }
-    ]
-  }
-}
-```
-
----
-
-## 5. 回答相关接口
-
-### 5.1 回答问题或回复回答
-**接口**: `POST /api/answers/create`
+**接口描述**: 回答问题或回复某个回答
 
 **请求体**:
 ```json
@@ -829,20 +700,14 @@ curl -X GET "http://localhost:8000/api/questions/my-invited?page=1&page_size=20"
 }
 ```
 
-**说明**: `parent_answer_id` 为空表示直接回答问题，有值表示回复某个回答
+**字段说明**:
+- `question_id`: 问题ID（必需）
+- `parent_answer_id`: 父回答ID，为空表示直接回答问题，有值表示回复某个回答（可选）
+- `content`: 回答内容（必需）
+- `images`: 图片URL列表（可选）
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/answers/create" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "question_id": 1,
-    "parent_answer_id": null,
-    "content": "回答内容",
-    "images": ["http://example.com/image1.jpg"]
-  }'
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -855,31 +720,29 @@ curl -X POST "http://localhost:8000/api/answers/create" \
 }
 ```
 
----
+### 4.2 修改回答
 
-### 5.2 修改回答
-**接口**: `PUT /api/answers/update/{answer_id}`
+**接口地址**: `PUT /api/answers/update/{answer_id}`
+
+**接口描述**: 修改已发布的回答（只能修改自己发布的回答）
 
 **路径参数**:
-- `answer_id` (int): 回答ID
+- `answer_id`: 回答ID
 
-**请求体** (所有字段可选):
+**请求体**:
 ```json
 {
-  "content": "新回答内容",
-  "images": ["http://example.com/image2.jpg"]
+  "content": "修改后的回答内容",
+  "images": ["http://example.com/image1.jpg"]
 }
 ```
 
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/answers/update/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "content": "新回答内容"
-  }'
-```
+**字段说明**:
+- `content`: 回答内容（可选）
+- `images`: 图片URL列表（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -892,23 +755,18 @@ curl -X PUT "http://localhost:8000/api/answers/update/1" \
 }
 ```
 
----
+### 4.3 获取问题的回答列表
 
-### 5.3 获取问题的回答列表
-**接口**: `GET /api/answers/list/question/{question_id}`
+**接口地址**: `GET /api/answers/list/question/{question_id}`
+
+**接口描述**: 获取指定问题的回答列表（包含嵌套回复）
 
 **路径参数**:
-- `question_id` (int): 问题ID
+- `question_id`: 问题ID
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认50
-
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/answers/list/question/1?page=1&page_size=50" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认50）
 
 **响应示例**:
 ```json
@@ -922,16 +780,17 @@ curl -X GET "http://localhost:8000/api/answers/list/question/1?page=1&page_size=
         "question_id": 1,
         "parent_answer_id": null,
         "content": "回答内容",
-        "images": [],
+        "images": ["http://example.com/image1.jpg"],
         "answerer_code": "002",
         "answerer_name": "李四",
-        "is_official": 0,
-        "is_pinned": 0,
+        "answerer_avatar": "http://example.com/avatar2.jpg",
+        "is_official": 1,
+        "is_pinned": 1,
         "points_awarded": 10,
-        "is_useful": 0,
-        "like_count": 3,
-        "view_count": 5,
-        "favorite_count": 1,
+        "is_useful": 1,
+        "like_count": 5,
+        "view_count": 50,
+        "favorite_count": 2,
         "create_time": "2024-01-01T12:00:00",
         "replies": [
           {
@@ -942,12 +801,13 @@ curl -X GET "http://localhost:8000/api/answers/list/question/1?page=1&page_size=
             "images": [],
             "answerer_code": "003",
             "answerer_name": "王五",
+            "answerer_avatar": "http://example.com/avatar3.jpg",
             "is_official": 0,
             "is_pinned": 0,
             "points_awarded": 0,
             "is_useful": 0,
-            "like_count": 1,
-            "view_count": 2,
+            "like_count": 2,
+            "view_count": 20,
             "favorite_count": 0,
             "create_time": "2024-01-01T13:00:00"
           }
@@ -958,60 +818,29 @@ curl -X GET "http://localhost:8000/api/answers/list/question/1?page=1&page_size=
 }
 ```
 
----
+### 4.4 获取回答详情
 
-### 5.4 获取回答详情
-**接口**: `GET /api/answers/detail/{answer_id}`
+**接口地址**: `GET /api/answers/detail/{answer_id}`
+
+**接口描述**: 获取回答的详细信息（包含回复列表）
 
 **路径参数**:
-- `answer_id` (int): 回答ID
+- `answer_id`: 回答ID
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/answers/detail/1" \
-  -H "gw_session: your_session_token_here"
-```
+**响应示例**: 同"获取问题的回答列表"中的单个回答对象
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "answer_id": 1,
-    "question_id": 1,
-    "parent_answer_id": null,
-    "question_title": "问题标题",
-    "content": "回答内容",
-    "images": [],
-    "answerer_code": "002",
-    "answerer_name": "李四",
-    "is_official": 0,
-    "is_pinned": 0,
-    "points_awarded": 10,
-    "is_useful": 0,
-    "like_count": 3,
-    "view_count": 5,
-    "create_time": "2024-01-01T12:00:00",
-    "replies": []
-  }
-}
-```
+### 4.5 我的被采纳回答
 
----
+**接口地址**: `GET /api/answers/my-useful`
 
-### 5.5 我的被采纳回答
-**接口**: `GET /api/answers/my-useful`
+**接口描述**: 获取当前用户被标记为有用的回答列表
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/answers/my-useful?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1024,12 +853,15 @@ curl -X GET "http://localhost:8000/api/answers/my-useful?page=1&page_size=20" \
         "answer_id": 1,
         "question_id": 1,
         "question_title": "问题标题",
-        "content": "回答内容...",
-        "points_awarded": 20,
+        "content": "回答内容（前200字）",
+        "answerer_code": "002",
+        "answerer_name": "李四",
+        "answerer_avatar": "http://example.com/avatar2.jpg",
+        "points_awarded": 10,
         "is_useful": 1,
-        "like_count": 3,
-        "view_count": 5,
-        "favorite_count": 1,
+        "like_count": 5,
+        "view_count": 50,
+        "favorite_count": 2,
         "create_time": "2024-01-01T12:00:00"
       }
     ]
@@ -1037,22 +869,17 @@ curl -X GET "http://localhost:8000/api/answers/my-useful?page=1&page_size=20" \
 }
 ```
 
----
+### 4.6 标记回答为有用
 
-### 5.6 标记回答为有用
-**接口**: `POST /api/answers/useful/{answer_id}`
+**接口地址**: `POST /api/answers/useful/{answer_id}`
+
+**接口描述**: 标记回答为有用（只有提问人可以操作）
 
 **路径参数**:
-- `answer_id` (int): 回答ID
+- `answer_id`: 回答ID
 
-**说明**: 只有提问人可以标记回答为有用
-
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/answers/useful/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1062,19 +889,17 @@ curl -X POST "http://localhost:8000/api/answers/useful/1" \
 }
 ```
 
----
+### 4.7 删除回答
 
-### 5.7 删除回答
-**接口**: `DELETE /api/answers/delete/{answer_id}`
+**接口地址**: `DELETE /api/answers/delete/{answer_id}`
+
+**接口描述**: 删除回答（只能删除自己发布的回答）
 
 **路径参数**:
-- `answer_id` (int): 回答ID
+- `answer_id`: 回答ID
 
-**curl示例**:
-```bash
-curl -X DELETE "http://localhost:8000/api/answers/delete/1" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1084,20 +909,17 @@ curl -X DELETE "http://localhost:8000/api/answers/delete/1" \
 }
 ```
 
----
+### 4.8 点赞/取消点赞回答
 
-### 5.8 点赞/取消点赞回答
-**接口**: `POST /api/answers/like/{answer_id}`
+**接口地址**: `POST /api/answers/like/{answer_id}`
+
+**接口描述**: 点赞或取消点赞回答（切换方式）
 
 **路径参数**:
-- `answer_id` (int): 回答ID
+- `answer_id`: 回答ID
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/answers/like/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1110,20 +932,17 @@ curl -X POST "http://localhost:8000/api/answers/like/1" \
 }
 ```
 
----
+### 4.9 收藏/取消收藏回答
 
-### 5.9 收藏/取消收藏回答
-**接口**: `POST /api/answers/favorite/{answer_id}`
+**接口地址**: `POST /api/answers/favorite/{answer_id}`
+
+**接口描述**: 收藏或取消收藏回答（切换方式）
 
 **路径参数**:
-- `answer_id` (int): 回答ID
+- `answer_id`: 回答ID
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/answers/favorite/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1136,109 +955,54 @@ curl -X POST "http://localhost:8000/api/answers/favorite/1" \
 }
 ```
 
----
+### 4.10 我的回答
 
-### 5.10 我的回答
-**接口**: `GET /api/answers/my`
+**接口地址**: `GET /api/answers/my`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**接口描述**: 获取当前用户发布的回答列表
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/answers/my?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "items": [
-      {
-        "answer_id": 1,
-        "question_id": 1,
-        "question_title": "问题标题",
-        "content": "回答内容...",
-        "points_awarded": 10,
-        "is_useful": 0,
-        "like_count": 3,
-        "view_count": 5,
-        "favorite_count": 1,
-        "create_time": "2024-01-01T12:00:00"
-      }
-    ]
-  }
-}
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
----
+**响应示例**: 同"我的被采纳回答"
 
-### 5.11 查看某个人的回答列表
-**接口**: `GET /api/answers/list/by-user/{target_user_code}`
+### 4.11 查看某个人的回答列表
+
+**接口地址**: `GET /api/answers/list/by-user/{target_user_code}`
+
+**接口描述**: 查看指定用户发布的回答列表
 
 **路径参数**:
-- `target_user_code` (string): 目标用户工号
+- `target_user_code`: 目标用户工号
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/answers/list/by-user/002?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "items": [
-      {
-        "answer_id": 1,
-        "question_id": 1,
-        "parent_answer_id": null,
-        "question_title": "问题标题",
-        "content": "回答内容...",
-        "images": [],
-        "answerer_code": "002",
-        "answerer_name": "李四",
-        "is_official": 0,
-        "is_pinned": 0,
-        "points_awarded": 10,
-        "is_useful": 0,
-        "like_count": 3,
-        "view_count": 5,
-        "favorite_count": 1,
-        "create_time": "2024-01-01T12:00:00"
-      }
-    ]
-  }
-}
-```
+**响应示例**: 同"我的被采纳回答"
 
 ---
 
-## 6. 话题相关接口
+## 5. 话题相关 (`/api/topics`)
 
-### 6.1 收藏/取消收藏话题
-**接口**: `POST /api/topics/favorite/{topic_id}`
+### 5.1 收藏/取消收藏话题
+
+**接口地址**: `POST /api/topics/favorite/{topic_id}`
+
+**接口描述**: 收藏或取消收藏话题（切换方式）
 
 **路径参数**:
-- `topic_id` (int): 话题ID
+- `topic_id`: 话题ID
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/topics/favorite/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1251,20 +1015,18 @@ curl -X POST "http://localhost:8000/api/topics/favorite/1" \
 }
 ```
 
----
+### 5.2 我收藏的话题列表
 
-### 6.2 我收藏的话题列表
-**接口**: `GET /api/topics/my-favorite`
+**接口地址**: `GET /api/topics/my-favorite`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**接口描述**: 获取当前用户收藏的话题列表
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/topics/my-favorite?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1286,20 +1048,15 @@ curl -X GET "http://localhost:8000/api/topics/my-favorite?page=1&page_size=20" \
 }
 ```
 
----
+### 5.3 获取话题列表
 
-### 6.3 获取话题列表
-**接口**: `GET /api/topics/list`
+**接口地址**: `GET /api/topics/list`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**接口描述**: 获取所有话题列表
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/topics/list?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
 
 **响应示例**:
 ```json
@@ -1321,19 +1078,27 @@ curl -X GET "http://localhost:8000/api/topics/list?page=1&page_size=20" \
 }
 ```
 
----
+### 5.4 搜索话题
 
-### 6.4 获取话题详情
-**接口**: `GET /api/topics/detail/{topic_id}`
+**接口地址**: `GET /api/topics/search`
+
+**接口描述**: 搜索话题（支持按标题和描述搜索）
+
+**查询参数**:
+- `keyword`: 关键词（必需）
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+
+**响应示例**: 同"获取话题列表"
+
+### 5.5 获取话题详情
+
+**接口地址**: `GET /api/topics/detail/{topic_id}`
+
+**接口描述**: 获取话题的详细信息
 
 **路径参数**:
-- `topic_id` (int): 话题ID
-
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/topics/detail/1" \
-  -H "gw_session: your_session_token_here"
-```
+- `topic_id`: 话题ID
 
 **响应示例**:
 ```json
@@ -1351,23 +1116,18 @@ curl -X GET "http://localhost:8000/api/topics/detail/1" \
 }
 ```
 
----
+### 5.6 获取话题下的问题列表
 
-### 6.5 获取话题下的问题列表
-**接口**: `GET /api/topics/questions/list/{topic_id}`
+**接口地址**: `GET /api/topics/questions/list/{topic_id}`
+
+**接口描述**: 获取指定话题下的问题列表
 
 **路径参数**:
-- `topic_id` (int): 话题ID
+- `topic_id`: 话题ID
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
-
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/topics/questions/list/1?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
 
 **响应示例**:
 ```json
@@ -1379,14 +1139,14 @@ curl -X GET "http://localhost:8000/api/topics/questions/list/1?page=1&page_size=
       {
         "question_id": 1,
         "title": "问题标题",
-        "content": "问题内容...",
+        "content": "问题内容（前200字）",
         "category": "求助类",
         "is_anonymous": 0,
         "asker_name": "张三",
         "status": 0,
-        "view_count": 10,
-        "like_count": 5,
-        "answer_count": 2,
+        "view_count": 100,
+        "like_count": 10,
+        "answer_count": 3,
         "create_time": "2024-01-01T10:00:00"
       }
     ]
@@ -1396,18 +1156,66 @@ curl -X GET "http://localhost:8000/api/topics/questions/list/1?page=1&page_size=
 
 ---
 
-## 7. 消息相关接口
+## 6. 部门相关 (`/api/department`)
+
+### 6.1 查询部门组织和人员
+
+**接口地址**: `GET /api/department/tree`
+
+**接口描述**: 查询部门组织和人员树形结构
+
+**查询参数**:
+- `dept_id`: 部门ID（可选，如果提供则只查询该部门及其人员）
+- `include_children`: 是否包括子部门（默认true）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "查询成功",
+  "data": {
+    "departments": [
+      {
+        "dept_id": 1,
+        "dept_code": "D001",
+        "dept_name": "技术部",
+        "full_name": "公司/技术部",
+        "parent_id": 0,
+        "is_anonymous_allowed": true,
+        "staffs": [
+          {
+            "staff_id": 1,
+            "staff_code": "001",
+            "name": "张三",
+            "job_title": "经理",
+            "is_virtual": false,
+            "is_anonymous_allowed": true
+          }
+        ],
+        "children": []
+      }
+    ],
+    "total_departments": 10,
+    "total_staffs": 100
+  }
+}
+```
+
+---
+
+## 7. 消息相关 (`/api/messages`)
 
 ### 7.1 消息汇总
-**接口**: `GET /api/messages/summary`
 
-**说明**: 获取个人消息、部门消息、系统消息的未读数量
+**接口地址**: `GET /api/messages/summary`
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/messages/summary" \
-  -H "gw_session: your_session_token_here"
-```
+**接口描述**: 获取消息汇总（未读数量）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1423,21 +1231,19 @@ curl -X GET "http://localhost:8000/api/messages/summary" \
 }
 ```
 
----
-
 ### 7.2 个人消息列表
-**接口**: `GET /api/messages/personal`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
-- `is_read` (int, 可选): 是否已读（0未读，1已读）
+**接口地址**: `GET /api/messages/personal`
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/messages/personal?page=1&page_size=20&is_read=0" \
-  -H "gw_session: your_session_token_here"
-```
+**接口描述**: 获取个人消息列表
+
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+- `is_read`: 是否已读，0未读，1已读（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1455,74 +1261,47 @@ curl -X GET "http://localhost:8000/api/messages/personal?page=1&page_size=20&is_
         "content": "消息内容",
         "target_type": "question",
         "target_id": 1,
-        "target_code": null,
+        "target_code": "001",
         "dept_id": null,
         "is_read": 0,
         "read_time": null,
-        "create_time": "2024-01-01T10:00:00"
+        "create_time": "2024-01-01T10:00:00",
+        "sender_name": "张三",
+        "sender_avatar": "http://example.com/avatar.jpg"
       }
     ]
   }
 }
 ```
-
----
 
 ### 7.3 部门消息列表
-**接口**: `GET /api/messages/department`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
-- `is_read` (int, 可选): 是否已读（0未读，1已读）
+**接口地址**: `GET /api/messages/department`
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/messages/department?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**接口描述**: 获取部门消息列表（用户所属部门的消息）
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 30,
-    "unread_count": 3,
-    "items": [
-      {
-        "message_id": 1,
-        "message_type": "department",
-        "title": "部门消息标题",
-        "content": "部门消息内容",
-        "target_type": "question",
-        "target_id": 1,
-        "target_code": null,
-        "dept_id": 1,
-        "is_read": 0,
-        "read_time": null,
-        "create_time": "2024-01-01T10:00:00"
-      }
-    ]
-  }
-}
-```
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+- `is_read`: 是否已读，0未读，1已读（可选）
 
----
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**: 同"个人消息列表"
 
 ### 7.4 系统消息列表
-**接口**: `GET /api/messages/system`
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**接口地址**: `GET /api/messages/system`
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/messages/system?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**接口描述**: 获取系统消息列表（全员消息）
+
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1547,19 +1326,14 @@ curl -X GET "http://localhost:8000/api/messages/system?page=1&page_size=20" \
 }
 ```
 
----
-
 ### 7.5 标记系统消息为已读
-**接口**: `POST /api/messages/system/read`
 
-**说明**: 更新用户最后查看系统消息的时间
+**接口地址**: `POST /api/messages/system/read`
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/messages/system/read" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+**接口描述**: 标记系统消息为已读（更新最后查看时间）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1568,21 +1342,18 @@ curl -X POST "http://localhost:8000/api/messages/system/read" \
   "message": "标记成功"
 }
 ```
-
----
 
 ### 7.6 标记消息为已读
-**接口**: `POST /api/messages/read/{message_id}`
+
+**接口地址**: `POST /api/messages/read/{message_id}`
+
+**接口描述**: 标记个人消息或部门消息为已读
 
 **路径参数**:
-- `message_id` (int): 消息ID
+- `message_id`: 消息ID
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/messages/read/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1592,51 +1363,40 @@ curl -X POST "http://localhost:8000/api/messages/read/1" \
 }
 ```
 
----
-
 ### 7.7 标记所有消息为已读
-**接口**: `POST /api/messages/read-all`
+
+**接口地址**: `POST /api/messages/read-all`
+
+**接口描述**: 标记所有消息为已读
 
 **查询参数**:
-- `message_type` (string, 可选): 消息类型（personal, department, system）
+- `message_type`: 消息类型，可选值：`personal`、`department`、`system`（可选，不传则标记所有类型）
 
-**curl示例**:
-```bash
-# 标记所有个人消息为已读
-curl -X POST "http://localhost:8000/api/messages/read-all?message_type=personal" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-
-# 标记所有消息为已读
-curl -X POST "http://localhost:8000/api/messages/read-all" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
 {
   "code": 200,
-  "message": "已标记5条消息为已读",
+  "message": "已标记10条消息为已读",
   "data": {
-    "count": 5
+    "count": 10
   }
 }
 ```
 
----
-
 ### 7.8 删除消息
-**接口**: `DELETE /api/messages/{message_id}`
+
+**接口地址**: `DELETE /api/messages/{message_id}`
+
+**接口描述**: 删除个人消息或部门消息
 
 **路径参数**:
-- `message_id` (int): 消息ID
+- `message_id`: 消息ID
 
-**curl示例**:
-```bash
-curl -X DELETE "http://localhost:8000/api/messages/1" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1648,164 +1408,30 @@ curl -X DELETE "http://localhost:8000/api/messages/1" \
 
 ---
 
-## 8. 文件上传相关接口
+## 8. 管理端 (`/api/admin`)
 
-### 8.1 上传单个文件
-**接口**: `POST /api/upload/file`
+### 8.1 内容管理
 
-**说明**: 上传单个文件到MinIO，支持图片、文档等格式，最大10MB
+#### 8.1.1 问题列表
 
-**请求**: multipart/form-data
+**接口地址**: `GET /api/admin/questions/list`
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/upload/file" \
-  -H "gw_session: your_session_token_here" \
-  -F "file=@/path/to/your/file.pdf"
-```
+**接口描述**: 内容管理-问题列表（包括匿名用户真实身份）
 
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "文件上传成功",
-  "data": {
-    "file_url": "http://10.162.248.179:3003/forum-files/2024/01/01/file.pdf",
-    "file_name": "file.pdf",
-    "file_size": 102400
-  }
-}
-```
+**权限要求**: 管理员（部门管理员或超级管理员）
 
----
+**查询参数**:
+- `category`: 问题分类，可选值：`求助类`、`建议类`、`吐槽类`（可选）
+- `status`: 问题状态，可选值：`待解决`、`已解决`、`未解决`、`已关闭`（可选）
+- `dept_id`: 部门ID（可选）
+- `keyword`: 关键词搜索（可选）
+- `start_time`: 开始时间（可选）
+- `end_time`: 结束时间（可选）
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
 
-### 8.2 上传多个文件
-**接口**: `POST /api/upload/files`
-
-**说明**: 上传多个文件，最多10个文件
-
-**请求**: multipart/form-data
-
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/upload/files" \
-  -H "gw_session: your_session_token_here" \
-  -F "files=@/path/to/file1.pdf" \
-  -F "files=@/path/to/file2.doc"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "成功上传 2 个文件",
-  "data": {
-    "files": [
-      {
-        "file_url": "http://10.162.248.179:3003/forum-files/2024/01/01/file1.pdf",
-        "file_name": "file1.pdf",
-        "file_size": 102400
-      },
-      {
-        "file_url": "http://10.162.248.179:3003/forum-files/2024/01/01/file2.doc",
-        "file_name": "file2.doc",
-        "file_size": 204800
-      }
-    ],
-    "success_count": 2,
-    "error_count": 0,
-    "errors": null
-  }
-}
-```
-
----
-
-### 8.3 上传单个图片
-**接口**: `POST /api/upload/image`
-
-**说明**: 专门用于问题/回答中的图片，只支持图片格式，最大5MB
-
-**请求**: multipart/form-data
-
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/upload/image" \
-  -H "gw_session: your_session_token_here" \
-  -F "file=@/path/to/your/image.jpg"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "图片上传成功",
-  "data": {
-    "image_url": "http://10.162.248.179:3003/forum-files/2024/01/01/image.jpg",
-    "file_name": "image.jpg",
-    "file_size": 51200
-  }
-}
-```
-
----
-
-### 8.4 上传多个图片
-**接口**: `POST /api/upload/images`
-
-**说明**: 专门用于问题/回答中的图片，最多上传9张图片
-
-**请求**: multipart/form-data
-
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/upload/images" \
-  -H "gw_session: your_session_token_here" \
-  -F "files=@/path/to/image1.jpg" \
-  -F "files=@/path/to/image2.png"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "成功上传 2 张图片",
-  "data": {
-    "image_urls": [
-      "http://10.162.248.179:3003/forum-files/2024/01/01/image1.jpg",
-      "http://10.162.248.179:3003/forum-files/2024/01/01/image2.png"
-    ],
-    "success_count": 2,
-    "error_count": 0,
-    "errors": null
-  }
-}
-```
-
----
-
-## 9. 管理端相关接口
-
-### 9.1 内容管理-问题列表
-**接口**: `GET /api/admin/questions/list`
-
-**说明**: 管理员查看问题列表（包括匿名用户真实身份）
-
-**参数**:
-- `category` (string, 可选): 问题分类
-- `status` (int, 可选): 状态
-- `dept_id` (int, 可选): 部门ID
-- `keyword` (string, 可选): 关键词
-- `start_time` (datetime, 可选): 开始时间
-- `end_time` (datetime, 可选): 结束时间
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
-
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/admin/questions/list?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1831,23 +1457,23 @@ curl -X GET "http://localhost:8000/api/admin/questions/list?page=1&page_size=20"
         "related_staffs": [
           {
             "staff_id": 1,
-            "staff_code": "002",
-            "staff_name": "李四"
+            "staff_code": "001",
+            "staff_name": "张三"
           }
         ],
         "status": 0,
         "is_featured": 0,
         "is_offline": 0,
-        "view_count": 10,
-        "like_count": 5,
-        "answer_count": 2,
+        "view_count": 100,
+        "like_count": 10,
+        "answer_count": 3,
         "create_time": "2024-01-01T10:00:00",
         "deadline": "2024-01-04T10:00:00",
-        "days_remaining": 2,
+        "days_remaining": 3,
         "topics": [
           {
             "topic_id": 1,
-            "title": "话题1"
+            "title": "话题标题"
           }
         ]
       }
@@ -1856,22 +1482,22 @@ curl -X GET "http://localhost:8000/api/admin/questions/list?page=1&page_size=20"
 }
 ```
 
----
+#### 8.1.2 标记精选
 
-### 9.2 标记精选
-**接口**: `PUT /api/admin/questions/mark-featured/{question_id}`
+**接口地址**: `PUT /api/admin/questions/mark-featured/{question_id}`
+
+**接口描述**: 标记问题为精选或取消精选
+
+**权限要求**: 管理员
 
 **路径参数**:
-- `question_id` (int): 问题ID
+- `question_id`: 问题ID
 
 **查询参数**:
-- `is_featured` (int): 是否精选（0否，1是）
+- `is_featured`: 是否精选，0否，1是
 
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/admin/questions/mark-featured/1?is_featured=1" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1881,19 +1507,19 @@ curl -X PUT "http://localhost:8000/api/admin/questions/mark-featured/1?is_featur
 }
 ```
 
----
+#### 8.1.3 删除问题
 
-### 9.3 删除问题
-**接口**: `DELETE /api/admin/questions/delete/{question_id}`
+**接口地址**: `DELETE /api/admin/questions/delete/{question_id}`
+
+**接口描述**: 删除问题
+
+**权限要求**: 管理员
 
 **路径参数**:
-- `question_id` (int): 问题ID
+- `question_id`: 问题ID
 
-**curl示例**:
-```bash
-curl -X DELETE "http://localhost:8000/api/admin/questions/delete/1" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1903,44 +1529,22 @@ curl -X DELETE "http://localhost:8000/api/admin/questions/delete/1" \
 }
 ```
 
----
+#### 8.1.4 问题下线/上线
 
-### 9.4 删除回答
-**接口**: `DELETE /api/admin/answers/delete/{answer_id}`
+**接口地址**: `PUT /api/admin/questions/offline/{question_id}`
 
-**路径参数**:
-- `answer_id` (int): 回答ID
+**接口描述**: 问题下线或上线
 
-**curl示例**:
-```bash
-curl -X DELETE "http://localhost:8000/api/admin/answers/delete/1" \
-  -H "gw_session: your_session_token_here"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "删除成功"
-}
-```
-
----
-
-### 9.5 问题下线/上线
-**接口**: `PUT /api/admin/questions/offline/{question_id}`
+**权限要求**: 管理员
 
 **路径参数**:
-- `question_id` (int): 问题ID
+- `question_id`: 问题ID
 
 **查询参数**:
-- `is_offline` (int): 是否下线（0上线，1下线）
+- `is_offline`: 是否下线，0上线，1下线
 
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/admin/questions/offline/1?is_offline=1" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1950,15 +1554,16 @@ curl -X PUT "http://localhost:8000/api/admin/questions/offline/1?is_offline=1" \
 }
 ```
 
----
+#### 8.1.5 人力转办
 
-### 9.6 人力转办
-**接口**: `POST /api/admin/questions/transfer/{question_id}`
+**接口地址**: `POST /api/admin/questions/transfer/{question_id}`
 
-**说明**: 仅超级管理员可以操作，转办问题到多个部门
+**接口描述**: 人力转办问题到多个部门（仅超级管理员）
+
+**权限要求**: 超级管理员
 
 **路径参数**:
-- `question_id` (int): 问题ID
+- `question_id`: 问题ID
 
 **请求体**:
 ```json
@@ -1968,16 +1573,12 @@ curl -X PUT "http://localhost:8000/api/admin/questions/offline/1?is_offline=1" \
 }
 ```
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/admin/questions/transfer/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "dept_ids": [1, 2],
-    "topic_ids": [1, 2]
-  }'
-```
+**字段说明**:
+- `dept_ids`: 转办部门ID列表（必需）
+- `topic_ids`: 话题ID列表（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -1987,10 +1588,37 @@ curl -X POST "http://localhost:8000/api/admin/questions/transfer/1" \
 }
 ```
 
----
+#### 8.1.6 删除回答
 
-### 9.7 创建话题
-**接口**: `POST /api/admin/topics/create`
+**接口地址**: `DELETE /api/admin/answers/delete/{answer_id}`
+
+**接口描述**: 删除回答
+
+**权限要求**: 管理员
+
+**路径参数**:
+- `answer_id`: 回答ID
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "删除成功"
+}
+```
+
+### 8.2 话题管理
+
+#### 8.2.1 创建话题
+
+**接口地址**: `POST /api/admin/topics/create`
+
+**接口描述**: 创建新话题
+
+**权限要求**: 管理员
 
 **请求体**:
 ```json
@@ -2001,17 +1629,13 @@ curl -X POST "http://localhost:8000/api/admin/questions/transfer/1" \
 }
 ```
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/admin/topics/create" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "话题标题",
-    "description": "话题描述",
-    "cover_image": "http://example.com/cover.jpg"
-  }'
-```
+**字段说明**:
+- `title`: 话题标题（必需）
+- `description`: 话题描述（可选）
+- `cover_image`: 封面图片URL（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2024,34 +1648,21 @@ curl -X POST "http://localhost:8000/api/admin/topics/create" \
 }
 ```
 
----
+#### 8.2.2 更新话题
 
-### 9.8 更新话题
-**接口**: `PUT /api/admin/topics/update/{topic_id}`
+**接口地址**: `PUT /api/admin/topics/update/{topic_id}`
+
+**接口描述**: 更新话题信息
+
+**权限要求**: 管理员
 
 **路径参数**:
-- `topic_id` (int): 话题ID
+- `topic_id`: 话题ID
 
-**请求体** (所有字段可选):
-```json
-{
-  "title": "新标题",
-  "description": "新描述",
-  "cover_image": "http://example.com/new_cover.jpg",
-  "status": 1
-}
-```
+**请求体**: 同创建话题，所有字段可选
 
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/admin/topics/update/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "新标题",
-    "description": "新描述"
-  }'
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2061,15 +1672,20 @@ curl -X PUT "http://localhost:8000/api/admin/topics/update/1" \
 }
 ```
 
----
+### 8.3 奖励规则管理
 
-### 9.9 创建奖励规则
-**接口**: `POST /api/admin/reward-rules/create`
+#### 8.3.1 创建奖励规则
+
+**接口地址**: `POST /api/admin/reward-rules/create`
+
+**接口描述**: 创建新的奖励规则
+
+**权限要求**: 管理员
 
 **请求体**:
 ```json
 {
-  "rule_name": "发布问题奖励",
+  "rule_name": "发布问题",
   "rule_code": "question",
   "points": 30,
   "rule_description": "发布问题奖励30积分",
@@ -2079,21 +1695,15 @@ curl -X PUT "http://localhost:8000/api/admin/topics/update/1" \
 }
 ```
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/admin/reward-rules/create" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "rule_name": "发布问题奖励",
-    "rule_code": "question",
-    "points": 30,
-    "rule_description": "发布问题奖励30积分",
-    "conditions": {
-      "min_length": 10
-    }
-  }'
-```
+**字段说明**:
+- `rule_name`: 规则名称（必需）
+- `rule_code`: 规则代码，可选值：`question`、`answer`、`useful_answer`、`sign_in`、`inappropriate_comment`等（必需）
+- `points`: 积分值，正数表示加分，负数表示减分（必需）
+- `rule_description`: 规则描述（可选）
+- `conditions`: 条件配置（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2106,21 +1716,21 @@ curl -X POST "http://localhost:8000/api/admin/reward-rules/create" \
 }
 ```
 
----
+#### 8.3.2 获取奖励规则列表
 
-### 9.10 获取奖励规则列表
-**接口**: `GET /api/admin/reward-rules/list`
+**接口地址**: `GET /api/admin/reward-rules/list`
 
-**参数**:
-- `status` (int, 可选): 状态
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认50
+**接口描述**: 获取奖励规则列表
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/admin/reward-rules/list?page=1&page_size=50" \
-  -H "gw_session: your_session_token_here"
-```
+**权限要求**: 管理员
+
+**查询参数**:
+- `status`: 状态，0禁用，1启用（可选）
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认50）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2131,7 +1741,7 @@ curl -X GET "http://localhost:8000/api/admin/reward-rules/list?page=1&page_size=
     "items": [
       {
         "rule_id": 1,
-        "rule_name": "发布问题奖励",
+        "rule_name": "发布问题",
         "rule_code": "question",
         "points": 30,
         "rule_description": "发布问题奖励30积分",
@@ -2147,15 +1757,18 @@ curl -X GET "http://localhost:8000/api/admin/reward-rules/list?page=1&page_size=
 }
 ```
 
----
+#### 8.3.3 更新奖励规则
 
-### 9.11 更新奖励规则
-**接口**: `PUT /api/admin/reward-rules/update/{rule_id}`
+**接口地址**: `PUT /api/admin/reward-rules/update/{rule_id}`
+
+**接口描述**: 更新奖励规则（只允许修改积分值和积分描述）
+
+**权限要求**: 管理员
 
 **路径参数**:
-- `rule_id` (int): 规则ID
+- `rule_id`: 规则ID
 
-**请求体** (只允许修改points和rule_description):
+**请求体**:
 ```json
 {
   "points": 50,
@@ -2163,16 +1776,12 @@ curl -X GET "http://localhost:8000/api/admin/reward-rules/list?page=1&page_size=
 }
 ```
 
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/admin/reward-rules/update/1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "points": 50,
-    "rule_description": "发布问题奖励50积分"
-  }'
-```
+**字段说明**:
+- `points`: 积分值（可选）
+- `rule_description`: 规则描述（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2182,19 +1791,19 @@ curl -X PUT "http://localhost:8000/api/admin/reward-rules/update/1" \
 }
 ```
 
----
+#### 8.3.4 删除奖励规则
 
-### 9.12 删除奖励规则
-**接口**: `DELETE /api/admin/reward-rules/delete/{rule_id}`
+**接口地址**: `DELETE /api/admin/reward-rules/delete/{rule_id}`
+
+**接口描述**: 删除奖励规则
+
+**权限要求**: 管理员
 
 **路径参数**:
-- `rule_id` (int): 规则ID
+- `rule_id`: 规则ID
 
-**curl示例**:
-```bash
-curl -X DELETE "http://localhost:8000/api/admin/reward-rules/delete/1" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2204,23 +1813,25 @@ curl -X DELETE "http://localhost:8000/api/admin/reward-rules/delete/1" \
 }
 ```
 
----
+### 8.4 用户管理
 
-### 9.13 用户列表
-**接口**: `GET /api/admin/staffs/list`
+#### 8.4.1 用户列表
 
-**参数**:
-- `dept_id` (int, 可选): 部门ID
-- `forum_tag` (string, 可选): 论坛标签
-- `keyword` (string, 可选): 关键词（工号或姓名）
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认20
+**接口地址**: `GET /api/admin/staffs/list`
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/admin/staffs/list?page=1&page_size=20" \
-  -H "gw_session: your_session_token_here"
-```
+**接口描述**: 获取用户列表
+
+**权限要求**: 管理员
+
+**查询参数**:
+- `dept_id`: 部门ID（可选）
+- `forum_tag`: 用户标签（可选）
+- `keyword`: 关键词搜索（工号或姓名，可选）
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认20）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2246,12 +1857,13 @@ curl -X GET "http://localhost:8000/api/admin/staffs/list?page=1&page_size=20" \
         "forum_tag": "普通用户",
         "is_forbidden": 0,
         "role": 0,
+        "total_points": 500,
         "departments": [
           {
             "dept_id": 1,
-            "dept_code": "TECH",
+            "dept_code": "D001",
             "dept_name": "技术部",
-            "full_name": "技术部"
+            "full_name": "公司/技术部"
           }
         ],
         "create_time": "2024-01-01T10:00:00"
@@ -2264,196 +1876,22 @@ curl -X GET "http://localhost:8000/api/admin/staffs/list?page=1&page_size=20" \
 }
 ```
 
----
+#### 8.4.2 禁用/取消禁用员工
 
-### 9.14 操作日志
-**接口**: `GET /api/admin/logs/list`
+**接口地址**: `PUT /api/admin/staffs/forbidden/{staff_code}`
 
-**参数**:
-- `user_code` (string, 可选): 用户工号
-- `operation_type` (string, 可选): 操作类型
-- `start_time` (datetime, 可选): 开始时间
-- `end_time` (datetime, 可选): 结束时间
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认100
+**接口描述**: 禁用或取消禁用员工（只有超级管理员可以操作）
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/admin/logs/list?page=1&page_size=100" \
-  -H "gw_session: your_session_token_here"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "items": [
-      {
-        "log_id": 1,
-        "user_code": "001",
-        "user_name": "张三",
-        "operation_type": "question_delete",
-        "target_type": "question",
-        "target_id": 1,
-        "content": "删除问题：问题标题",
-        "ip_address": "192.168.1.1",
-        "user_agent": "Mozilla/5.0...",
-        "create_time": "2024-01-01T10:00:00"
-      }
-    ]
-  }
-}
-```
-
----
-
-### 9.15 查看操作记录详情
-**接口**: `GET /api/admin/logs/{log_id}`
+**权限要求**: 超级管理员
 
 **路径参数**:
-- `log_id` (int): 日志ID
-
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/admin/logs/1" \
-  -H "gw_session: your_session_token_here"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "log_id": 1,
-    "user_code": "001",
-    "user_name": "张三",
-    "operation_type": "question_delete",
-    "target_type": "question",
-    "target_id": 1,
-    "content": "删除问题：问题标题",
-    "ip_address": "192.168.1.1",
-    "user_agent": "Mozilla/5.0...",
-    "create_time": "2024-01-01T10:00:00"
-  }
-}
-```
-
----
-
-### 9.16 添加部门管理员
-**接口**: `POST /api/admin/dept-admins`
-
-**说明**: 仅超级管理员可以操作
+- `staff_code`: 员工工号
 
 **查询参数**:
-- `staff_code` (string): 员工工号
-- `dept_id` (int): 部门ID
+- `is_forbidden`: 是否禁用，0取消禁用，1禁用
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/admin/dept-admins?staff_code=002&dept_id=1" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "id": 1,
-    "staff_code": "002",
-    "dept_id": 1
-  }
-}
-```
-
----
-
-### 9.17 获取部门管理员列表
-**接口**: `GET /api/admin/dept-admins`
-
-**说明**: 仅超级管理员可以查看
-
-**参数**:
-- `dept_id` (int, 可选): 部门ID
-- `staff_code` (string, 可选): 员工工号
-
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/admin/dept-admins?dept_id=1" \
-  -H "gw_session: your_session_token_here"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "items": [
-      {
-        "id": 1,
-        "staff_code": "002",
-        "staff_name": "李四",
-        "dept_id": 1,
-        "dept_name": "技术部",
-        "status": 1,
-        "create_time": "2024-01-01T10:00:00",
-        "update_time": "2024-01-01T10:00:00"
-      }
-    ]
-  }
-}
-```
-
----
-
-### 9.18 删除部门管理员
-**接口**: `DELETE /api/admin/dept-admins`
-
-**说明**: 仅超级管理员可以操作
-
-**查询参数**:
-- `staff_code` (string): 员工工号
-- `dept_id` (int): 部门ID
-
-**curl示例**:
-```bash
-curl -X DELETE "http://localhost:8000/api/admin/dept-admins?staff_code=002&dept_id=1" \
-  -H "gw_session: your_session_token_here"
-```
-
-**响应示例**:
-```json
-{
-  "code": 200,
-  "message": "删除成功"
-}
-```
-
----
-
-### 9.19 禁用/取消禁用员工
-**接口**: `PUT /api/admin/staffs/forbidden/{staff_code}`
-
-**说明**: 仅超级管理员可以操作
-
-**路径参数**:
-- `staff_code` (string): 员工工号
-
-**查询参数**:
-- `is_forbidden` (int): 是否禁用（0取消禁用，1禁用）
-
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/admin/staffs/forbidden/002?is_forbidden=1" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2463,53 +1901,52 @@ curl -X PUT "http://localhost:8000/api/admin/staffs/forbidden/002?is_forbidden=1
 }
 ```
 
----
+#### 8.4.3 修改用户标签
 
-### 9.20 取消/恢复部门管理员权限
-**接口**: `PUT /api/admin/dept-admins/status/{staff_code}`
+**接口地址**: `PUT /api/admin/staffs/forum-tag/{staff_code}`
 
-**说明**: 仅超级管理员可以操作
+**接口描述**: 修改用户标签（只有超级管理员可以操作）
+
+**权限要求**: 超级管理员
 
 **路径参数**:
-- `staff_code` (string): 员工工号
+- `staff_code`: 员工工号
 
 **查询参数**:
-- `dept_id` (int): 部门ID
-- `status` (int): 状态（0取消权限，1恢复权限）
+- `forum_tag`: 新的标签值，如 `普通用户`、`专家` 等
 
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/admin/dept-admins/status/002?dept_id=1&status=0" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
 {
   "code": 200,
-  "message": "取消权限成功"
+  "message": "修改成功",
+  "data": {
+    "staff_code": "001",
+    "forum_tag": "专家"
+  }
 }
 ```
 
----
+#### 8.4.4 查看员工积分
 
-### 9.21 查看员工积分
-**接口**: `GET /api/admin/staffs/points/{staff_code}`
+**接口地址**: `GET /api/admin/staffs/points/{staff_code}`
 
-**说明**: 仅超级管理员可以操作
+**接口描述**: 查看员工积分（只有超级管理员可以操作）
+
+**权限要求**: 超级管理员
 
 **路径参数**:
-- `staff_code` (string): 员工工号
+- `staff_code`: 员工工号
 
-**参数**:
-- `page` (int, 可选): 页码，默认1
-- `page_size` (int, 可选): 每页大小，默认50
+**查询参数**:
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认50）
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/admin/staffs/points/002?page=1&page_size=50" \
-  -H "gw_session: your_session_token_here"
-```
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2517,9 +1954,9 @@ curl -X GET "http://localhost:8000/api/admin/staffs/points/002?page=1&page_size=
   "code": 200,
   "message": "success",
   "data": {
-    "staff_code": "002",
-    "staff_name": "李四",
-    "total_points": 150,
+    "staff_code": "001",
+    "staff_name": "张三",
+    "total_points": 500,
     "items": [
       {
         "record_id": 1,
@@ -2537,25 +1974,31 @@ curl -X GET "http://localhost:8000/api/admin/staffs/points/002?page=1&page_size=
 }
 ```
 
----
+#### 8.4.5 调整员工积分
 
-### 9.22 调整员工积分
-**接口**: `PUT /api/admin/staffs/points/{staff_code}`
+**接口地址**: `PUT /api/admin/staffs/points/{staff_code}`
 
-**说明**: 仅超级管理员可以操作
+**接口描述**: 调整员工积分（只有超级管理员可以操作）
+
+**权限要求**: 超级管理员
 
 **路径参数**:
-- `staff_code` (string): 员工工号
+- `staff_code`: 员工工号
 
-**查询参数**:
-- `current_points` (int): 当前积分
-- `new_points` (int): 调整后的积分
-
-**curl示例**:
-```bash
-curl -X PUT "http://localhost:8000/api/admin/staffs/points/002?current_points=150&new_points=200" \
-  -H "gw_session: your_session_token_here"
+**请求体**:
+```json
+{
+  "current_points": 500,
+  "new_points": 600
+}
 ```
+
+**字段说明**:
+- `current_points`: 当前积分（必需）
+- `new_points`: 调整后的积分（必需）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2563,30 +2006,94 @@ curl -X PUT "http://localhost:8000/api/admin/staffs/points/002?current_points=15
   "code": 200,
   "message": "调整成功",
   "data": {
-    "staff_code": "002",
-    "current_points": 150,
-    "new_points": 200,
-    "points_diff": 50
+    "staff_code": "001",
+    "current_points": 500,
+    "new_points": 600,
+    "points_diff": 100
   }
 }
 ```
 
----
+### 8.5 操作日志
 
-### 9.23 添加超级管理员
-**接口**: `POST /api/admin/super-admins`
+#### 8.5.1 操作日志列表
 
-**说明**: 仅超级管理员可以操作
+**接口地址**: `GET /api/admin/logs/list`
+
+**接口描述**: 获取操作日志列表
+
+**权限要求**: 管理员
 
 **查询参数**:
-- `staff_code` (string): 员工工号
+- `user_code`: 用户工号（可选）
+- `operation_type`: 操作类型（可选）
+- `start_time`: 开始时间（可选）
+- `end_time`: 结束时间（可选）
+- `page`: 页码（默认1）
+- `page_size`: 每页大小（默认100）
 
-**curl示例**:
-```bash
-curl -X POST "http://localhost:8000/api/admin/super-admins?staff_code=003" \
-  -H "gw_session: your_session_token_here" \
-  -H "Content-Type: application/json"
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "log_id": 1,
+        "user_code": "001",
+        "user_name": "张三",
+        "operation_type": "question_create",
+        "target_type": "question",
+        "target_id": 1,
+        "content": "发布问题",
+        "ip_address": "192.168.1.1",
+        "user_agent": "Mozilla/5.0",
+        "create_time": "2024-01-01T10:00:00"
+      }
+    ],
+    "total": 1000,
+    "page": 1,
+    "page_size": 100
+  }
+}
 ```
+
+#### 8.5.2 查看操作记录详情
+
+**接口地址**: `GET /api/admin/logs/{log_id}`
+
+**接口描述**: 查看操作记录详情
+
+**权限要求**: 管理员
+
+**路径参数**:
+- `log_id`: 日志ID
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**: 同"操作日志列表"中的单个日志对象
+
+### 8.6 部门管理员管理
+
+#### 8.6.1 添加部门管理员
+
+**接口地址**: `POST /api/admin/dept-admins`
+
+**接口描述**: 添加部门管理员（只有超级管理员可以操作）
+
+**权限要求**: 超级管理员
+
+**查询参数**:
+- `staff_code`: 员工工号
+- `dept_id`: 部门ID
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2595,26 +2102,26 @@ curl -X POST "http://localhost:8000/api/admin/super-admins?staff_code=003" \
   "message": "success",
   "data": {
     "id": 1,
-    "staff_code": "003"
+    "staff_code": "001",
+    "dept_id": 1
   }
 }
 ```
 
----
+#### 8.6.2 获取部门管理员列表
 
-### 9.24 获取超级管理员列表
-**接口**: `GET /api/admin/super-admins`
+**接口地址**: `GET /api/admin/dept-admins`
 
-**说明**: 仅超级管理员可以查看
+**接口描述**: 获取部门管理员列表（只有超级管理员可以查看）
 
-**参数**:
-- `status` (int, 可选): 状态
+**权限要求**: 超级管理员
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/admin/super-admins" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `dept_id`: 部门ID（可选）
+- `staff_code`: 员工工号（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2625,8 +2132,10 @@ curl -X GET "http://localhost:8000/api/admin/super-admins" \
     "items": [
       {
         "id": 1,
-        "staff_code": "003",
-        "staff_name": "王五",
+        "staff_code": "001",
+        "staff_name": "张三",
+        "dept_id": 1,
+        "dept_name": "技术部",
         "status": 1,
         "create_time": "2024-01-01T10:00:00",
         "update_time": "2024-01-01T10:00:00"
@@ -2636,21 +2145,20 @@ curl -X GET "http://localhost:8000/api/admin/super-admins" \
 }
 ```
 
----
+#### 8.6.3 删除部门管理员
 
-### 9.25 删除超级管理员
-**接口**: `DELETE /api/admin/super-admins/{staff_code}`
+**接口地址**: `DELETE /api/admin/dept-admins`
 
-**说明**: 仅超级管理员可以操作，不能删除自己
+**接口描述**: 删除部门管理员（只有超级管理员可以操作）
 
-**路径参数**:
-- `staff_code` (string): 员工工号
+**权限要求**: 超级管理员
 
-**curl示例**:
-```bash
-curl -X DELETE "http://localhost:8000/api/admin/super-admins/003" \
-  -H "gw_session: your_session_token_here"
-```
+**查询参数**:
+- `staff_code`: 员工工号
+- `dept_id`: 部门ID
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2660,26 +2168,132 @@ curl -X DELETE "http://localhost:8000/api/admin/super-admins/003" \
 }
 ```
 
----
+#### 8.6.4 取消/恢复部门管理员权限
 
-### 9.26 Dashboard
-**接口**: `GET /api/admin/dashboard`
+**接口地址**: `PUT /api/admin/dept-admins/status/{staff_code}`
 
-**说明**: Dashboard统计（支持时间段筛选）
+**接口描述**: 取消或恢复部门管理员权限（只有超级管理员可以操作）
 
-**参数**:
-- `start_time` (datetime, 可选): 开始时间
-- `end_time` (datetime, 可选): 结束时间
+**权限要求**: 超级管理员
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/api/admin/dashboard" \
-  -H "gw_session: your_session_token_here"
+**路径参数**:
+- `staff_code`: 员工工号
 
-# 带时间筛选
-curl -X GET "http://localhost:8000/api/admin/dashboard?start_time=2024-01-01T00:00:00&end_time=2024-01-31T23:59:59" \
-  -H "gw_session: your_session_token_here"
+**查询参数**:
+- `dept_id`: 部门ID
+- `status`: 状态，0取消权限，1恢复权限
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "取消权限成功"
+}
 ```
+
+### 8.7 超级管理员管理
+
+#### 8.7.1 添加超级管理员
+
+**接口地址**: `POST /api/admin/super-admins`
+
+**接口描述**: 添加超级管理员（只有超级管理员可以操作）
+
+**权限要求**: 超级管理员
+
+**查询参数**:
+- `staff_code`: 员工工号
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "id": 1,
+    "staff_code": "001"
+  }
+}
+```
+
+#### 8.7.2 获取超级管理员列表
+
+**接口地址**: `GET /api/admin/super-admins`
+
+**接口描述**: 获取超级管理员列表（只有超级管理员可以查看）
+
+**权限要求**: 超级管理员
+
+**查询参数**:
+- `status`: 状态，0禁用，1启用（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "staff_code": "001",
+        "staff_name": "张三",
+        "status": 1,
+        "create_time": "2024-01-01T10:00:00",
+        "update_time": "2024-01-01T10:00:00"
+      }
+    ]
+  }
+}
+```
+
+#### 8.7.3 删除超级管理员
+
+**接口地址**: `DELETE /api/admin/super-admins/{staff_code}`
+
+**接口描述**: 删除超级管理员（只有超级管理员可以操作，不能删除自己）
+
+**权限要求**: 超级管理员
+
+**路径参数**:
+- `staff_code`: 员工工号
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "删除成功"
+}
+```
+
+### 8.8 Dashboard
+
+#### 8.8.1 Dashboard统计
+
+**接口地址**: `GET /api/admin/dashboard`
+
+**接口描述**: Dashboard统计（支持时间段筛选）
+
+**权限要求**: 管理员
+
+**查询参数**:
+- `start_time`: 开始时间（可选）
+- `end_time`: 结束时间（可选）
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
 
 **响应示例**:
 ```json
@@ -2698,8 +2312,8 @@ curl -X GET "http://localhost:8000/api/admin/dashboard?start_time=2024-01-01T00:
         "total_count": 50,
         "reply_count": 40,
         "reply_rate": 80.0,
-        "resolved_count": 35,
-        "resolution_rate": 70.0,
+        "resolved_count": 30,
+        "resolution_rate": 60.0,
         "timeout_count": 5,
         "avg_reply_time": 2.5
       }
@@ -2707,7 +2321,7 @@ curl -X GET "http://localhost:8000/api/admin/dashboard?start_time=2024-01-01T00:
     "topic_ranking": [
       {
         "topic_id": 1,
-        "title": "话题1",
+        "title": "话题标题",
         "popularity": 100
       }
     ]
@@ -2717,15 +2331,152 @@ curl -X GET "http://localhost:8000/api/admin/dashboard?start_time=2024-01-01T00:
 
 ---
 
+## 9. 文件上传 (`/api/upload`)
+
+### 9.1 上传单个文件
+
+**接口地址**: `POST /api/upload/file`
+
+**接口描述**: 上传单个文件到MinIO
+
+**支持的文件类型**:
+- 图片：jpg, jpeg, png, gif, webp, bmp
+- 文档：pdf, doc, docx, xls, xlsx, ppt, pptx
+- 文本：txt, md
+
+**文件大小限制**: 最大10MB
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+- `Content-Type`: multipart/form-data
+
+**请求体**: FormData
+- `file`: 文件（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "文件上传成功",
+  "data": {
+    "file_url": "http://example.com/files/xxx.jpg",
+    "file_name": "test.jpg",
+    "file_size": 102400
+  }
+}
+```
+
+### 9.2 上传多个文件
+
+**接口地址**: `POST /api/upload/files`
+
+**接口描述**: 上传多个文件到MinIO
+
+**限制**: 最多上传10个文件
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+- `Content-Type`: multipart/form-data
+
+**请求体**: FormData
+- `files`: 文件列表（必需，多个文件）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "成功上传 2 个文件",
+  "data": {
+    "files": [
+      {
+        "file_url": "http://example.com/files/xxx1.jpg",
+        "file_name": "test1.jpg",
+        "file_size": 102400
+      },
+      {
+        "file_url": "http://example.com/files/xxx2.jpg",
+        "file_name": "test2.jpg",
+        "file_size": 204800
+      }
+    ],
+    "success_count": 2,
+    "error_count": 0,
+    "errors": null
+  }
+}
+```
+
+### 9.3 上传单个图片
+
+**接口地址**: `POST /api/upload/image`
+
+**接口描述**: 上传单个图片文件（专门用于问题/回答中的图片）
+
+**支持的文件类型**: jpg, jpeg, png, gif, webp, bmp
+
+**文件大小限制**: 最大5MB
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+- `Content-Type`: multipart/form-data
+
+**请求体**: FormData
+- `file`: 图片文件（必需）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "图片上传成功",
+  "data": {
+    "image_url": "http://example.com/images/xxx.jpg",
+    "file_name": "test.jpg",
+    "file_size": 102400
+  }
+}
+```
+
+### 9.4 上传多个图片
+
+**接口地址**: `POST /api/upload/images`
+
+**接口描述**: 上传多个图片文件（专门用于问题/回答中的图片）
+
+**限制**: 最多上传9张图片
+
+**请求头**:
+- `gw_session`: SSO会话标识（必需）
+- `Content-Type`: multipart/form-data
+
+**请求体**: FormData
+- `files`: 图片文件列表（必需，多个文件）
+
+**响应示例**:
+```json
+{
+  "code": 200,
+  "message": "成功上传 2 张图片",
+  "data": {
+    "image_urls": [
+      "http://example.com/images/xxx1.jpg",
+      "http://example.com/images/xxx2.jpg"
+    ],
+    "success_count": 2,
+    "error_count": 0,
+    "errors": null
+  }
+}
+```
+
+---
+
 ## 10. 根路径和健康检查
 
 ### 10.1 根路径
-**接口**: `GET /`
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/"
-```
+**接口地址**: `GET /`
+
+**接口描述**: 根路径，返回API基本信息
 
 **响应示例**:
 ```json
@@ -2736,15 +2487,11 @@ curl -X GET "http://localhost:8000/"
 }
 ```
 
----
-
 ### 10.2 健康检查
-**接口**: `GET /health`
 
-**curl示例**:
-```bash
-curl -X GET "http://localhost:8000/health"
-```
+**接口地址**: `GET /health`
+
+**接口描述**: 健康检查接口
 
 **响应示例**:
 ```json
@@ -2755,20 +2502,33 @@ curl -X GET "http://localhost:8000/health"
 
 ---
 
-## 注意事项
-
-1. **认证**: 所有需要认证的接口都需要在请求头中携带 `gw_session`
-2. **文件上传**: 文件上传接口使用 `multipart/form-data` 格式
-3. **时间格式**: 所有时间字段使用 ISO 8601 格式（如：`2024-01-01T10:00:00`）
-4. **分页**: 分页参数从1开始，不是从0开始
-5. **权限**: 管理端接口需要相应的管理员权限
-6. **错误处理**: 所有错误都会返回相应的HTTP状态码和错误信息
-
 ## 错误码说明
 
 - `200`: 成功
 - `400`: 请求参数错误
-- `401`: 未认证
-- `403`: 无权限
+- `401`: 未授权（需要登录）
+- `403`: 禁止访问（权限不足）
 - `404`: 资源不存在
 - `500`: 服务器内部错误
+
+---
+
+## 注意事项
+
+1. **认证方式**: 所有需要登录的接口都需要在请求头中携带 `gw_session` 参数
+2. **时间格式**: 所有时间字段使用 ISO 8601 格式，例如：`2024-01-01T10:00:00`
+3. **分页**: 所有列表接口都支持分页，默认页码为1，每页大小为20
+4. **匿名问题**: 匿名问题的提问人信息会被隐藏，显示为"momo"
+5. **权限说明**:
+   - 普通用户：可以查看和发布问题、回答等
+   - 部门管理员：可以管理本部门及下属部门的内容
+   - 超级管理员：可以管理所有内容
+6. **文件上传**: 上传的文件会存储在MinIO中，返回的URL可以直接使用
+7. **积分系统**: 系统会根据用户的操作自动奖励或扣除积分，具体规则由管理员配置
+
+---
+
+## 更新日志
+
+- **v1.0.0** (2024-01-01): 初始版本发布
+

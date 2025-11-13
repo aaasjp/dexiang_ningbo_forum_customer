@@ -10,8 +10,10 @@
         <div class="filter-left">
           <el-select v-model="selectedType" placeholder="全部类型" style="width: 200px; height: 44px" class="custom-select">
             <el-option label="全部类型" value="" />
-            <el-option label="问题" value="question" />
-            <el-option label="文章" value="article" />
+            <el-option label="随便说说" value="随便说说" />
+            <el-option label="求助类" value="求助类" />
+            <el-option label="建议类" value="建议类" />
+            <el-option label="吐槽类" value="吐槽类" />
             <template #suffix>
               <el-icon><ArrowDown /></el-icon>
             </template>
@@ -19,8 +21,10 @@
           
           <el-select v-model="selectedStatus" placeholder="全部状态" style="width: 200px; margin-left: 16px; height: 44px" class="custom-select">
             <el-option label="全部状态" value="" />
-            <el-option label="已上线" value="online" />
-            <el-option label="已下线" value="offline" />
+            <el-option label="待解决" value="待解决" />
+            <el-option label="已解决" value="已解决" />
+            <el-option label="未解决" value="未解决" />
+            <el-option label="已关闭" value="已关闭" />
             <template #suffix>
               <el-icon><ArrowDown /></el-icon>
             </template>
@@ -31,11 +35,11 @@
               v-model="dateRange"
               type="daterange"
               range-separator="-"
-              start-placeholder="2014.12.09"
-              end-placeholder="2025.08.22"
+              start-placeholder="开始时间"
+              end-placeholder="结束时间"
               style="width: 280px; height: 44px"
               class="custom-date-picker"
-              :clearable="false"
+              :clearable="true"
             />
             <el-icon class="custom-suffix-icon"><ArrowDown /></el-icon>
           </div>
@@ -53,7 +57,7 @@
           </el-input>
         </div>
 
-        <div class="operation-record">操作记录</div>
+        <div class="operation-record" @click="openLogsDialog">操作记录</div>
       </div>
 
       <!-- 表格 -->
@@ -62,30 +66,36 @@
         <el-table-column prop="sequence" label="序号" width="80" align="center" />
         <el-table-column prop="title" label="标题" min-width="200" />
         <el-table-column prop="author" label="作者" width="120" />
-        <el-table-column prop="department" label="@部门" width="150">
+        <el-table-column prop="department" label="@部门" width="180">
           <template #default="{ row }">
-            <el-select v-model="row.department" size="small">
-              <el-option :label="row.department" :value="row.department" />
-            </el-select>
+            <div class="text-content" :title="row.department">{{ row.department }}</div>
           </template>
         </el-table-column>
-        <el-table-column prop="topic" label="所属话题" width="150">
+        <el-table-column prop="topic" label="所属话题" width="180">
           <template #default="{ row }">
-            <el-select v-model="row.topic" size="small">
-              <el-option :label="row.topic" :value="row.topic" />
-            </el-select>
+            <div class="text-content" :title="row.topic">{{ row.topic }}</div>
           </template>
         </el-table-column>
         <el-table-column prop="views" label="浏览" width="80" align="center" />
         <el-table-column prop="replies" label="回答" width="80" align="center" />
         <el-table-column prop="likes" label="点赞" width="80" align="center" />
         <el-table-column prop="favorites" label="收藏" width="80" align="center" />
-        <el-table-column prop="countdown" label="倒计时" width="100" align="center" />
+        <el-table-column prop="countdown" label="倒计时" width="100" align="center">
+        <template #default="{ row }">
+          <span :class="['countdown-tag', row.days_remaining < 2 ? 'countdown-tag-expired' : 'countdown-tag-active']">
+            {{ row.days_remaining }}
+          </span>天
+        </template>
+        </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="180" align="center" />
-        <el-table-column label="状态" width="100" align="center">
+        <el-table-column label="精选" width="100" align="center">
           <template #default="{ row }">
-            <span :class="['status-tag', row.status === 'online' ? 'status-online' : 'status-offline']">
-              {{ row.status === 'online' ? '已上线' : '已下线' }}
+            <span 
+              :class="['status-tag', row.is_featured === 1 ? 'status-featured' : 'status-not-featured']"
+              @click="handleToggleFeatured(row)"
+              style="cursor: pointer;"
+            >
+              {{ row.is_featured === 1 ? '标记精选' : '取消精选' }}
             </span>
           </template>
         </el-table-column>
@@ -106,9 +116,10 @@
                   @change="handleStatusChange(row)"
                 />
               </el-tooltip>
-              <el-button link type="warning">编辑</el-button>
-              <el-button link type="info">详情</el-button>
-              <el-dropdown @command="(cmd) => { currentDeleteId = row.id; handleCommand(cmd); }" popper-class="dark-dropdown">
+              <el-button link type="warning" @click="handleEdit(row)">编辑</el-button>
+              <el-button link type="warning" @click="handleDetail(row)">详情</el-button>
+              <el-button link type="info" @click="handleDelete(row)">删除</el-button>
+              <!-- <el-dropdown @command="(cmd) => { currentDeleteId = row.id; handleCommand(cmd); }" popper-class="dark-dropdown">
                 <el-icon class="more-icon" style="color: #999;"><MoreFilled /></el-icon>
                 <template #dropdown>
                   <el-dropdown-menu>
@@ -116,7 +127,7 @@
                     <el-dropdown-item command="manage">管理内容</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
-              </el-dropdown>
+              </el-dropdown> -->
             </div>
           </template>
         </el-table-column>
@@ -136,12 +147,33 @@
       </div>
     </div>
 
+    <!-- 编辑弹框 -->
+    <ContentFormDialog
+      v-model="showEditDialog"
+      :data="currentEditData"
+      @confirm="handleEditConfirm"
+    />
+
+    <!-- 详情弹框 -->
+    <PostDetailDialog
+      v-model="showDetailDialog"
+      :data="currentDetailData"
+    />
+
     <!-- 删除确认弹框 -->
     <DeleteConfirmDialog
       v-model="showDeleteDialog"
-      message="确定删除该任务吗？"
+      title="删除内容"
+      message="确定删除该内容吗？"
       @confirm="handleDeleteConfirm"
       @cancel="handleDeleteCancel"
+    />
+
+    <!-- 操作记录弹框 -->
+    <LogsDialog 
+      v-model="showLogsDialog"
+      title="操作记录"
+      width="1200px"
     />
   </div>
 </template>
@@ -149,21 +181,29 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { Search, MoreFilled, ArrowDown } from '@element-plus/icons-vue'
-import { getQuestionsList, deleteQuestion, updateOfflineStatus, transferQuestion } from '@/api/content'
+import { getQuestionsList, deleteQuestion, updateOfflineStatus, transferQuestion, markFeatured } from '@/api/content'
 import { getDepartmentTree } from '@/api/department'
 import DeleteConfirmDialog from '../components/DeleteConfirmDialog.vue'
+import ContentFormDialog from '../components/ContentFormDialog.vue'
+import PostDetailDialog from '../components/PostDetailDialog.vue'
+import LogsDialog from '../components/LogsDialog.vue'
 import { ElMessage } from 'element-plus'
 
 const selectedType = ref('')
 const selectedStatus = ref('')
-const dateRange = ref(['2014-12-09', '2025-08-22'])
+const dateRange = ref(['', ''])
 const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const contentList = ref([])
 const showDeleteDialog = ref(false)
+const showEditDialog = ref(false)
+const showDetailDialog = ref(false)
+const showLogsDialog = ref(false)
 const currentDeleteId = ref(null)
+const currentEditData = ref(null)
+const currentDetailData = ref(null)
 const loading = ref(false)
 const departments = ref([])
 
@@ -188,11 +228,8 @@ const statusMap = {
 // 计算倒计时
 const calculateCountdown = (deadline) => {
   if (!deadline) return '-'
-  const now = new Date()
-  const end = new Date(deadline)
-  const diff = Math.ceil((end - now) / (1000 * 60 * 60 * 24))
-  if (diff < 0) return '已超时'
-  return `${diff}天`
+  if (deadline < 0) return '已超时'
+  return `${deadline}天`
 }
 
 // 获取问题列表
@@ -212,9 +249,9 @@ const fetchQuestionsList = async () => {
       params.status = statusMap[selectedStatus.value]
     }
     
-    if (dateRange.value && dateRange.value.length === 2) {
-      params.start_time = new Date(dateRange.value[0]).toISOString()
-      params.end_time = new Date(dateRange.value[1]).toISOString()
+    if (dateRange.value && dateRange.value.length === 2 && dateRange.value[0] && dateRange.value[1]) {
+      params.start_time = dateRange.value[0]
+      params.end_time = dateRange.value[1]
     }
     
     const res = await getQuestionsList(params)
@@ -226,18 +263,19 @@ const fetchQuestionsList = async () => {
         title: item.title,
         author: item.asker_name,
         department: item.related_depts && item.related_depts.length > 0 
-          ? item.related_depts.map(d => d.dept_name).join('/')
+          ? item.related_depts.map(d => d.dept_name).join(', ')
           : '-',
         topic: item.topics && item.topics.length > 0 
-          ? item.topics.map(t => '#' + t.title).join(' ')
+          ? item.topics.map(t => '#' + t.title).join(', ')
           : '-',
         views: item.view_count || 0,
         replies: item.answer_count || 0,
         likes: item.like_count || 0,
         favorites: item.favorite_count || 0,
-        countdown: calculateCountdown(item.deadline),
+        days_remaining: item.days_remaining || 0,
         createTime: new Date(item.create_time).toLocaleString('zh-CN'),
         status: item.is_offline === 1 ? 'offline' : 'online',
+        is_featured: item.is_featured || 0,
         questionData: item // 保存原始数据
       }))
       
@@ -245,7 +283,7 @@ const fetchQuestionsList = async () => {
     }
   } catch (error) {
     console.error('获取问题列表失败:', error)
-    ElMessage.error('获取问题列表失败')
+    //ElMessage.error('获取问题列表失败')
   } finally {
     loading.value = false
   }
@@ -267,7 +305,7 @@ const handleStatusChange = async (row) => {
   try {
     const isOffline = row.status === 'offline' ? 1 : 0
     await updateOfflineStatus(row.id, isOffline)
-    ElMessage.success(isOffline === 1 ? '已下线' : '已上线')
+    //ElMessage.success(isOffline === 1 ? '已下线' : '已上线')
     fetchQuestionsList()
   } catch (error) {
     console.error('更新状态失败:', error)
@@ -289,7 +327,7 @@ const handleDeleteConfirm = async () => {
   
   try {
     await deleteQuestion(currentDeleteId.value)
-    ElMessage.success('删除成功')
+    //ElMessage.success('删除成功')
     showDeleteDialog.value = false
     currentDeleteId.value = null
     fetchQuestionsList()
@@ -301,6 +339,56 @@ const handleDeleteConfirm = async () => {
 const handleDeleteCancel = () => {
   showDeleteDialog.value = false
   currentDeleteId.value = null
+}
+
+// 处理编辑
+const handleEdit = (row) => {
+  currentEditData.value = row.questionData
+  showEditDialog.value = true
+}
+
+// 处理编辑确认
+const handleEditConfirm = async (data) => {
+  try {
+    await transferQuestion(currentEditData.value.question_id, data)
+    //ElMessage.success('编辑成功')
+    showEditDialog.value = false
+    currentEditData.value = null
+    fetchQuestionsList()
+  } catch (error) {
+    console.error('编辑失败:', error)
+    //ElMessage.error('编辑失败')
+  }
+}
+
+// 处理详情
+const handleDetail = (row) => {
+  currentDetailData.value = row.questionData
+  showDetailDialog.value = true
+}
+
+// 打开操作记录弹框
+const openLogsDialog = () => {
+  showLogsDialog.value = true
+}
+
+// 处理删除
+const handleDelete = (row) => {
+  currentDeleteId.value = row.id
+  showDeleteDialog.value = true
+}
+
+// 处理精选切换
+const handleToggleFeatured = async (row) => {
+  try {
+    const newFeaturedStatus = row.is_featured === 1 ? 0 : 1
+    await markFeatured(row.id, newFeaturedStatus)
+    //ElMessage.success(newFeaturedStatus === 1 ? '已标记精选' : '已取消精选')
+    fetchQuestionsList()
+  } catch (error) {
+    console.error('更新精选状态失败:', error)
+    //ElMessage.error('更新精选状态失败')
+  }
 }
 
 // 组件挂载时获取数据
@@ -384,16 +472,43 @@ onMounted(() => {
   padding: 2px 8px;
   border-radius: 2px;
   font-size: 12px;
+  transition: all 0.3s;
+}
+
+.status-featured {
+  color: #FF7800;
+  font-weight: 500;
+}
+
+.status-not-featured {
+  color: #999999;
+}
+.countdown-tag-expired {
+  color: #FF7800;
+}
+.countdown-tag-active {
+  color: #999999;
+}
+
+.status-tag:hover {
+  opacity: 0.8;
 }
 
 .status-online {
-  background: #e6f7ff;
-  color: #1890ff;
+  /* background: #e6f7ff; */
+  color: #FF7800;
 }
 
 .status-offline {
-  background: #f5f5f5;
-  color: #999;
+  /* background: #f5f5f5; */
+  color: #1A1A1A;
+}
+
+/* 文本内容样式 */
+.text-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pagination {

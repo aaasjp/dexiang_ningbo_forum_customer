@@ -8,21 +8,22 @@
       <!-- 标题和操作按钮 -->
       <div class="header-section">
         <h3 class="section-title">话题列表</h3>
-        <el-button type="warning" @click="handleCreateTopic">创建新话题</el-button>
+        <div class="create-topic-btn" @click="handleCreateTopic">创建新话题</div>
       </div>
 
       <!-- 话题卡片列表 -->
       <div class="topics-grid">
-      <el-card
+      <div
         v-for="topic in topicsList"
         :key="topic.id"
         class="topic-card"
-        shadow="hover"
       >
         <div class="topic-header">
-          <div class="topic-icon">{{ topic.icon }}</div>
           <div class="topic-info">
-            <h3 class="topic-title">{{ topic.title }}</h3>
+            <h3 class="topic-title">
+              <span class="topic-icon">#</span>
+              {{ topic.title }}
+            </h3>
             <p class="topic-description">{{ topic.description }}</p>
           </div>
         </div>
@@ -40,12 +41,12 @@
               <el-dropdown-menu>
                 <el-dropdown-item command="edit">编辑话题</el-dropdown-item>
                 <el-dropdown-item command="manage">管理内容</el-dropdown-item>
-                <el-dropdown-item command="delete">删除话题</el-dropdown-item>
+                <el-dropdown-item command="delete" style="color: #808080;">删除话题</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
         </div>
-      </el-card>
+      </div>
     </div>
 
       <!-- 分页 -->
@@ -72,6 +73,7 @@
     <!-- 删除确认弹窗 -->
     <DeleteConfirmDialog
       v-model="showDeleteDialog"
+      title="删除话题"
       message="确定删除该话题吗？删除后该话题下的所有内容将不再关联此话题。"
       @confirm="handleDeleteConfirm"
     />
@@ -135,7 +137,7 @@ const fetchTopicsList = async () => {
     }
   } catch (error) {
     console.error('获取话题列表失败:', error)
-    ElMessage.error('获取话题列表失败')
+    //ElMessage.error('获取话题列表失败')
   } finally {
     loading.value = false
   }
@@ -181,7 +183,7 @@ const handleTopicFormConfirm = async (data) => {
         description: data.description,
         cover_image: data.coverImage
       })
-      ElMessage.success('编辑成功')
+      //ElMessage.success('编辑成功')
     } else {
       // 创建话题
       await createTopic({
@@ -189,7 +191,7 @@ const handleTopicFormConfirm = async (data) => {
         description: data.description,
         cover_image: data.coverImage
       })
-      ElMessage.success('创建成功')
+      //ElMessage.success('创建成功')
     }
     showTopicDialog.value = false
     fetchTopicsList()
@@ -200,7 +202,7 @@ const handleTopicFormConfirm = async (data) => {
 
 // 处理管理内容
 const handleManageContent = (topic) => {
-  ElMessage.info(`查看话题"${topic.title}"下的内容列表`)
+  //ElMessage.info(`查看话题"${topic.title}"下的内容列表`)
   // 这里可以跳转到内容管理页面，筛选该话题下的内容
   // 或者打开一个弹窗显示该话题下的问题列表
 }
@@ -215,11 +217,11 @@ const handleDeleteTopic = (topic) => {
 const handleDeleteConfirm = async () => {
   try {
     // 注意: API 文档中没有删除话题的接口，这里先提示
-    ElMessage.warning('删除话题接口暂未提供')
+    //ElMessage.warning('删除话题接口暂未提供')
     showDeleteDialog.value = false
     // 如果后端提供了删除接口，取消注释下面的代码：
     // await deleteTopic(currentEditTopic.value.id)
-    // ElMessage.success('删除成功')
+    // //ElMessage.success('删除成功')
     // showDeleteDialog.value = false
     // fetchTopicsList()
   } catch (error) {
@@ -268,23 +270,50 @@ onMounted(() => {
   margin: 0;
 }
 
+.create-topic-btn {
+  width: 120px;
+  height: 44px;
+  line-height: 44px;
+  background: linear-gradient(90deg, #FFBD39 0%, #FF7800 100%);
+  border-radius: 4px;
+  font-weight: 400;
+  font-size: 14px;
+  color: #FFFFFF;
+  text-align: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.3s;
+}
+
+.create-topic-btn:hover {
+  opacity: 0.9;
+}
+
+.create-topic-btn:active {
+  opacity: 0.8;
+}
+
 .topics-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 16px 16px; /* 行间距 列间距 */
+  row-gap: 12px; /* 减小上下间距 */
   margin-bottom: 20px;
-  flex: 1;
+  /* flex: 1; */
 }
 
 .topic-card {
+  /* width: 380px; */
+  height: 146px;
+  padding: 16px;
   background: #ffffff;
-  border-radius: 8px;
-  transition: all 0.3s;
+  background: #FAFAFA;
+  border-radius: 0px 0px 4px 4px;
 }
 
-.topic-card:hover {
+/* .topic-card:hover {
   transform: translateY(-4px);
-}
+} */
 
 .topic-header {
   display: flex;
@@ -293,15 +322,13 @@ onMounted(() => {
 }
 
 .topic-icon {
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  background: #fff7e6;
+  padding: 0 6px;
+  height: 18px;
+  font-size: 18px;
   border-radius: 8px;
   flex-shrink: 0;
+  color: #fff;
+  background: linear-gradient( 46deg, #FF4400 0%, #FFA600 100%);
 }
 
 .topic-info {
@@ -324,6 +351,7 @@ onMounted(() => {
   color: #999;
   margin: 0;
   line-height: 1.6;
+  height: 48px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
@@ -335,8 +363,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 12px;
-  border-top: 1px solid #f0f0f0;
+  /* padding-top: 12px; */
+  /* border-top: 1px solid #f0f0f0; */
 }
 
 .topic-stats {

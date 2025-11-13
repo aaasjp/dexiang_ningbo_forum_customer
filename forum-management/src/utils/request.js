@@ -4,7 +4,8 @@ const GW_SESSION = encodeURIComponent('appid=500883957,name=张三,depatment=人
 
 // 创建 axios 实例
 const request = axios.create({
-  baseURL: 'http://220.154.134.61:8000/api', // 使用 Vite 代理，避免跨域问题
+  // baseURL: 'http://220.154.134.61:8000/api', // 使用 Vite 代理，避免跨域问题
+  baseURL: 'http://10.129.114.106:8000/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -38,7 +39,7 @@ request.interceptors.response.use(
     
     // 如果返回的状态码不是 200,则显示错误信息
     if (res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
+      //ElMessage.error(res.message || '请求失败')
       return Promise.reject(new Error(res.message || '请求失败'))
     }
     
@@ -68,7 +69,7 @@ request.interceptors.response.use(
       }
     }
     
-    ElMessage.error(message)
+    //ElMessage.error(message)
     return Promise.reject(error)
   }
 )

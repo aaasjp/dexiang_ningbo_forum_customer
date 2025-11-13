@@ -8,7 +8,7 @@
       <!-- 标题和操作按钮 -->
       <div class="header-section">
         <h3 class="section-title">积分列表</h3>
-        <el-button type="warning" @click="handleAdd">新增</el-button>
+        <div class="create-points-btn" @click="handleAdd">新增</div>
       </div>
 
       <!-- 表格 -->
@@ -59,6 +59,7 @@
     <!-- 删除确认弹框 -->
     <DeleteConfirmDialog
       v-model="showDeleteDialog"
+      title="删除积分规则"
       message="确定删除该积分规则吗？"
       @confirm="handleDeleteConfirm"
     />
@@ -114,7 +115,7 @@ const fetchPointsRulesList = async () => {
     }
   } catch (error) {
     console.error('获取积分规则列表失败:', error)
-    ElMessage.error('获取积分规则列表失败')
+    //ElMessage.error('获取积分规则列表失败')
   } finally {
     loading.value = false
   }
@@ -152,7 +153,7 @@ const handleFormConfirm = async (data) => {
         points: data.points,
         rule_description: data.action
       })
-      ElMessage.success('编辑成功')
+      //ElMessage.success('编辑成功')
     } else {
       // 新增逻辑
       await createRewardRule({
@@ -161,7 +162,7 @@ const handleFormConfirm = async (data) => {
         points: data.points,
         rule_description: data.action
       })
-      ElMessage.success('新增成功')
+      //ElMessage.success('新增成功')
     }
     showFormDialog.value = false
     fetchPointsRulesList()
@@ -184,7 +185,7 @@ const handleDeleteConfirm = async () => {
   
   try {
     await deleteRewardRule(currentDeleteRow.value.id)
-    ElMessage.success('删除成功')
+    //ElMessage.success('删除成功')
     showDeleteDialog.value = false
     currentDeleteRow.value = null
     fetchPointsRulesList()
@@ -232,6 +233,29 @@ onMounted(() => {
   font-weight: 600;
   color: #333;
   margin: 0;
+}
+
+.create-points-btn {
+  width: 120px;
+  height: 44px;
+  line-height: 44px;
+  background: linear-gradient(90deg, #FFBD39 0%, #FF7800 100%);
+  border-radius: 4px;
+  font-weight: 400;
+  font-size: 14px;
+  color: #FFFFFF;
+  text-align: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.3s;
+}
+
+.create-points-btn:hover {
+  opacity: 0.9;
+}
+
+.create-points-btn:active {
+  opacity: 0.8;
 }
 
 .pagination {

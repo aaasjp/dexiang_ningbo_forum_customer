@@ -1,28 +1,40 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    :width="width"
-    :title="title"
-    class="form-dialog"
-    @close="handleClose"
-  >
-    <el-form 
-      ref="formRef" 
-      :model="formData" 
-      :rules="rules" 
-      label-width="auto"
-      class="dialog-form"
-    >
-      <slot name="form" :form-data="formData"></slot>
-    </el-form>
-    
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button class="cancel-btn" @click="handleCancel">取消</el-button>
-        <el-button class="confirm-btn" @click="handleConfirm">确定</el-button>
+  <transition name="dialog-fade">
+    <div v-if="visible" class="custom-dialog-overlay" @click.self="handleCancel">
+      <div class="custom-dialog" :style="{ width: width }">
+        <!-- Header -->
+        <div class="custom-dialog-header">
+          <div class="custom-dialog-title">{{ title }}</div>
+          <button class="custom-dialog-close" @click="handleCancel">
+            <svg viewBox="0 0 1024 1024" width="16" height="16">
+              <path fill="currentColor" d="M764.288 214.592 512 466.88 259.712 214.592a31.936 31.936 0 0 0-45.12 45.12L466.752 512 214.528 764.224a31.936 31.936 0 1 0 45.12 45.184L512 557.184l252.288 252.288a31.936 31.936 0 0 0 45.12-45.12L557.12 512.064l252.288-252.352a31.936 31.936 0 1 0-45.12-45.184z"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="custom-dialog-body">
+          <el-form 
+            ref="formRef" 
+            :model="formData" 
+            :rules="rules" 
+            label-width="auto"
+            class="dialog-form"
+          >
+            <slot name="form" :form-data="formData"></slot>
+          </el-form>
+        </div>
+        
+        <!-- Footer -->
+        <div class="custom-dialog-footer">
+          <div class="dialog-footer">
+            <el-button class="cancel-btn" @click="handleCancel">取消</el-button>
+            <el-button class="confirm-btn" @click="handleConfirm">确定</el-button>
+          </div>
+        </div>
       </div>
-    </template>
-  </el-dialog>
+    </div>
+  </transition>
 </template>
 
 <script setup>
@@ -91,50 +103,107 @@ const handleClose = () => {
     formRef.value.resetFields()
   }
 }
+
+// 监听visible变化，关闭时重置表单
+watch(visible, (newVal, oldVal) => {
+  if (oldVal && !newVal) {
+    handleClose()
+  }
+})
 </script>
 
 <style scoped>
-.form-dialog :deep(.el-dialog) {
+/* 遮罩层 */
+.custom-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* 弹框主体 */
+.custom-dialog {
+  background: #ffffff;
   border-radius: 8px;
-  padding: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.form-dialog :deep(.el-dialog__header) {
-  padding: 20px 24px;
+/* Header */
+.custom-dialog-header {
+  padding: 20px 40px;
   border-bottom: 1px solid #f0f0f0;
-  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
 }
 
-.form-dialog :deep(.el-dialog__title) {
+.custom-dialog-title {
   font-size: 16px;
   font-weight: 500;
   color: #1a1a1a;
+  line-height: 24px;
 }
 
-.form-dialog :deep(.el-dialog__headerbtn) {
-  top: 20px;
-  right: 24px;
+.custom-dialog-close {
   width: 24px;
   height: 24px;
-  font-size: 16px;
-}
-
-.form-dialog :deep(.el-dialog__close) {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #999999;
+  transition: color 0.3s;
 }
 
-.form-dialog :deep(.el-dialog__close:hover) {
+.custom-dialog-close:hover {
   color: #fa8c16;
 }
 
-.form-dialog :deep(.el-dialog__body) {
-  padding: 32px 24px 24px;
+/* Body */
+.custom-dialog-body {
+  padding: 40px;
+  overflow-y: auto;
+  flex: 1;
 }
 
-.form-dialog :deep(.el-dialog__footer) {
-  padding: 0 24px 24px;
-  border-top: 1px solid #f0f0f0;
-  margin-top: 24px;
+/* Footer */
+.custom-dialog-footer {
+  padding: 0 40px 40px;
+  flex-shrink: 0;
+}
+
+/* 动画 */
+.dialog-fade-enter-active,
+.dialog-fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.dialog-fade-enter-active .custom-dialog,
+.dialog-fade-leave-active .custom-dialog {
+  transition: transform 0.3s;
+}
+
+.dialog-fade-enter-from,
+.dialog-fade-leave-to {
+  opacity: 0;
+}
+
+.dialog-fade-enter-from .custom-dialog,
+.dialog-fade-leave-to .custom-dialog {
+  transform: scale(0.9);
 }
 
 .dialog-form :deep(.el-form-item) {
@@ -209,37 +278,35 @@ const handleClose = () => {
 }
 
 .cancel-btn {
-  min-width: 80px;
-  height: 36px;
-  background: #ffffff;
-  border: 1px solid #d9d9d9;
-  color: #1a1a1a;
+  width: 120px;
+  height: 44px;
+  background: #FAFAFA;
+  border: none;
+  color: #4D4D4D;
   border-radius: 4px;
   font-size: 14px;
 }
 
 .cancel-btn:hover {
-  color: #fa8c16;
-  border-color: #fa8c16;
-  background: #ffffff;
+  background: #F0F0F0;
 }
 
 .confirm-btn {
-  min-width: 80px;
-  height: 36px;
-  background: #fa8c16;
+  width: 120px;
+  height: 44px;
+  background: #FF7800;
   border: none;
-  color: #ffffff;
+  color: #FFFFFF;
   border-radius: 4px;
   font-size: 14px;
 }
 
 .confirm-btn:hover {
-  background: #ff9d3d;
+  background: #FF8C1A;
 }
 
 .confirm-btn:active {
-  background: #d87a0f;
+  background: #E66D00;
 }
 </style>
 

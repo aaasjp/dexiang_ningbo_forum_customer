@@ -42,7 +42,7 @@
       <!-- 第二组：一句话介绍自己 -->
       <div class="form-group">
         <!-- 一句话介绍自己 -->
-        <div class="form-item" v-if="!isEditingIntro" @click="startEditIntro">
+        <div class="form-item" @click="startEditIntro">
           <div class="form-label" v-if="!intro">一句话介绍自己</div>
           <div class="form-value-left" v-if="intro">
             <span class="value-text">{{ intro }}</span>
@@ -50,18 +50,6 @@
           <el-icon :size="16" class="arrow-icon">
             <Edit />
           </el-icon>
-        </div>
-        <!-- 编辑状态 -->
-        <div class="form-item-edit" v-else>
-          <input 
-            v-model="tempIntro" 
-            type="text" 
-            class="edit-input" 
-            placeholder="一句话介绍自己"
-            maxlength="50"
-            @keyup.enter="confirmIntro"
-          />
-          <button class="confirm-btn" @click="confirmIntro">确认</button>
         </div>
       </div>
       <!-- 第三组：性别、生日、岗位 -->
@@ -89,7 +77,7 @@
         </div>
 
         <!-- 岗位 -->
-        <div class="form-item" v-if="!isEditingPosition" @click="startEditPosition">
+        <div class="form-item" @click="startEditPosition">
           <div class="form-label">岗位</div>
           <div class="form-value-left">
             <span class="value-text">{{ position || '请输入岗位' }}</span>
@@ -97,19 +85,6 @@
           <el-icon :size="16" class="arrow-icon">
             <Edit />
           </el-icon>
-        </div>
-        <!-- 编辑状态 -->
-        <div class="form-item-edit" v-else>
-          <div class="form-label">岗位</div>
-          <input 
-            v-model="tempPosition" 
-            type="text" 
-            class="edit-input" 
-            placeholder="请输入岗位"
-            maxlength="30"
-            @keyup.enter="confirmPosition"
-          />
-          <button class="confirm-btn" @click="confirmPosition">确认</button>
         </div>
       </div>
     </div>
@@ -128,6 +103,7 @@
               class="picker-item"
               :class="{ active: selectedYear === year }"
               :data-value="year"
+              @click="selectYear(year)"
             >
               {{ year }}年
             </div>
@@ -143,6 +119,7 @@
               class="picker-item"
               :class="{ active: selectedMonth === month }"
               :data-value="month"
+              @click="selectMonth(month)"
             >
               {{ String(month).padStart(2, '0') }}月
             </div>
@@ -158,6 +135,7 @@
               class="picker-item"
               :class="{ active: selectedDay === day }"
               :data-value="day"
+              @click="selectDay(day)"
             >
               {{ String(day).padStart(2, '0') }}日
             </div>
@@ -186,6 +164,7 @@
               class="picker-item"
               :class="{ active: tempGender === option.value }"
               :data-value="option.value"
+              @click="selectGender(option.value)"
             >
               {{ option.label }}
             </div>
@@ -198,6 +177,17 @@
       </div>
     </div>
 
+    <!-- 底部编辑输入框 -->
+    <BottomEditInput
+      v-model:visible="showBottomEdit"
+      :title="editTitle"
+      :placeholder="editPlaceholder"
+      :model-value="editValue"
+      :max-length="editMaxLength"
+      @confirm="handleEditConfirm"
+      @cancel="handleEditCancel"
+    />
+
   </div>
 </template>
 
@@ -207,6 +197,7 @@ import { useRouter } from 'vue-router'
 import { ArrowLeft, ArrowRight, Edit } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getUserProfile, updateUserProfile, type UpdateProfileData } from '../../api/user'
+import BottomEditInput from '../../components/common/BottomEditInput.vue'
 
 const router = useRouter()
 
@@ -224,11 +215,13 @@ const birthday = ref('')
 const position = ref('')
 const avatarUrl = ref('')
 
-// 编辑状态
-const isEditingIntro = ref(false)
-const isEditingPosition = ref(false)
-const tempIntro = ref('')
-const tempPosition = ref('')
+// 底部编辑输入框
+const showBottomEdit = ref(false)
+const editType = ref<'intro' | 'position'>('intro')
+const editTitle = ref('')
+const editPlaceholder = ref('')
+const editValue = ref('')
+const editMaxLength = ref(50)
 
 // 弹窗控制
 const showBirthdayModal = ref(false)
@@ -282,7 +275,7 @@ const loadUserProfile = async () => {
       position.value = '' // 根据实际API字段调整
     }
   } catch (error: any) {
-    ElMessage.error(error.message || '加载用户资料失败')
+    //ElMessage.error(error.message || '加载用户资料失败')
   }
 }
 
@@ -291,7 +284,7 @@ const updateProfile = async (data: UpdateProfileData) => {
   try {
     const res = await updateUserProfile(data)
     if (res.data) {
-      ElMessage.success('更新成功')
+      //ElMessage.success('更新成功')
       // 更新本地数据
       if (data.self_introduction !== undefined) intro.value = data.self_introduction
       if (data.forum_gender !== undefined) gender.value = data.forum_gender
@@ -299,7 +292,7 @@ const updateProfile = async (data: UpdateProfileData) => {
       if (data.forum_avatar !== undefined) avatarUrl.value = data.forum_avatar
     }
   } catch (error: any) {
-    ElMessage.error(error.message || '更新失败')
+    //ElMessage.error(error.message || '更新失败')
   }
 }
 
@@ -315,37 +308,43 @@ const goToAvatarEdit = () => {
 
 // 一句话介绍编辑
 const startEditIntro = () => {
-  tempIntro.value = intro.value
-  isEditingIntro.value = true
-}
-
-const confirmIntro = async () => {
-  if (tempIntro.value.trim() === intro.value) {
-    isEditingIntro.value = false
-    return
-  }
-  
-  await updateProfile({ self_introduction: tempIntro.value.trim() })
-  isEditingIntro.value = false
+  editType.value = 'intro'
+  editTitle.value = '一句话介绍自己'
+  editPlaceholder.value = '一句话介绍自己'
+  editValue.value = intro.value
+  editMaxLength.value = 20
+  showBottomEdit.value = true
 }
 
 // 岗位编辑
 const startEditPosition = () => {
-  tempPosition.value = position.value
-  isEditingPosition.value = true
+  editType.value = 'position'
+  editTitle.value = '岗位'
+  editPlaceholder.value = '请输入岗位'
+  editValue.value = position.value
+  editMaxLength.value = 20
+  showBottomEdit.value = true
 }
 
-const confirmPosition = async () => {
-  if (tempPosition.value.trim() === position.value) {
-    isEditingPosition.value = false
-    return
+// 处理编辑确认
+const handleEditConfirm = async (value: string) => {
+  if (editType.value === 'intro') {
+    if (value !== intro.value) {
+      await updateProfile({ self_introduction: value })
+    }
+  } else if (editType.value === 'position') {
+    if (value !== position.value) {
+      // 注意：API中没有岗位字段，这里可能需要使用其他字段或扩展API
+      // 暂时使用 nickname 字段作为示例
+      position.value = value
+      //ElMessage.warning('岗位字段暂未对接API，请联系后端添加')
+    }
   }
-  
-  // 注意：API中没有岗位字段，这里可能需要使用其他字段或扩展API
-  // 暂时使用 nickname 字段作为示例
-  position.value = tempPosition.value.trim()
-  isEditingPosition.value = false
-  ElMessage.warning('岗位字段暂未对接API，请联系后端添加')
+}
+
+// 处理编辑取消
+const handleEditCancel = () => {
+  // 不需要做什么，组件会自动关闭
 }
 
 // 生日选择
@@ -404,8 +403,32 @@ const confirmGender = async () => {
   }
 }
 
+// 点击选择年份
+const selectYear = (year: number) => {
+  selectedYear.value = year
+  scrollToSelected(yearColumn.value, year, true)
+}
+
+// 点击选择月份
+const selectMonth = (month: number) => {
+  selectedMonth.value = month
+  scrollToSelected(monthColumn.value, month, true)
+}
+
+// 点击选择日期
+const selectDay = (day: number) => {
+  selectedDay.value = day
+  scrollToSelected(dayColumn.value, day, true)
+}
+
+// 点击选择性别
+const selectGender = (value: number) => {
+  tempGender.value = value
+  scrollToSelected(genderColumn.value, value, true)
+}
+
 // 滚动到选中项
-const scrollToSelected = (column: HTMLElement | undefined, value: any) => {
+const scrollToSelected = (column: HTMLElement | undefined, value: any, smooth: boolean = false) => {
   if (!column) return
   
   const items = column.querySelectorAll('.picker-item:not(.picker-placeholder)')
@@ -418,7 +441,17 @@ const scrollToSelected = (column: HTMLElement | undefined, value: any) => {
     const itemHeight = 40
     const containerHeight = 120
     const scrollTop = (targetItem as HTMLElement).offsetTop - (containerHeight / 2) + (itemHeight / 2)
-    column.scrollTop = scrollTop
+    
+    if (smooth) {
+      // 使用平滑滚动
+      column.scrollTo({
+        top: scrollTop,
+        behavior: 'smooth'
+      })
+    } else {
+      // 直接跳转（用于初始化）
+      column.scrollTop = scrollTop
+    }
   }
 }
 
@@ -620,66 +653,6 @@ onMounted(() => {
   margin-left: auto;
 }
 
-.edit-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-/* 编辑状态 */
-.form-item-edit {
-  display: flex;
-  align-items: center;
-  height: 46px;
-  padding: 0 16px;
-  gap: 8px;
-}
-
-.edit-input {
-  flex: 1;
-  height: 30px;
-  padding: 0 8px;
-  border: none;
-  background: #F7F7F7;
-  border-radius: 4px;
-  font-family: PingFang SC, PingFang SC;
-  font-weight: 400;
-  font-size: 15px;
-  color: #1A1A1A;
-  outline: none;
-  transition: background 0.2s;
-}
-
-.edit-input:focus {
-  background: #F0F0F0;
-}
-
-.edit-input::placeholder {
-  color: #999;
-}
-
-.confirm-btn {
-  flex-shrink: 0;
-  height: 28px;
-  padding: 0 12px;
-  background: #FFDD00;
-  border: none;
-  border-radius: 14px;
-  font-family: PingFang SC, PingFang SC;
-  font-weight: 500;
-  font-size: 13px;
-  color: #1A1A1A;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.confirm-btn:active {
-  transform: scale(0.95);
-  background: #FFD700;
-}
-
 /* 弹窗遮罩 */
 .modal-overlay {
   position: fixed;
@@ -803,7 +776,14 @@ onMounted(() => {
   color: #808080;
   cursor: pointer;
   scroll-snap-align: center;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.picker-item:not(.picker-placeholder):active {
+  transform: scale(0.95);
+  color: #1A1A1A;
 }
 
 .picker-item.active {
@@ -855,7 +835,14 @@ onMounted(() => {
   color: #808080;
   cursor: pointer;
   scroll-snap-align: center;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gender-picker .picker-item:not(.picker-placeholder):active {
+  transform: scale(0.95);
+  color: #1A1A1A;
 }
 
 .gender-picker .picker-item.active {
