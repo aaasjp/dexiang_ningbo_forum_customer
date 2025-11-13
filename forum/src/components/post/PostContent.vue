@@ -53,7 +53,7 @@
     </div>
 
     <!-- 话题标签 -->
-    <div v-if="topic" class="post-topic">
+    <div v-if="topic" class="post-topic" @click="handleTopicClick">
       <span class="topic-hash">#</span>
       <span class="topic-text">{{ topic }}</span>
     </div>
@@ -76,14 +76,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import Avatar from '../common/Avatar.vue'
-import type { Author } from '../../types/post'
+import type { Author, TopicInfo } from '../../types/post'
 import { useImageViewerStore } from '../../stores/imageViewer'
 
 defineOptions({
   name: 'PostContent'
 })
 
+const router = useRouter()
 const imageViewerStore = useImageViewerStore()
 
 // 解决状态按钮ref
@@ -98,6 +100,7 @@ interface Props {
   content: string
   images?: string[]  // 图片列表
   topic?: string
+  topics?: TopicInfo[]  // 话题列表
   solved?: boolean
   showSolveStatus?: boolean  // 是否显示解决状态
   canChangeSolveStatus?: boolean  // 是否可以修改解决状态（只有自己的才能修改）
@@ -142,6 +145,15 @@ const onFollowClick = () => {
 // 处理图片点击
 const handleImageClick = (imageUrl: string) => {
   imageViewerStore.open(imageUrl)
+}
+
+// 处理话题点击 - 跳转到话题详情页
+const handleTopicClick = () => {
+  // 从 topics 数组中获取第一个话题的 ID
+  if (props.topics && props.topics.length > 0 && props.topics[0]) {
+    const topicId = props.topics[0].topic_id
+    router.push(`/topic/${topicId}`)
+  }
 }
 
 // 暴露给父组件使用
@@ -297,6 +309,17 @@ defineExpose({
   gap: 2px;
   line-height: 1;
   margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.post-topic:hover {
+  background: rgba(255, 221, 0, 0.1);
+  border-color: rgba(255, 221, 0, 0.5);
+}
+
+.post-topic:active {
+  transform: scale(0.95);
 }
 
 .topic-hash {

@@ -11,7 +11,7 @@
         <div class="author-details">
           <div class="author-name">
             {{ post.author.name }}
-            <span v-if="post.author.badge" class="badge">{{ post.author.badge }}</span>
+            <!-- <span v-if="post.author.badge" class="badge">{{ post.author.badge }}</span> -->
           </div>
         </div>
       </div>
@@ -21,8 +21,11 @@
     </div>
 
     <!-- 精选标签和标题 -->
-    <div class="title-section" :class="{ 'has-select': post.category === 'select' }">
-      <span class="post-title">{{ post.title }}</span>
+    <div class="title-section">
+      <span class="post-title">
+        <span v-if="post.is_featured === 1" class="select-badge">精选</span>
+        {{ post.title }}
+      </span>
     </div>
 
     <!-- 帖子内容预览 -->
@@ -43,7 +46,7 @@
     </div>
 
     <!-- 话题标签 -->
-    <div class="post-topic" v-if="post.topic">
+    <div class="post-topic" v-if="post.topic" @click.stop="handleTopicClick">
       <span class="topic-icon">#</span>
       <span class="topic-text">{{ post.topic }}</span>
     </div>
@@ -108,7 +111,7 @@ const getCategoryName = (category: string) => {
     suggest: '建议',
     help: '求助',
     complain: '吐槽',
-    select: '精选'
+    free: '自由提问'
   }
   return categoryMap[category] || ''
 }
@@ -145,6 +148,15 @@ const handleAuthorClick = () => {
   } else {
     // 否则跳转到他人主页
     router.push(`/profile/home/${staffCode}`)
+  }
+}
+
+// 处理话题点击 - 跳转到话题详情页
+const handleTopicClick = () => {
+  // 从 topics 数组中获取第一个话题的 ID
+  if (props.post.topics && props.post.topics.length > 0 && props.post.topics[0]) {
+    const topicId = props.post.topics[0].topic_id
+    router.push(`/topic/${topicId}`)
   }
 }
 </script>
@@ -302,7 +314,6 @@ const handleAuthorClick = () => {
 /* 精选标签和标题区域 */
 .title-section {
   margin-bottom: 8px;
-  overflow: hidden;
 }
 
 /* 帖子标题 */
@@ -322,22 +333,25 @@ const handleAuthorClick = () => {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   line-clamp: 2;
-  max-height: 48px;
 }
 
-.title-section.has-select .post-title::before {
-  content: '精选';
+.post-title .select-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 24px;
-  padding: 0 6px;
-  margin-right: 4px;
-  background: #FFD700;
-  border-radius: 4px;
-  font-size: 12px;
+  min-width: 30px;
+  height: 18px;
+  padding: 0 4px;
+  background: #FFDD00;
+  border-radius: 5px;
+  font-family: PingFang SC, PingFang SC;
   font-weight: 500;
-  color: #1A1A1A;
+  font-size: 11px;
+  color: #000000;
+  line-height: 18px;
+  text-align: center;
+  white-space: nowrap;
+  margin-right: 4px;
 }
 
 /* 帖子内容 */
@@ -397,6 +411,17 @@ const handleAuthorClick = () => {
   gap: 2px;
   vertical-align: middle;
   line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.post-topic:hover {
+  background: rgba(255, 221, 0, 0.1);
+  border-color: rgba(255, 221, 0, 0.5);
+}
+
+.post-topic:active {
+  transform: scale(0.95);
 }
 
 .topic-icon {

@@ -11,7 +11,7 @@
       <div class="user-info">
         <div class="user-name-wrapper">
           <div class="user-name">{{ userProfile?.name || '加载中...' }}</div>
-          <div class="user-badge" v-if="userProfile?.forum_tag">{{ userProfile.forum_tag }}</div>
+          <div class="user-badge" v-if="userProfile?.forum_tag && userProfile.forum_tag !== '普通用户'">{{ userProfile.forum_tag }}</div>
         </div>
         <div class="user-desc">{{ userProfile?.self_introduction || '这个人很懒，什么都没留下' }}</div>
       </div>

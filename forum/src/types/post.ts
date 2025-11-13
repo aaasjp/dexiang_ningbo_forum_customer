@@ -97,7 +97,7 @@ export interface CommentReply {
 }
 
 // 帖子分类
-export type PostCategory = 'suggest' | 'help' | 'complain' | 'select' | 'all' | '建议类' | '求助类' | '吐槽类' | '精选'
+export type PostCategory = 'suggest' | 'help' | 'complain' | 'free' | 'all' | '建议类' | '求助类' | '吐槽类' | '自由提问'
 
 // 分类选项
 export interface CategoryOption {

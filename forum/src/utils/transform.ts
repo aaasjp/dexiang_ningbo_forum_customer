@@ -22,7 +22,7 @@ export function transformQuestionToPost(question: QuestionItem): Post {
       badge: question.is_featured ? '精选' : '',
       staff_code: question.asker_code
     },
-    category: mapCategoryToFrontend(question.category),
+    category: question.is_featured ? 'select' : mapCategoryToFrontend(question.category),
     title: question.title,
     content: question.content,
     images: question.images || [],
@@ -62,7 +62,7 @@ export function transformQuestionDetailToPost(question: QuestionDetail): Post {
       badge: question.is_featured ? '精选' : '',
       staff_code: question.asker_code
     },
-    category: mapCategoryToFrontend(question.category),
+    category: question.is_featured ? 'select' : mapCategoryToFrontend(question.category),
     title: question.title,
     content: question.content,
     images: question.images || [],
@@ -157,7 +157,7 @@ export function mapCategoryToFrontend(apiCategory: string): string {
     '建议类': 'suggest',
     '求助类': 'help',
     '吐槽类': 'complain',
-    '精选': 'select'
+    '自由提问': 'free'
   }
   return categoryMap[apiCategory] || apiCategory
 }
@@ -170,7 +170,7 @@ export function mapCategoryToApi(frontendCategory: string): string {
     'suggest': '建议类',
     'help': '求助类',
     'complain': '吐槽类',
-    'select': '精选'
+    'free': '自由提问'
   }
   return categoryMap[frontendCategory] || frontendCategory
 }

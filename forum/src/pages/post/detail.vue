@@ -23,9 +23,10 @@
       :content="postData.content || ''"
       :images="postData.images"
       :topic="postData.topic"
+      :topics="postData.topics"
       :solved="postData.solved"
-      :show-solve-status="dataLoaded && postData.category !== 'question'"
-      :can-change-solve-status="isOwnPost && postData.category !== 'question'"
+      :show-solve-status="dataLoaded && postData.category !== 'free'"
+      :can-change-solve-status="isOwnPost && postData.category !== 'free'"
       :show-follow-btn="!isOwnPost"
       :is-followed="isFollowed"
       :is-anonymous="postData.is_anonymous === 1"
@@ -185,7 +186,7 @@ const getCategoryName = (category: string): string => {
     'suggest': '建议',
     'help': '求助',
     'complain': '吐槽',
-    'question': '自由提问'
+    'free': '自由提问'
   }
   return categoryMap[category] || '帖子'
 }
