@@ -9,26 +9,26 @@
       </div>
       <div class="header-title">个人中心</div>
       <div class="header-right">
-        <button class="followed-btn" v-if="isFollowed">已关注</button>
+        <!-- <span class="followed-text" v-if="userInfo.is_followed">已关注</span> -->
       </div>
     </div>
 
     <!-- 用户信息卡片 -->
     <div class="user-card">
-      <div class="user-avatar">{{ userInfo.avatar }}</div>
+      <Avatar :src="userInfo.forum_avatar" :name="userInfo.name" :size="56" />
       <div class="user-info">
-        <div class="user-name-wrapper">
-          <div class="user-name">{{ userInfo.name }}</div>
-          <div class="user-badge" v-if="userInfo.badge">{{ userInfo.badge }}</div>
+        <div class="user-name-row">
+          <span class="user-name">{{ userInfo.nickname || userInfo.name }}</span>
+          <span v-if="userInfo.forum_tag === '专家'" class="user-badge">{{ userInfo.forum_tag }}</span>
         </div>
-        <div class="user-desc">{{ userInfo.description }}</div>
+        <div class="user-desc">{{ userInfo.self_introduction || '这个人很懒，什么都没留下' }}</div>
       </div>
       <button 
         class="follow-btn" 
-        :class="{ followed: isFollowed }"
+        :class="{ followed: userInfo.is_followed }"
         @click="toggleFollow"
       >
-        {{ isFollowed ? '已关注' : '关注' }}
+        {{ userInfo.is_followed ? '已关注' : '关注' }}
       </button>
     </div>
 
@@ -62,6 +62,7 @@
         :key="post.id"
         :post="post"
         @click="handlePostClick(post)"
+        @like="handlePostLike"
       />
     </div>
   </div>
@@ -71,11 +72,11 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import PostCard from '../../components/post/PostCard.vue'
-import { getUserQuestions, type QuestionItem } from '../../api/question'
+import Avatar from '../../components/common/Avatar.vue'
+import { getUserQuestions, type QuestionItem, toggleLikeQuestion } from '../../api/question'
 import { getUserAnswers, type AnswerItem } from '../../api/answer'
-import { toggleFollowUser } from '../../api/user'
+import { toggleFollowUser, getOtherUserProfile, type UserProfile } from '../../api/user'
 import { transformQuestionToPost } from '../../utils/transform'
 import type { Post } from '../../types/post'
 
@@ -85,19 +86,21 @@ const route = useRoute()
 // 当前激活的 tab
 const activeTab = ref<'questions' | 'answers'>('questions')
 
-// 是否已关注
-const isFollowed = ref(false)
-
 // 用户工号（从路由参数获取）
 const userCode = ref(route.query.code as string || '')
 
 // 用户信息
-const userInfo = ref({
-  id: userCode.value,
+const userInfo = ref<UserProfile>({
+  staff_code: userCode.value,
   name: '加载中...',
-  avatar: '👤',
-  badge: '',
-  description: ''
+  nickname: '',
+  forum_avatar: '',
+  forum_tag: '',
+  self_introduction: '',
+  question_count: 0,
+  answer_count: 0,
+  total_points: 0,
+  is_followed: false
 })
 
 // 用户的提问列表
@@ -107,6 +110,35 @@ const questionsLoading = ref(false)
 // 用户的回答列表
 const userAnswers = ref<AnswerItem[]>([])
 const answersLoading = ref(false)
+
+// 加载用户信息
+const loadUserInfo = async () => {
+  if (!userCode.value) return
+  
+  try {
+    // 使用查看他人主页接口获取用户信息
+    const res = await getOtherUserProfile(userCode.value)
+    if (res.code === 200 && res.data) {
+      userInfo.value = {
+        staff_code: res.data.staff_code,
+        name: res.data.name,
+        nickname: res.data.nickname,
+        forum_avatar: res.data.forum_avatar,
+        forum_tag: res.data.forum_tag,
+        self_introduction: res.data.self_introduction || '这个人很懒，什么都没留下',
+        question_count: res.data.question_count,
+        answer_count: res.data.answer_count,
+        total_points: res.data.total_points,
+        is_followed: res.data.is_followed || false
+      }
+    } else {
+      //ElMessage.error(res.message || '用户不存在')
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+    //ElMessage.error('获取用户信息失败')
+  }
+}
 
 // 加载用户的提问
 const loadUserQuestions = async () => {
@@ -120,12 +152,12 @@ const loadUserQuestions = async () => {
       // 从第一个问题获取用户信息
       if (res.data.items.length > 0) {
         const firstQuestion = res.data.items[0]
-        if (firstQuestion && firstQuestion.asker_name) {
+        if (firstQuestion) {
           userInfo.value.name = firstQuestion.asker_name
         }
       }
     } else {
-      ElMessage.error(res.message || '获取提问失败')
+      //ElMessage.error(res.message || '获取提问失败')
     }
   } catch (error) {
     console.error('获取提问失败:', error)
@@ -144,14 +176,14 @@ const loadUserAnswers = async () => {
     if (res.code === 200) {
       userAnswers.value = res.data.items
       // 从第一个回答获取用户信息
-      if (res.data.items.length > 0) {
+      if (res.data.items.length > 0 && !userInfo.value.name) {
         const firstAnswer = res.data.items[0]
-        if (firstAnswer && firstAnswer.answerer_name) {
+        if (firstAnswer) {
           userInfo.value.name = firstAnswer.answerer_name
         }
       }
     } else {
-      ElMessage.error(res.message || '获取回答失败')
+      //ElMessage.error(res.message || '获取回答失败')
     }
   } catch (error) {
     console.error('获取回答失败:', error)
@@ -160,22 +192,33 @@ const loadUserAnswers = async () => {
   }
 }
 
+// 加载所有数据
+const loadAllData = async () => {
+  if (!userCode.value) {
+    //ElMessage.error('用户信息不存在')
+    return
+  }
+  
+  // 先获取用户信息
+  await loadUserInfo()
+  
+  // 然后并行加载提问和回答列表
+  await Promise.all([
+    loadUserQuestions(),
+    loadUserAnswers()
+  ])
+}
+
 // 页面加载时获取数据
 onMounted(() => {
-  if (userCode.value) {
-    loadUserQuestions()
-    loadUserAnswers()
-  } else {
-    ElMessage.error('用户信息不存在')
-  }
+  loadAllData()
 })
 
 // 监听路由变化
 watch(() => route.query.code, (newCode) => {
   if (newCode) {
     userCode.value = newCode as string
-    loadUserQuestions()
-    loadUserAnswers()
+    loadAllData()
   }
 })
 
@@ -188,7 +231,8 @@ const displayPosts = computed(() => {
       id: String(a.answer_id),
       author: {
         name: a.answerer_name,
-        avatar: '👤'
+        avatar: '👤',
+        staff_code: a.answerer_code
       },
       category: 'answer',
       title: a.question_id ? `回答了问题 #${a.question_id}` : '回答',
@@ -196,7 +240,9 @@ const displayPosts = computed(() => {
       time: a.create_time,
       solved: a.is_useful === 1,
       likes: a.like_count,
+      liked: a.is_liked,
       collects: a.favorite_count,
+      collected: a.is_favorited,
       comments: 0
     } as Post))
   }
@@ -214,29 +260,53 @@ const toggleFollow = async () => {
   try {
     const res = await toggleFollowUser(userCode.value)
     if (res.code === 200) {
-      isFollowed.value = res.data.followed
-      ElMessage.success(res.data.followed ? '关注成功' : '取消关注')
+      userInfo.value.is_followed = res.data.followed
+      //ElMessage.success(res.data.followed ? '关注成功' : '取消关注')
     } else {
-      ElMessage.error(res.message || '操作失败')
+      //ElMessage.error(res.message || '操作失败')
     }
   } catch (error) {
     console.error('关注操作失败:', error)
-    ElMessage.error('操作失败')
+    //ElMessage.error('操作失败')
   }
 }
 
 // 处理帖子点击
 const handlePostClick = (post: Post) => {
-  router.push(`/post/${post.id}`)
+  router.push(`/post/${post.question_id || post.id}`)
+}
+
+// 处理帖子点赞
+const handlePostLike = async (post: Post) => {
+  try {
+    const questionId = post.question_id || Number(post.id)
+    const response = await toggleLikeQuestion(questionId)
+    
+    // 更新帖子的点赞状态
+    if (activeTab.value === 'questions' && response.data) {
+      const postIndex = userQuestions.value.findIndex(q => q.question_id === questionId)
+      if (postIndex !== -1 && userQuestions.value[postIndex]) {
+        userQuestions.value[postIndex].is_liked = response.data.liked
+        userQuestions.value[postIndex].like_count = response.data.liked 
+          ? (userQuestions.value[postIndex].like_count || 0) + 1 
+          : (userQuestions.value[postIndex].like_count || 0) - 1
+      }
+    }
+    
+    //ElMessage.success(response.data.liked ? '点赞成功' : '取消点赞')
+  } catch (error) {
+    console.error('点赞失败:', error)
+    //ElMessage.error('操作失败')
+  }
 }
 </script>
 
 <style scoped>
 .user-profile-page {
   width: 100%;
-  
+  max-width: 100vw;
   min-height: 100vh;
-  background: #F5F5F5;
+  background: #fff;
   overflow-x: hidden;
 }
 
@@ -249,6 +319,7 @@ const handlePostClick = (post: Post) => {
   gap: 12px;
   position: sticky;
   top: 0;
+  width: 100%;
   z-index: 100;
   border-bottom: 1px solid #F5F5F5;
 }
@@ -277,18 +348,11 @@ const handlePostClick = (post: Post) => {
   justify-content: flex-end;
 }
 
-.followed-btn {
-  padding: 4px 12px;
-  height: 28px;
-  background: #F7F7F7;
-  color: #999;
-  border: 1px solid #E5E5E5;
-  border-radius: 14px;
-  font-size: 12px;
+.followed-text {
+  font-family: PingFang SC, PingFang SC;
   font-weight: 400;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
+  font-size: 12px;
+  color: #B3B3B3;
 }
 
 /* 用户信息卡片 */
@@ -301,24 +365,12 @@ const handlePostClick = (post: Post) => {
   margin-bottom: 8px;
 }
 
-.user-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #F7F7F7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  flex-shrink: 0;
-}
-
 .user-info {
   flex: 1;
   min-width: 0;
 }
 
-.user-name-wrapper {
+.user-name-row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -333,18 +385,30 @@ const handlePostClick = (post: Post) => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 180px;
 }
 
 .user-badge {
   padding: 2px 8px;
   font-size: 10px;
   font-weight: 400;
+  white-space: nowrap;
+  flex-shrink: 0;
   height: 20px;
   color: #A56D39;
+  text-align: left;
+  font-style: normal;
+  text-transform: none;
+  font-family: PingFang SC, PingFang SC;
+  
+  /* 背景渐变 */
   background: linear-gradient(133deg, #FDF3EA 0%, #F5E9DE 100%);
+  
+  /* 左上和右下圆角 */
+  position: relative;
   border: 1px solid #DEB691;
   border-radius: 10px 0 10px 0;
-  flex-shrink: 0;
+  background-clip: padding-box;
   display: flex;
   align-items: center;
 }
@@ -357,18 +421,21 @@ const handlePostClick = (post: Post) => {
 }
 
 .follow-btn {
-  padding: 6px 20px;
-  height: 32px;
-  background: #FFDD00;
+  width: 64px;
+  height: 30px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #FFD700;
   color: #1A1A1A;
   border: none;
-  border-radius: 16px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
   flex-shrink: 0;
-  white-space: nowrap;
 }
 
 .follow-btn:active {
@@ -376,9 +443,11 @@ const handlePostClick = (post: Post) => {
 }
 
 .follow-btn.followed {
+  width: 64px;
+  height: 30px;
   background: #F7F7F7;
-  color: #999;
-  border: 1px solid #E5E5E5;
+  border-radius: 18px;
+  color: #B3B3B3;
 }
 
 /* Tab 切换 */

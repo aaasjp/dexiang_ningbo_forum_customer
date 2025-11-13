@@ -59,7 +59,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
-// import { ElMessage } from 'element-plus'
 import {
   getPersonalMessages,
   getDepartmentMessages,

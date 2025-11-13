@@ -24,7 +24,7 @@ export function getLogsList(params) {
  */
 export function getLogDetail(logId) {
   return request({
-    url: `/admin/logs/${logId}`,
+    url: `/api/admin/logs/${logId}`,
     method: 'get'
   })
 }

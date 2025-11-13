@@ -12,7 +12,7 @@
         class="message-item"
         @click="goToSystemMessages"
       >
-        <div class="avatar">📢</div>
+        <Avatar name="官方" :size="40" bgColor="#FF6B00" />
         <div class="message-info">
           <div class="message-header">
             <span class="username">官方消息</span>
@@ -30,7 +30,7 @@
         class="message-item"
         @click="goToDepartmentMessages"
       >
-        <div class="avatar">🏢</div>
+        <Avatar name="部门" :size="40" bgColor="#4A90E2" />
         <div class="message-info">
           <div class="message-header">
             <span class="username">部门消息</span>
@@ -54,12 +54,11 @@
         @click="handleMessageClick(message)"
       >
         <!-- 头像：根据消息类型显示 -->
-        <div 
-          v-if="message.avatarUrl" 
-          class="avatar avatar-image"
-          :style="{ backgroundImage: `url(${message.avatarUrl})` }"
-        ></div>
-        <div v-else class="avatar">{{ message.avatar }}</div>
+        <Avatar 
+          :src="message.avatarUrl || undefined" 
+          :name="message.displayName"
+          :size="40"
+        />
         
         <div class="message-info">
           <div class="message-header">
@@ -77,7 +76,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import Avatar from '../../components/common/Avatar.vue'
 import { 
   getPersonalMessages, 
   getDepartmentMessages, 
@@ -121,7 +120,7 @@ const loadMessages = async () => {
     }
   } catch (error) {
     console.error('获取消息失败:', error)
-    ElMessage.error('获取消息失败')
+    //ElMessage.error('获取消息失败')
   } finally {
     loading.value = false
   }
@@ -320,9 +319,13 @@ const handleMessageClick = async (message: any) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 100;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  z-index: 1000;
   border-bottom: 1px solid #F5F5F5;
 }
 
@@ -337,6 +340,7 @@ const handleMessageClick = async (message: any) => {
 /* 消息列表 */
 .content {
   padding: 0;
+  margin-top: 43px; /* header height (padding + content + border) */
 }
 
 .message-item {
@@ -348,29 +352,11 @@ const handleMessageClick = async (message: any) => {
   cursor: pointer;
   position: relative;
   transition: background 0.2s;
+  gap: 12px;
 }
 
 .message-item:active {
   background: #FAFAFA;
-}
-
-.avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: #F7F7F7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  margin-right: 12px;
-  flex-shrink: 0;
-}
-
-.avatar-image {
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .message-info {

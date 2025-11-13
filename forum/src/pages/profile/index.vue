@@ -7,9 +7,7 @@
 
     <!-- 用户信息卡片 -->
     <div class="user-card">
-      <div class="user-avatar">
-        <img :src="userProfile?.forum_avatar" alt="avatar" />
-      </div>
+      <Avatar :src="userProfile?.forum_avatar" :name="userProfile?.name" :size="56" />
       <div class="user-info">
         <div class="user-name-wrapper">
           <div class="user-name">{{ userProfile?.name || '加载中...' }}</div>
@@ -78,6 +76,7 @@
         :key="post.id"
         :post="post"
         @click="handlePostClick(post)"
+        @like="handlePostLike"
       />
     </div>
   </div>
@@ -86,17 +85,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import PostCard from '../../components/post/PostCard.vue'
+import Avatar from '../../components/common/Avatar.vue'
 import { getUserProfile, type UserProfile } from '../../api/user'
-import { getMyQuestions, type QuestionItem } from '../../api/question'
+import { getMyQuestions, type QuestionItem, toggleLikeQuestion } from '../../api/question'
 import { getMyAnswers, type AnswerItem } from '../../api/answer'
 import { transformQuestionToPost } from '../../utils/transform'
 import type { Post } from '../../types/post'
-import { useUserStore } from '../../stores/user'
-
 const router = useRouter()
-useUserStore()
 
 // 当前激活的 tab
 const activeTab = ref<'questions' | 'answers'>('questions')
@@ -122,7 +118,7 @@ const loadUserProfile = async () => {
       userProfile.value = res.data
       console.log('✅ 用户信息加载成功:', userProfile.value)
     } else {
-      ElMessage.error(res.message || '获取用户信息失败')
+      //ElMessage.error(res.message || '获取用户信息失败')
     }
   } catch (error) {
     console.error('❌ 获取用户信息失败:', error)
@@ -151,7 +147,7 @@ const loadMyQuestions = async () => {
       
       console.log('✅ 提问列表加载完成，共', myQuestions.value.length, '条')
     } else {
-      ElMessage.error(res.message || '获取提问失败')
+      //ElMessage.error(res.message || '获取提问失败')
     }
   } catch (error) {
     console.error('❌ 获取提问失败:', error)
@@ -180,7 +176,7 @@ const loadMyAnswers = async () => {
       
       console.log('✅ 回答列表加载完成，共', myAnswers.value.length, '条')
     } else {
-      ElMessage.error(res.message || '获取回答失败')
+      //ElMessage.error(res.message || '获取回答失败')
     }
   } catch (error) {
     console.error('❌ 获取回答失败:', error)
@@ -236,6 +232,30 @@ const goToQuestions = () => router.push('/profile/answers')
 const handlePostClick = (post: Post) => {
   router.push(`/post/detail?id=${post.id}`)
 }
+
+// 处理帖子点赞
+const handlePostLike = async (post: Post) => {
+  try {
+    const questionId = post.question_id || Number(post.id)
+    const response = await toggleLikeQuestion(questionId)
+    
+    // 更新帖子的点赞状态
+    if (activeTab.value === 'questions' && response.data) {
+      const postIndex = myQuestions.value.findIndex(q => q.question_id === questionId)
+      if (postIndex !== -1 && myQuestions.value[postIndex]) {
+        myQuestions.value[postIndex].is_liked = response.data.liked
+        myQuestions.value[postIndex].like_count = response.data.liked 
+          ? (myQuestions.value[postIndex].like_count || 0) + 1 
+          : (myQuestions.value[postIndex].like_count || 0) - 1
+      }
+    }
+    
+    //ElMessage.success(response.data.liked ? '点赞成功' : '取消点赞')
+  } catch (error) {
+    console.error('点赞失败:', error)
+    //ElMessage.error('操作失败')
+  }
+}
 </script>
 
 <style scoped>
@@ -254,9 +274,13 @@ const handlePostClick = (post: Post) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 100;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
+  z-index: 1000;
 }
 
 .header-title {
@@ -275,26 +299,9 @@ const handlePostClick = (post: Post) => {
   align-items: center;
   gap: 12px;
   margin-bottom: 8px;
+  margin-top: 43px; /* header height (padding + content) */
 }
 
-.user-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #F7F7F7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  flex-shrink: 0;
-}
-
-.user-avatar img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-}
 .user-info {
   flex: 1;
   min-width: 0;

@@ -76,7 +76,7 @@ const performSearch = async (keyword: string) => {
   try {
     isSearching.value = true
     const response = await searchTopics(keyword, 1, 20)
-    searchResults.value = response.data?.items || []
+    searchResults.value = response.data.items
   } catch (error) {
     console.error('搜索话题失败:', error)
     searchResults.value = []
@@ -115,8 +115,10 @@ const handleSelectTopic = (topicName: string) => {
 .modal-overlay {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;

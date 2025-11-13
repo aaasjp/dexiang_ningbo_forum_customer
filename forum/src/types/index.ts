@@ -47,6 +47,7 @@ export interface Comment {
   likeCount: number
   replies?: Comment[]
   createTime: string
+  favorited?: boolean
 }
 
 // 消息类型

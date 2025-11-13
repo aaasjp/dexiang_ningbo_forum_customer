@@ -101,7 +101,6 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, ArrowLeft, CircleClose, Delete, Loading } from '@element-plus/icons-vue'
 import { getQuestionList, type QuestionItem } from '@/api/question'
-import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const searchInputRef = ref<HTMLInputElement>()
@@ -200,7 +199,7 @@ const performSearch = async () => {
     console.log('搜索结果数量:', searchResults.value.length, '总数:', totalCount.value)
   } catch (error: any) {
     console.error('搜索失败:', error)
-    ElMessage.error(error.message || '搜索失败，请稍后重试')
+    //ElMessage.error(error.message || '搜索失败，请稍后重试')
     searchResults.value = []
     totalCount.value = 0
   } finally {
@@ -257,28 +256,6 @@ const highlightKeyword = (text: string) => {
   
   return text.replace(regex, '<span class="highlight">$1</span>')
 }
-
-// 获取问题状态文本（保留供未来使用）
-// const getStatusText = (status: number) => {
-//   const statusMap: Record<number, string> = {
-//     0: '待解决',
-//     1: '已解决',
-//     2: '未解决',
-//     3: '已关闭'
-//   }
-//   return statusMap[status] || '未知'
-// }
-
-// 获取问题状态样式类（保留供未来使用）
-// const getStatusClass = (status: number) => {
-//   const classMap: Record<number, string> = {
-//     0: 'status-pending',
-//     1: 'status-solved',
-//     2: 'status-unsolved',
-//     3: 'status-closed'
-//   }
-//   return classMap[status] || ''
-// }
 
 // 点击搜索结果
 const handleResultClick = (item: QuestionItem) => {

@@ -23,8 +23,8 @@ export interface QuestionDetail {
   like_count: number
   favorite_count: number
   answer_count: number
-  is_liked?: boolean
-  is_favorited?: boolean
+  is_liked: boolean
+  is_favorited: boolean
   topics?: TopicInfo[]
   related_dept_ids?: number[]
   related_staff_codes?: string[]
@@ -47,8 +47,8 @@ export interface QuestionItem {
   like_count: number
   favorite_count: number
   answer_count: number
-  is_liked?: boolean
-  is_favorited?: boolean
+  is_liked: boolean
+  is_favorited: boolean
   create_time: string
   topics?: TopicInfo[]
   images?: string[]
@@ -207,7 +207,6 @@ export interface FavoriteItem {
   question_id?: number
   question_title?: string
   answerer_name?: string
-  answerer_avatar?: string
   is_official?: number
   points_awarded?: number
   is_useful?: number

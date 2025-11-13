@@ -115,11 +115,10 @@ export function transformAnswerToComment(answer: AnswerItem): Comment {
     is_useful: answer.is_useful,
     view_count: answer.view_count,
     favorite_count: answer.favorite_count,
-    favorited: answer.is_favorited,
     images: answer.images,
     parent_answer_id: answer.parent_answer_id,
     question_id: answer.question_id
-  }
+  } as any
 }
 
 /**

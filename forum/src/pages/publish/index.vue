@@ -149,7 +149,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { 
   Close
 } from '@element-plus/icons-vue'
-// import { ElMessage } from 'element-plus'
 import CategorySelector from '@/components/publish/CategorySelector.vue'
 import MentionSection from '@/components/publish/MentionSection.vue'
 import BottomToolbar from '@/components/publish/BottomToolbar.vue'

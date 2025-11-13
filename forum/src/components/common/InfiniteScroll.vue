@@ -149,12 +149,12 @@ const handleScroll = () => {
 
 // 下拉刷新 - 触摸开始
 const handleTouchStart = (e: TouchEvent) => {
-  if (!props.enablePullRefresh) return
+  if (!props.enablePullRefresh || !e.touches || !e.touches[0]) return
   
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop
   
   // 只有在页面顶部才能触发下拉刷新
-  if (scrollTop === 0 && e.touches[0]) {
+  if (scrollTop === 0) {
     startY.value = e.touches[0].clientY
     isPulling.value = true
   }
@@ -162,7 +162,7 @@ const handleTouchStart = (e: TouchEvent) => {
 
 // 下拉刷新 - 触摸移动
 const handleTouchMove = (e: TouchEvent) => {
-  if (!props.enablePullRefresh || !isPulling.value || !e.touches[0]) return
+  if (!props.enablePullRefresh || !isPulling.value || !e.touches || !e.touches[0]) return
   
   const currentY = e.touches[0].clientY
   const distance = currentY - startY.value
@@ -265,7 +265,6 @@ defineExpose({
 <style scoped>
 .infinite-scroll-wrapper {
   position: relative;
-  min-height: 100vh;
 }
 
 /* 下拉刷新指示器 */

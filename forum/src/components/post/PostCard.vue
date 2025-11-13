@@ -2,8 +2,12 @@
   <div class="post-card" @click="handleClick">
     <!-- 帖子头部 -->
     <div class="post-header">
-      <div class="author-info" @click.stop="handleAuthorClick">
-        <div class="avatar">{{ post.author.avatar }}</div>
+      <div 
+        class="author-info" 
+        :class="{ 'not-clickable': post.is_anonymous === 1 }"
+        @click.stop="handleAuthorClick"
+      >
+        <Avatar :src="post.author.avatar" :name="post.author.name" :size="24" />
         <div class="author-details">
           <div class="author-name">
             {{ post.author.name }}
@@ -11,7 +15,7 @@
           </div>
         </div>
       </div>
-      <div class="post-tag" :class="`tag-${post.category}`">
+      <div class="post-tag" :class="`tag-${post.category}`" v-if="getCategoryName(post.category)">
         {{ getCategoryName(post.category) }}
       </div>
     </div>
@@ -47,11 +51,11 @@
     <div class="post-footer">
       <span class="post-time">{{ post.time }}</span>
       <div class="post-stats">
-        <div class="stat-item" :class="{ active: post.commented }">
+        <div class="stat-item" :class="{ active: post.commented }" @click.stop>
           <img src="../../assets/images/icon/answer.png" alt="评论" class="action-image" width="16" height="16"/>
           <span class="stat-text">{{ post.comments > 0 ? formatNumber(post.comments) : '评论' }}</span>
         </div>
-        <div class="stat-item" :class="{ active: post.liked }">
+        <div class="stat-item" :class="{ active: post.liked }" @click.stop="handleLike">
           <img v-if="!post.liked" src="../../assets/images/icon/like.png" alt="点赞" class="action-image" width="16" height="16"/>
           <img v-if="post.liked" src="../../assets/images/icon/like-active.png" alt="点赞" class="action-image" width="16" height="16"/>
           <span class="stat-text">{{ post.likes > 0 ? formatNumber(post.likes) : '点赞' }}</span>
@@ -62,8 +66,11 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import Avatar from '../common/Avatar.vue'
 import type { Post } from '../../types/post'
+import { getUserProfile } from '../../api/user'
 
 interface Props {
   post: Post
@@ -71,11 +78,32 @@ interface Props {
 
 interface Emits {
   (e: 'click', post: Post): void
+  (e: 'like', post: Post): void
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 const router = useRouter()
+
+// 当前用户的工号
+const currentUserStaffCode = ref<string>('')
+
+// 获取当前用户信息
+onMounted(async () => {
+  try {
+    const res = await getUserProfile()
+    if (res.code === 200) {
+      currentUserStaffCode.value = res.data.staff_code
+    }
+  } catch (error) {
+    console.error('获取用户信息失败:', error)
+  }
+})
+
+// 处理点赞
+const handleLike = () => {
+  emit('like', props.post)
+}
 
 // 获取分类名称
 const getCategoryName = (category: string) => {
@@ -85,7 +113,7 @@ const getCategoryName = (category: string) => {
     complain: '吐槽',
     select: '精选'
   }
-  return categoryMap[category] || '推荐'
+  return categoryMap[category] || ''
 }
 
 // 格式化数字
@@ -103,9 +131,22 @@ const handleClick = () => {
 
 // 处理作者点击 - 跳转到个人主页
 const handleAuthorClick = () => {
+  // 如果是匿名帖子，不允许点击
+  if (props.post.is_anonymous === 1) {
+    return
+  }
+  
   // 使用 staff_code 或 asker_code 跳转到个人主页
   const staffCode = props.post.author.staff_code || props.post.asker_code
-  if (staffCode) {
+  if (!staffCode) {
+    return
+  }
+  
+  // 如果点击的是自己，跳转到个人中心页
+  if (staffCode === currentUserStaffCode.value) {
+    router.push('/profile')
+  } else {
+    // 否则跳转到他人主页
     router.push(`/profile/home/${staffCode}`)
   }
 }
@@ -150,16 +191,17 @@ const handleAuthorClick = () => {
   opacity: 0.6;
 }
 
-.avatar {
-  width: 24px;  /* clamp(32px, 9.6vw, 36px) → 36px */
-  height: 24px;
-  border-radius: 50%;
-  background: #f0f0f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;  /* clamp(16px, 5.3vw, 20px) → 20px */
-  flex-shrink: 0;
+/* 匿名用户不可点击 */
+.author-info.not-clickable {
+  cursor: default;
+}
+
+.author-info.not-clickable:hover {
+  opacity: 1;
+}
+
+.author-info.not-clickable:active {
+  opacity: 1;
 }
 
 .author-details {

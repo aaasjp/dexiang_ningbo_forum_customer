@@ -195,7 +195,6 @@
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, ArrowRight, Edit } from '@element-plus/icons-vue'
-// import { ElMessage } from 'element-plus'
 import { getUserProfile, updateUserProfile, type UpdateProfileData } from '../../api/user'
 import BottomEditInput from '../../components/common/BottomEditInput.vue'
 

@@ -31,7 +31,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // 预设的颜色数组 - 多种颜色供随机选择
-const colorPalette: readonly string[] = [
+const colorPalette = [
   '#4A90E2', // 蓝色
   '#5CB85C', // 绿色
   '#F0AD4E', // 橙色
@@ -51,8 +51,8 @@ const colorPalette: readonly string[] = [
 ]
 
 // 根据名称生成颜色索引（确保同一名称总是得到相同颜色）
-const getColorFromName = (name: string): string => {
-  if (!name) return colorPalette[0]!
+const getColorFromName = (name: string | undefined): string => {
+  if (!name) return colorPalette[0] || '#4A90E2'
   
   // 使用简单的哈希函数将名称转换为数字
   let hash = 0
@@ -63,7 +63,7 @@ const getColorFromName = (name: string): string => {
   
   // 使用哈希值选择颜色
   const index = Math.abs(hash) % colorPalette.length
-  return colorPalette[index]!
+  return colorPalette[index] || '#4A90E2'
 }
 
 // 从名称中提取最后两个字
@@ -75,9 +75,9 @@ const displayText = computed(() => {
 })
 
 // 计算背景颜色
-const computedBgColor = computed(() => {
+const computedBgColor = computed((): string => {
   if (props.bgColor) return props.bgColor
-  return getColorFromName(props.name)
+  return getColorFromName(props.name || '')
 })
 
 // 计算字体大小（如果fontSize为0，则根据size自动计算）

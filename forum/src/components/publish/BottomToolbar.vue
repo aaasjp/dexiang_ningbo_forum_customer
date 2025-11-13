@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-
 interface Props {
   isKeyboardActive: boolean
 }
@@ -29,15 +28,17 @@ defineEmits<{
 .bottom-fixed {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
   background: #fff;
   z-index: 100;
   transition: transform 0.3s ease;
 }
 
 .bottom-fixed.keyboard-active {
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
 }
 
 .toolbar {

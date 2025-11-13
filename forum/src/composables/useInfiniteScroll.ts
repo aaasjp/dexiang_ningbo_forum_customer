@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
  * 无限滚动加载 Hook
  * 用于简化列表页的分页加载逻辑
  */
-export function useInfiniteScroll<T = any, R extends T = any>(
+export function useInfiniteScroll<T = any, R = any>(
   fetchFunction: (page: number, pageSize: number, ...args: any[]) => Promise<{
     data: {
       items: R[]
@@ -61,13 +61,13 @@ export function useInfiniteScroll<T = any, R extends T = any>(
       const { items, total: totalCount, has_more } = response.data
 
       // 转换数据（如果提供了转换函数）
-      const transformedItems = transform ? items.map(transform) : items
+      const transformedItems = transform ? items.map(transform) : (items as any)
 
       // 更新列表
       if (isRefresh) {
-        list.value = transformedItems as any
+        list.value = transformedItems
       } else {
-        list.value.push(...(transformedItems as any))
+        list.value.push(...transformedItems)
       }
 
       // 更新总数

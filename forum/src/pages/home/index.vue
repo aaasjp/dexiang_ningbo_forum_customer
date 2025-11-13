@@ -67,11 +67,15 @@
         class="follow-user-item"
         @click="handleUserClick(user)"
       >
-        <div class="user-avatar">{{ user.avatar }}</div>
+        <Avatar :src="user.forum_avatar" :name="user.name" :size="56" />
         <div class="user-name">{{ user.name }}</div>
       </div>
-      <div class="follow-more-item">
-        <div class="more-icon">+</div>
+      <div class="follow-more-item" @click="goToUserList">
+        <div class="more-icon">
+          <el-icon :size="24">
+            <Plus />
+          </el-icon>
+        </div>
         <div class="more-text">关注更多</div>
       </div>
     </div>
@@ -81,30 +85,7 @@
       <!-- 关注页空状态 -->
       <div v-if="mainTab === 'follow' && filteredPosts.length === 0" class="empty-follow">
         <div class="empty-icon">
-          <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
-            <!-- 左边的黄色人物 -->
-            <rect x="20" y="30" width="35" height="45" rx="8" fill="#FFD700"/>
-            <circle cx="30" cy="45" r="3" fill="#333"/>
-            <circle cx="45" cy="45" r="3" fill="#333"/>
-            <path d="M 30 55 Q 37.5 58 45 55" stroke="#333" stroke-width="2" fill="none"/>
-            <rect x="25" y="80" width="8" height="15" rx="4" fill="#333"/>
-            <rect x="42" y="80" width="8" height="15" rx="4" fill="#333"/>
-            <path d="M 20 75 L 15 85 L 20 85" fill="#333"/>
-            <path d="M 55 75 L 60 85 L 55 85" fill="#333"/>
-            
-            <!-- 右边的黄色人物 -->
-            <rect x="65" y="30" width="35" height="45" rx="8" fill="#FFD700"/>
-            <circle cx="75" cy="45" r="3" fill="#333"/>
-            <circle cx="90" cy="45" r="3" fill="#333"/>
-            <path d="M 75 55 Q 82.5 58 90 55" stroke="#333" stroke-width="2" fill="none"/>
-            <rect x="70" y="80" width="8" height="15" rx="4" fill="#333"/>
-            <rect x="87" y="80" width="8" height="15" rx="4" fill="#333"/>
-            <path d="M 65 75 L 60 85 L 65 85" fill="#333"/>
-            <path d="M 100 75 L 105 85 L 100 85" fill="#333"/>
-            
-            <!-- 手拉手 -->
-            <path d="M 55 60 Q 60 55 65 60" stroke="#333" stroke-width="3" fill="none"/>
-          </svg>
+          <img src="../../assets/images/empty/follow_empty.png" alt="暂无关注"  width="130" height="130"/>
         </div>
         <div class="empty-text">还未关注任何人，可以去推荐页看看</div>
         <div class="empty-btn" @click="goToRecommend">去看看</div>
@@ -120,12 +101,21 @@
         @load-more="loadMore"
         @refresh="refresh"
       >
+        <template #empty>
+          <div class="custom-empty">
+            <div class="empty-icon">
+              <img src="../../assets/images/empty/follow_empty.png" alt="暂无数据" width="130" height="130" />
+            </div>
+            <div class="empty-text">暂无内容</div>
+          </div>
+        </template>
         <div class="post-list">
           <PostCard
             v-for="post in filteredPosts"
             :key="post.id"
             :post="post"
             @click="handlePostClick(post)"
+            @like="handlePostLike"
           />
         </div>
       </InfiniteScroll>
@@ -136,11 +126,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search } from '@element-plus/icons-vue'
+import { Search, Plus } from '@element-plus/icons-vue'
 import PostCard from '../../components/post/PostCard.vue'
 import InfiniteScroll from '../../components/common/InfiniteScroll.vue'
+import Avatar from '../../components/common/Avatar.vue'
 import type { Post, CategoryOption } from '../../types/post'
-import { getQuestionList } from '../../api/question'
+import { getQuestionList, toggleLikeQuestion } from '../../api/question'
 import { getFollowedUsers } from '../../api/user'
 import { transformQuestionToPost, mapCategoryToApi } from '../../utils/transform'
 import { useInfiniteScroll } from '../../composables/useInfiniteScroll'
@@ -176,6 +167,9 @@ const {
       page,
       page_size: pageSize
     }
+    
+    // 添加 interest_type 参数
+    params.interest_type = mainTab.value === 'follow' ? '关注' : '推荐'
     
     // 如果选择了分类，添加分类参数
     if (activeCategory.value !== 'all') {
@@ -224,6 +218,8 @@ const handleRecommendClick = () => {
   if (mainTab.value !== 'recommend') {
     mainTab.value = 'recommend'
     showDropdown.value = false
+    // 切换到推荐Tab时重新加载数据
+    refresh()
   } else {
     // 如果已经在推荐 Tab，则切换下拉菜单
     showDropdown.value = !showDropdown.value
@@ -251,6 +247,8 @@ const switchMainTab = (tab: 'recommend' | 'follow') => {
   if (tab === 'follow') {
     loadFollowUsers()
   }
+  // 切换Tab时重新加载帖子列表
+  refresh()
 }
 
 // 切换二级 Tab
@@ -266,8 +264,8 @@ const loadFollowUsers = async () => {
     const response = await getFollowedUsers(1, 20)
     followUsers.value = response.data.items.map(user => ({
       id: user.staff_code,
-      name: user.nickname || user.name,
-      avatar: '👤',
+      name: user.name,
+      forum_avatar: user.forum_avatar || '',
       badge: user.forum_tag || ''
     }))
   } catch (error) {
@@ -302,11 +300,40 @@ const handlePostClick = (post: Post) => {
   router.push(`/post/${post.question_id || post.id}`)
 }
 
+// 处理帖子点赞
+const handlePostLike = async (post: Post) => {
+  try {
+    const questionId = post.question_id || Number(post.id)
+    const response = await toggleLikeQuestion(questionId)
+    
+    // 更新帖子的点赞状态
+    const postIndex = allPosts.value.findIndex(p => p.id === post.id)
+    if (postIndex !== -1 && response.data && allPosts.value[postIndex]) {
+      allPosts.value[postIndex].liked = response.data.liked
+      if (response.data.liked) {
+        allPosts.value[postIndex].likes++
+      } else {
+        allPosts.value[postIndex].likes--
+      }
+    }
+    
+    //ElMessage.success(response.data.liked ? '点赞成功' : '取消点赞')
+  } catch (error) {
+    console.error('点赞失败:', error)
+    //ElMessage.error('操作失败')
+  }
+}
+
 // 跳转到推荐页
 const goToRecommend = () => {
   mainTab.value = 'recommend'
   activeCategory.value = 'all'
   refresh()
+}
+
+// 跳转到用户列表页
+const goToUserList = () => {
+  router.push('/users')
 }
 
 // 跳转到搜索页
@@ -468,19 +495,13 @@ onMounted(() => {
   display: flex;
   background: #fff;
   padding: 12px 16px;
+  padding-top: 60px;
   gap: 16px;
   overflow-x: auto;
   white-space: nowrap;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   border-bottom: 1px solid #F5F5F5;
-  position: fixed;
-  top: 48px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 600px;
-  z-index: 1000;
 }
 
 .follow-list::-webkit-scrollbar {
@@ -496,21 +517,7 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.user-avatar {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #F7F7F7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 32px;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.2s;
-}
-
-.follow-user-item:active .user-avatar {
+.follow-user-item:active :deep(.avatar-component) {
   transform: scale(0.95);
 }
 
@@ -543,10 +550,10 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 40px;
   color: #999;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  /* border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); */
   transition: transform 0.2s;
 }
 
@@ -651,7 +658,17 @@ onMounted(() => {
 /* 内容区域 */
 .content {
   padding: 0;
+  padding-top: 48px; /* header 高度 */
+}
+
+/* 推荐Tab下，增加 sub-tabs 的高度 */
+.home-page:has(.sub-tabs) .content {
   padding-top: 100px;
+}
+
+/* 关注Tab下，关注列表自带上边距 */
+.home-page:has(.follow-list) .content {
+  padding-top: 0;
 }
 
 /* 关注页空状态 */
@@ -660,13 +677,20 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 40px;
-  min-height: calc(100vh - 150px);
+  padding: 120px 40px;
+  min-height: calc(100vh - 100px);
 }
 
-.empty-icon {
+.empty-follow .empty-icon {
   margin-bottom: 30px;
   animation: float 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-follow .empty-icon img {
+  display: block;
 }
 
 @keyframes float {
@@ -716,6 +740,34 @@ onMounted(() => {
 /* 帖子列表容器 */
 .post-list {
   background: #fff;
+}
+
+/* 自定义空状态 */
+.custom-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+}
+
+.custom-empty .empty-icon {
+  margin-bottom: 30px;
+  animation: float 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-empty .empty-icon img {
+  display: block;
+}
+
+.custom-empty .empty-text {
+  font-size: 14px;
+  color: #999;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .empty-state {

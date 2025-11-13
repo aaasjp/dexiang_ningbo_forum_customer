@@ -59,7 +59,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Search } from '@element-plus/icons-vue'
-// import { ElMessage } from 'element-plus'
 import PostCard from '../../components/post/PostCard.vue'
 import { getTopicDetail, getTopicQuestions, toggleFavoriteTopic } from '../../api/topic'
 import { toggleLikeQuestion } from '../../api/question'
@@ -175,13 +174,12 @@ const handlePostLike = async (post: Post) => {
     
     // 更新帖子的点赞状态
     const postIndex = topicPosts.value.findIndex(p => p.id === post.id)
-    if (postIndex !== -1 && topicPosts.value[postIndex]) {
-      const targetPost = topicPosts.value[postIndex]
-      targetPost.liked = response.data.liked
+    if (postIndex !== -1 && response.data && topicPosts.value[postIndex]) {
+      topicPosts.value[postIndex].liked = response.data.liked
       if (response.data.liked) {
-        targetPost.likes++
+        topicPosts.value[postIndex].likes++
       } else {
-        targetPost.likes--
+        topicPosts.value[postIndex].likes--
       }
     }
     

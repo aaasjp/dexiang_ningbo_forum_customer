@@ -5,7 +5,7 @@ const GW_SESSION = encodeURIComponent('appid=500883957,name=张三,depatment=人
 // 创建 axios 实例
 const request = axios.create({
   // baseURL: 'http://220.154.134.61:8000/api', // 使用 Vite 代理，避免跨域问题
-  baseURL: 'http://10.129.114.106:8000/api',
+  baseURL: '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

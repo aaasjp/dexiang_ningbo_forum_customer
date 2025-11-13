@@ -64,7 +64,6 @@
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
-// import { ElMessage } from 'element-plus'
 import InfiniteScroll from '../../components/common/InfiniteScroll.vue'
 import Avatar from '../../components/common/Avatar.vue'
 import { getUserList, toggleFollowUser, type UserListItem } from '../../api/user'

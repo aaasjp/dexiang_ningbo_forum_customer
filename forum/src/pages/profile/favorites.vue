@@ -42,7 +42,7 @@
         >
           <!-- 用户信息 -->
           <div class="answer-header">
-            <Avatar :src="item.answerer_avatar" :name="item.type === 'answer' ? item.answerer_name : '匿名用户'" :size="24" />
+            <Avatar :src="(item.type === 'answer' ? (item as any).answerer_avatar : undefined)" :name="item.type === 'answer' ? item.answerer_name : '匿名用户'" :size="24" />
             <div class="user-info">
               <div class="user-name">{{ item.type === 'answer' ? item.answerer_name : '匿名用户' }}</div>
             </div>
@@ -100,7 +100,7 @@
               <div class="topic-stats">
                 <span class="topic-stats-item">{{ formatCount(topic.question_count) }}篇内容</span>
                 <span class="topic-stats-divider">·</span>
-                <span class="topic-stats-item">{{ formatCount(topic.view_count ? topic.view_count : 0) }}次浏览</span>
+                <span class="topic-stats-item">{{ formatCount((topic as any).view_count ? (topic as any).view_count : 0) }}次浏览</span>
               </div>
               <div class="more-btn" @click.stop="toggleMoreMenu(topic.topic_id)">
                 <el-icon :size="16">
@@ -125,7 +125,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, MoreFilled } from '@element-plus/icons-vue'
-// import { ElMessage } from 'element-plus'
 import { getMyFavorites, type FavoriteItem } from '../../api/question'
 import { getMyFavoriteTopics, type Topic } from '../../api/topic'
 import Avatar from '../../components/common/Avatar.vue'

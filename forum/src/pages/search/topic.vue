@@ -103,7 +103,6 @@ import { useRouter } from 'vue-router'
 import { Search, ArrowLeft, CircleClose, Delete, Loading } from '@element-plus/icons-vue'
 import { searchTopics } from '../../api/topic'
 import type { Topic } from '../../api/topic'
-import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const searchInputRef = ref<HTMLInputElement>()
@@ -196,7 +195,7 @@ const performSearch = async () => {
   } catch (error) {
     console.error('搜索话题失败:', error)
     searchResults.value = []
-    ElMessage.error('搜索失败，请稍后重试')
+    //ElMessage.error('搜索失败，请稍后重试')
   } finally {
     isSearching.value = false
   }
