@@ -87,7 +87,7 @@ fi
 echo -e "\n${GREEN}========================================${NC}"
 echo -e "${GREEN}完成！${NC}"
 echo -e "${GREEN}========================================${NC}"
-echo -e "论坛前端: ${YELLOW}http://${SERVER_IP}:8080${NC}"
+echo -e "论坛前端: ${YELLOW}http://${SERVER_IP}:8082${NC}"
 echo -e "管理后台: ${YELLOW}http://${SERVER_IP}:8081${NC}"
 echo ""
 echo -e "查看日志: ${YELLOW}ssh ${SERVER_USER}@${SERVER_IP} 'cd /opt/forum_code && docker compose logs -f'${NC}"
