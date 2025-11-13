@@ -21,9 +21,10 @@
       :related-mentions="relatedMentions"
       :title="postData.title"
       :content="postData.content || ''"
+      :images="postData.images"
       :topic="postData.topic"
       :solved="postData.solved"
-      :show-solve-status="postData.category === 'help'"
+      :show-solve-status="dataLoaded && postData.category === 'help'"
       :can-change-solve-status="isOwnPost && postData.category === 'help'"
       :show-follow-btn="!isOwnPost"
       :is-followed="isFollowed"
@@ -127,6 +128,7 @@ const isFollowed = ref(false)
 
 // 加载状态
 const loading = ref(false)
+const dataLoaded = ref(false)
 
 // 帖子数据
 const postData = ref<Post>({
@@ -261,6 +263,9 @@ const loadPostData = async () => {
     
     // 更新关联提及信息
     updateRelatedMentions()
+    
+    // 标记数据已加载
+    dataLoaded.value = true
   } catch (error) {
     console.error('加载帖子数据失败:', error)
     //ElMessage.error('加载帖子数据失败')

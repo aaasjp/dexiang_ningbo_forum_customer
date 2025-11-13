@@ -82,8 +82,8 @@
 
     <!-- 帖子列表 -->
     <div class="content">
-      <!-- 关注页空状态 -->
-      <div v-if="mainTab === 'follow' && filteredPosts.length === 0" class="empty-follow">
+      <!-- 关注页空状态 - 只在没有关注任何人时显示 -->
+      <div v-if="mainTab === 'follow' && filteredPosts.length === 0 && followUsers.length === 0" class="empty-follow">
         <div class="empty-icon">
           <img src="../../assets/images/empty/follow_empty.png" alt="暂无关注"  width="130" height="130"/>
         </div>

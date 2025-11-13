@@ -39,6 +39,18 @@
     <!-- 内容 -->
     <div class="post-body">{{ content }}</div>
 
+    <!-- 图片 -->
+    <div v-if="images && images.length > 0" class="post-images">
+      <img
+        v-for="(image, index) in images"
+        :key="index"
+        :src="image"
+        :alt="`图片${index + 1}`"
+        class="post-image"
+        :class="`image-count-${images.length}`"
+      />
+    </div>
+
     <!-- 话题标签 -->
     <div v-if="topic" class="post-topic">
       <span class="topic-hash">#</span>
@@ -80,6 +92,7 @@ interface Props {
   relatedMentions?: string[]  // @的部门和人员
   title: string
   content: string
+  images?: string[]  // 图片列表
   topic?: string
   solved?: boolean
   showSolveStatus?: boolean  // 是否显示解决状态
@@ -231,6 +244,37 @@ defineExpose({
   color: #1A1A1A;
   line-height: 1.6;
   margin-bottom: 16px;
+}
+
+/* 图片 */
+.post-images {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.post-image {
+  display: block;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f0f0f0;
+  object-fit: cover;
+}
+
+.post-image.image-count-1 {
+  width: 108px;
+  height: 108px;
+}
+
+.post-image.image-count-2 {
+  width: 108px;
+  height: 108px;
+}
+
+.post-image.image-count-3 {
+  width: 108px;
+  height: 108px;
 }
 
 /* 话题标签 */
