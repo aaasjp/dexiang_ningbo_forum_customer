@@ -51,6 +51,13 @@ request.interceptors.response.use(
     let message = '网络错误,请稍后重试'
     
     if (error.response) {
+      // 优先检查 detail 字段
+      if (error.response.data?.detail) {
+        message = error.response.data.detail
+        ElMessage.error(message)
+        return Promise.reject(error)
+      }
+      
       switch (error.response.status) {
         case 401:
           message = '未授权,请重新登录'
@@ -69,7 +76,7 @@ request.interceptors.response.use(
       }
     }
     
-    //ElMessage.error(message)
+    ElMessage.error(message)
     return Promise.reject(error)
   }
 )
