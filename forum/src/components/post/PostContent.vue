@@ -1,0 +1,295 @@
+<template>
+  <div class="post-content">
+    <!-- 用户信息 -->
+    <div class="post-header">
+      <div class="author" @click="onAuthorClick">
+        <div class="author-avatar">{{ author.avatar }}</div>
+        <div class="author-info">
+          <div class="author-name">{{ author.name }}</div>
+          <div class="post-time">{{ time }}</div>
+        </div>
+      </div>
+      <!-- 关注按钮 - 只在查看他人帖子时显示 -->
+      <button v-if="showFollowBtn" class="follow-btn" :class="{ followed: isFollowed }" @click="onFollowClick">
+        {{ isFollowed ? '已关注' : '关注' }}
+      </button>
+    </div>
+
+    <!-- @提及 -->
+    <div v-if="mentions && mentions.length > 0" class="mentions">
+      <div v-for="mention in mentions" :key="mention" class="mention-tag">
+        @{{ mention }}
+      </div>
+    </div>
+
+    <!-- 标题 -->
+    <div class="post-title">{{ title }}</div>
+
+    <!-- 内容 -->
+    <div class="post-body">{{ content }}</div>
+
+    <!-- 话题标签 -->
+    <div v-if="topic" class="post-topic">
+      <span class="topic-hash">#</span>
+      <span class="topic-text">{{ topic }}</span>
+    </div>
+
+    <!-- 解决状态按钮 (提问类型都显示，但只有自己的才能点击) -->
+    <div v-if="showSolveStatus" class="solve-status-container">
+      <div 
+        class="solve-status" 
+        :class="{ clickable: canChangeSolveStatus }"
+        @click="canChangeSolveStatus && onSolveClick()"
+      >
+        <span :class="['status-text', { solved: solved }]">
+          {{ solved ? '已解决' : '未解决' }}
+        </span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { Author } from '../../types/post'
+
+defineOptions({
+  name: 'PostContent'
+})
+
+interface Props {
+  author: Author
+  time: string
+  mentions?: string[]
+  title: string
+  content: string
+  topic?: string
+  solved?: boolean
+  showSolveStatus?: boolean  // 是否显示解决状态
+  canChangeSolveStatus?: boolean  // 是否可以修改解决状态（只有自己的才能修改）
+  showFollowBtn?: boolean  // 是否显示关注按钮（查看他人帖子时显示）
+  isFollowed?: boolean  // 是否已关注
+}
+
+interface Emits {
+  (e: 'author-click'): void
+  (e: 'solve-click'): void
+  (e: 'follow-click'): void
+}
+
+withDefaults(defineProps<Props>(), {
+  solved: false,
+  showSolveStatus: false,
+  canChangeSolveStatus: false,
+  showFollowBtn: false,
+  isFollowed: false
+})
+
+const emit = defineEmits<Emits>()
+
+const onAuthorClick = () => {
+  emit('author-click')
+}
+
+const onSolveClick = () => {
+  emit('solve-click')
+}
+
+const onFollowClick = () => {
+  emit('follow-click')
+}
+</script>
+
+<style scoped>
+.post-content {
+  padding: 16px;
+  border-bottom: 8px solid #F5F5F5;
+}
+
+.post-header {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.author-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #F7F7F7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.author-info {
+  flex: 1;
+}
+
+.author-name {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 500;
+  font-size: 15px;
+  color: #1A1A1A;
+  margin-bottom: 4px;
+}
+
+.post-time {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 400;
+  font-size: 12px;
+  color: #999;
+}
+
+/* @提及 */
+.mentions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mention-tag {
+  display: flex;
+  align-items: center;
+  padding: 2px 8px;
+  background: rgba(255, 221, 0, 0.1);
+  border: 1px solid rgba(255, 221, 0, 0.5);
+  border-radius: 12px;
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 400;
+  font-size: 12px;
+  color: #FF9500;
+  line-height: 1;
+}
+
+/* 标题 */
+.post-title {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 600;
+  font-size: 18px;
+  color: #1A1A1A;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+/* 内容 */
+.post-body {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 400;
+  font-size: 14px;
+  color: #1A1A1A;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+/* 话题标签 */
+.post-topic {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: #FFFFFF;
+  border: 1px solid rgba(255, 221, 0, 0.3);
+  border-radius: 16px;
+  gap: 2px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.topic-hash {
+  font-size: 14px;
+  font-weight: 600;
+  background: #FFDD00;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1A1A1A;
+  line-height: 1;
+}
+
+.topic-text {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 400;
+  font-size: 12px;
+  color: #88662F;
+  line-height: 1;
+}
+
+/* 关注按钮 */
+.follow-btn {
+  padding: 6px 16px;
+  background: #FFDD00;
+  border: none;
+  border-radius: 16px;
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 500;
+  font-size: 14px;
+  color: #1A1A1A;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.follow-btn.followed {
+  background: #F5F5F5;
+  color: #999;
+}
+
+.follow-btn:active {
+  transform: scale(0.95);
+}
+
+.solve-status-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* 解决状态 */
+.solve-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 12px;
+  height: 28px;
+  background: #F5F5F5;
+  border-radius: 14px;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.solve-status.clickable {
+  cursor: pointer;
+}
+
+.solve-status.clickable:active {
+  transform: scale(0.98);
+}
+
+.status-text {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 400;
+  font-size: 12px;
+  color: #999999;
+  line-height: 1;
+}
+
+.status-text.solved {
+  color: #2EC84F;
+}
+</style>
+

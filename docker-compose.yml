@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  # 论坛前端
+  forum:
+    build:
+      context: ./forum
+      dockerfile: Dockerfile
+    container_name: forum-frontend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # 管理后台
+  forum-management:
+    build:
+      context: ./forum-management
+      dockerfile: Dockerfile
+    container_name: forum-management-frontend
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+

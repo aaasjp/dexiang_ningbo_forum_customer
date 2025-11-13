@@ -1,0 +1,141 @@
+<template>
+  <div class="topic-page">
+    <!-- 顶部导航 -->
+    <div class="header">
+      <div class="header-title">话题广场</div>
+    </div>
+
+    <!-- 搜索栏 -->
+    <div class="search-bar">
+      <el-icon class="search-icon" :size="18">
+        <Search />
+      </el-icon>
+      <input 
+        type="text" 
+        placeholder="搜索话题" 
+        v-model="searchKeyword"
+        @input="handleSearch"
+      />
+    </div>
+
+    <!-- 话题列表 - 使用无限滚动 -->
+    <InfiniteScroll
+      :loading="loading"
+      :no-more="noMore"
+      :is-empty="isEmpty"
+      :enable-pull-refresh="true"
+      empty-text="未找到相关话题"
+      empty-icon="🔍"
+      @load-more="loadMore"
+      @refresh="refresh"
+    >
+      <div class="content">
+        <div 
+          class="topic-item" 
+          v-for="(topic, index) in displayTopics" 
+          :key="topic.topic_id" 
+          @click="goToDetail(topic.topic_id)"
+        >
+          <!-- 排名标识 -->
+          <div class="topic-rank">
+            <div 
+              class="rank-badge"
+              :class="{
+                'rank-1': index === 0,
+                'rank-2': index === 1,
+                'rank-3': index === 2,
+                'rank-other': index >= 3
+              }"
+            >
+              {{ index + 1 }}
+            </div>
+          </div>
+
+          <!-- 话题信息 -->
+          <div class="topic-info">
+            <div class="topic-name">#{{ topic.title }}</div>
+          </div>
+
+          <!-- 参与数量 -->
+          <div class="topic-stats">
+            {{ formatCount(topic.question_count) }}参与
+          </div>
+        </div>
+      </div>
+    </InfiniteScroll>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { Search } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import InfiniteScroll from '../../components/common/InfiniteScroll.vue'
+import { getTopicList } from '../../api/topic'
+import type { Topic } from '../../api/topic'
+import { useInfiniteScroll } from '../../composables/useInfiniteScroll'
+
+const router = useRouter()
+
+// 搜索关键词
+const searchKeyword = ref('')
+
+// 使用无限滚动 Hook
+const {
+  list: allTopics,
+  loading,
+  isEmpty,
+  noMore,
+  loadMore,
+  refresh
+} = useInfiniteScroll<Topic>(
+  async (page, pageSize) => {
+    return await getTopicList(page, pageSize)
+  },
+  {
+    pageSize: 20
+  }
+)
+
+// 显示的话题列表（支持搜索过滤）
+const displayTopics = computed(() => {
+  if (!searchKeyword.value.trim()) {
+    return allTopics.value
+  }
+  return allTopics.value.filter(topic =>
+    topic.title.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+    topic.description?.toLowerCase().includes(searchKeyword.value.toLowerCase())
+  )
+})
+
+// 格式化数字
+const formatCount = (count: number): string => {
+  if (count >= 10000) {
+    return (count / 10000).toFixed(1) + 'w'
+  } else if (count >= 1000) {
+    return (count / 1000).toFixed(1) + 'k'
+  }
+  return count.toString()
+}
+
+// 搜索处理
+const handleSearch = () => {
+  // 搜索逻辑已通过 computed 实现
+}
+
+// 跳转到话题详情
+const goToDetail = (id: number) => {
+  router.push(`/topic/${id}`)
+}
+
+// 初始加载
+onMounted(() => {
+  refresh()
+})
+</script>
+
+<style scoped>
+/* 样式保持不变 */
+</style>
+

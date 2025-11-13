@@ -1,0 +1,364 @@
+<template>
+  <div class="users-management">
+    <!-- 页面标题 -->
+    <h2 class="page-title">用户管理</h2>
+
+    <!-- 白色背景区块 -->
+    <div class="content-wrapper">
+      <!-- 筛选区 -->
+      <div class="filter-section">
+        <el-select v-model="selectedDepartment" placeholder="请选择部门" style="width: 200px; height: 44px" class="custom-select">
+          <el-option label="请选择部门" value="" />
+          <el-option 
+            v-for="dept in departments" 
+            :key="dept.dept_id" 
+            :label="dept.dept_name" 
+            :value="dept.dept_id" 
+          />
+        </el-select>
+        
+        <el-select v-model="selectedRole" placeholder="选择角色" style="width: 200px; margin-left: 16px; height: 44px" class="custom-select">
+          <el-option label="选择角色" value="" />
+          <el-option label="普通用户" value="user" />
+          <el-option label="专家" value="expert" />
+          <el-option label="管理员" value="admin" />
+        </el-select>
+
+        <el-input
+          v-model="searchKeyword"
+          placeholder="搜索关键词"
+          style="width: 200px; margin-left: 16px; height: 44px"
+          class="custom-input"
+          clearable
+        >
+          <template #suffix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+      </div>
+
+      <!-- 表格 -->
+      <div class="table-section">
+        <el-table :data="usersList" style="width: 100%" class="content-table">
+          <el-table-column prop="sequence" label="序号" width="80" align="center" />
+          <el-table-column prop="nickname" label="姓名" width="150" />
+          <el-table-column prop="department" label="部门" width="150" />
+          <el-table-column prop="points" label="积分" width="120" align="center" />
+          <el-table-column label="角色" width="200">
+            <template #default="{ row }">
+              <el-select v-model="row.role" size="small">
+                <el-option label="普通用户" value="普通用户" />
+                <el-option label="专家" value="专家" />
+                <el-option label="管理员" value="管理员" />
+              </el-select>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" width="150" align="center">
+            <template #default="{ row }">
+              <el-tooltip
+                :content="row.status === 'active' ? '禁用' : '启用'"
+                placement="top"
+                effect="dark"
+                popper-class="switch-tooltip"
+              >
+                <el-switch
+                  v-model="row.status"
+                  active-value="active"
+                  inactive-value="inactive"
+                  style="--el-switch-on-color: #fa8c16"
+                  @change="handleStatusChange(row)"
+                />
+              </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column label="管理员" width="150" align="center">
+            <template #default="{ row }">
+              <el-tooltip
+                :content="row.isAdmin ? '解除管理员' : '设为管理员'"
+                placement="top"
+                effect="dark"
+                popper-class="switch-tooltip"
+              >
+                <el-switch
+                  v-model="row.isAdmin"
+                  style="--el-switch-on-color: #52c41a"
+                  @change="handleAdminChange(row)"
+                />
+              </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="150" align="center" fixed="right">
+            <template #default="{ row }">
+              <div class="action-buttons">
+                <el-button type="warning" link @click="handleAdjustPoints(row)">调整积分</el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          layout="total, prev, pager, next, sizes"
+          class="custom-pagination"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, watch } from 'vue'
+import { Search } from '@element-plus/icons-vue'
+import { getUsersList, updateForbiddenStatus, updateDeptAdminStatus, adjustStaffPoints } from '@/api/users'
+import { getDepartmentTree } from '@/api/department'
+import { ElMessage, ElMessageBox } from 'element-plus'
+
+const selectedDepartment = ref('')
+const selectedRole = ref('')
+const searchKeyword = ref('')
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+const usersList = ref([])
+const loading = ref(false)
+const departments = ref([])
+
+// 角色映射
+const roleMap = {
+  '普通用户': 'user',
+  '专家': 'expert',
+  '管理员': 'admin'
+}
+
+// 格式化数字
+const formatNumber = (num) => {
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + 'k'
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'k'
+  }
+  return String(num)
+}
+
+// 获取部门列表
+const fetchDepartments = async () => {
+  try {
+    const res = await getDepartmentTree({})
+    if (res.data && res.data.departments) {
+      departments.value = res.data.departments
+    }
+  } catch (error) {
+    console.error('获取部门列表失败:', error)
+  }
+}
+
+// 获取用户列表
+const fetchUsersList = async () => {
+  try {
+    loading.value = true
+    const params = {
+      page: currentPage.value,
+      page_size: pageSize.value
+    }
+    
+    if (selectedDepartment.value) {
+      params.dept_id = selectedDepartment.value
+    }
+    
+    if (selectedRole.value) {
+      params.forum_tag = selectedRole.value
+    }
+    
+    if (searchKeyword.value) {
+      params.keyword = searchKeyword.value
+    }
+    
+    const res = await getUsersList(params)
+    
+    if (res.data && res.data.items) {
+      usersList.value = res.data.items.map((item, index) => ({
+        id: item.staff_id,
+        sequence: (currentPage.value - 1) * pageSize.value + index + 1,
+        staffCode: item.staff_code,
+        nickname: item.nickname || item.name,
+        department: item.departments && item.departments.length > 0 
+          ? item.departments[0].dept_name 
+          : '-',
+        points: formatNumber(item.total_points || 0),
+        role: item.forum_tag || '普通用户',
+        isAdmin: item.role === 1 || item.role === 2, // 1=部门管理员, 2=超级管理员
+        status: item.is_forbidden === 0 ? 'active' : 'inactive',
+        originalData: item
+      }))
+      
+      total.value = res.data.total || 0
+    }
+  } catch (error) {
+    console.error('获取用户列表失败:', error)
+    ElMessage.error('获取用户列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 监听筛选条件变化
+watch([selectedDepartment, selectedRole, searchKeyword], () => {
+  currentPage.value = 1
+  fetchUsersList()
+})
+
+// 监听分页变化
+watch([currentPage, pageSize], () => {
+  fetchUsersList()
+})
+
+// 处理状态切换(禁用/启用)
+const handleStatusChange = async (row) => {
+  try {
+    const isForbidden = row.status === 'inactive' ? 1 : 0
+    await updateForbiddenStatus(row.staffCode, isForbidden)
+    ElMessage.success(isForbidden === 1 ? '已禁用' : '已启用')
+    fetchUsersList()
+  } catch (error) {
+    console.error('更新状态失败:', error)
+    // 恢复原状态
+    row.status = row.status === 'inactive' ? 'active' : 'inactive'
+  }
+}
+
+// 处理管理员权限切换
+const handleAdminChange = async (row) => {
+  try {
+    // 这里简化处理,实际需要知道用户所属部门
+    if (row.originalData.departments && row.originalData.departments.length > 0) {
+      const deptId = row.originalData.departments[0].dept_id
+      const status = row.isAdmin ? 1 : 0
+      await updateDeptAdminStatus(row.staffCode, deptId, status)
+      ElMessage.success(row.isAdmin ? '已设为管理员' : '已取消管理员权限')
+      fetchUsersList()
+    } else {
+      ElMessage.error('用户没有所属部门')
+      row.isAdmin = !row.isAdmin
+    }
+  } catch (error) {
+    console.error('更新管理员权限失败:', error)
+    // 恢复原状态
+    row.isAdmin = !row.isAdmin
+  }
+}
+
+// 处理积分调整
+const handleAdjustPoints = async (row) => {
+  try {
+    const { value: newPoints } = await ElMessageBox.prompt('请输入新的积分值', '调整积分', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputPattern: /^\d+$/,
+      inputErrorMessage: '请输入有效的积分值'
+    })
+    
+    if (newPoints) {
+      const currentPoints = row.originalData.total_points || 0
+      await adjustStaffPoints(row.staffCode, currentPoints, parseInt(newPoints))
+      ElMessage.success('积分调整成功')
+      fetchUsersList()
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('积分调整失败:', error)
+    }
+  }
+}
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchDepartments()
+  fetchUsersList()
+})
+</script>
+
+<style scoped>
+.users-management {
+  width: 100%;
+}
+
+.page-title {
+  font-weight: 400;
+  font-size: 12px;
+  color: #999999;
+  margin-bottom: 16px;
+}
+
+.content-wrapper {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  min-height: calc(100vh - 120px);
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-section {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.pagination {
+  margin-top: auto;
+  padding-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 自定义选择框样式 */
+.custom-select :deep(.el-select__wrapper) {
+  height: 44px !important;
+  box-shadow: 0 0 0 1px #dcdfe6 inset !important;
+  padding-left: 11px !important;
+}
+
+.custom-select :deep(.el-input__wrapper) {
+  height: 44px !important;
+  box-shadow: 0 0 0 1px #dcdfe6 inset !important;
+  padding-left: 11px !important;
+}
+
+.custom-select :deep(.el-input__inner) {
+  height: 42px !important;
+  line-height: 42px !important;
+}
+
+.custom-select :deep(.el-input__prefix) {
+  display: none !important;
+}
+
+.custom-select :deep(.el-input__suffix) {
+  display: flex !important;
+  align-items: center;
+}
+
+.custom-select :deep(.el-icon) {
+  font-size: 14px !important;
+  color: #999 !important;
+}
+
+/* 自定义输入框样式 */
+.custom-input :deep(.el-input__wrapper) {
+  height: 44px !important;
+  box-shadow: 0 0 0 1px #dcdfe6 inset !important;
+}
+
+.custom-input :deep(.el-input__inner) {
+  height: 42px !important;
+  line-height: 42px !important;
+}
+</style>
+
+
