@@ -83,7 +83,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { MoreFilled } from '@element-plus/icons-vue'
-import { getTopicsList, createTopic, updateTopic } from '@/api/topics'
+import { getTopicsList, createTopic, updateTopic, deleteTopic } from '@/api/topics'
 import TopicFormDialog from '../components/TopicFormDialog.vue'
 import DeleteConfirmDialog from '../components/DeleteConfirmDialog.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -216,16 +216,13 @@ const handleDeleteTopic = (topic) => {
 // 确认删除
 const handleDeleteConfirm = async () => {
   try {
-    // 注意: API 文档中没有删除话题的接口，这里先提示
-    //ElMessage.warning('删除话题接口暂未提供')
+    await deleteTopic(currentEditTopic.value.id)
+    ElMessage.success('删除成功')
     showDeleteDialog.value = false
-    // 如果后端提供了删除接口，取消注释下面的代码：
-    // await deleteTopic(currentEditTopic.value.id)
-    // //ElMessage.success('删除成功')
-    // showDeleteDialog.value = false
-    // fetchTopicsList()
+    fetchTopicsList()
   } catch (error) {
     console.error('删除失败:', error)
+    ElMessage.error('删除失败')
   }
 }
 

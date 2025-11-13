@@ -72,4 +72,15 @@ export function getTopicQuestions(topicId, params) {
   })
 }
 
+/**
+ * 删除话题（逻辑删除）
+ * @param {number} topicId - 话题ID
+ */
+export function deleteTopic(topicId) {
+  return request({
+    url: `/admin/topics/delete/${topicId}`,
+    method: 'delete'
+  })
+}
+
 
