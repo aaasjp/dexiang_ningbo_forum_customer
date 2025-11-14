@@ -404,6 +404,14 @@ const handleTopicClick = (topicId: number) => {
 }
 
 
+/* 话题标签容器 */
+.post-topics-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 /* 话题标签 */
 .post-topic {
   display: inline-flex;
@@ -412,7 +420,6 @@ const handleTopicClick = (topicId: number) => {
   background: #FFFFFF;
   border: 1px solid rgba(255, 221, 0, 0.3);
   border-radius: 16px;
-  margin-bottom: 8px;
   gap: 2px;
   vertical-align: middle;
   line-height: 1;
