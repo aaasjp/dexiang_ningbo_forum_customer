@@ -158,16 +158,53 @@ const isMemberSelected = (deptId: number, staffCode: string) => {
   return deptMembers ? deptMembers.has(staffCode) : false
 }
 
-// 切换部门选择（不影响人员）
+// 收集部门下一级（仅当前部门）所有具有虚拟身份的人员（不包括子部门）
+const collectVirtualStaffs = (dept: DepartmentInfo): Array<{ deptId: number, staff: StaffInfo }> => {
+  const virtualStaffs: Array<{ deptId: number, staff: StaffInfo }> = []
+  
+  // 只收集当前部门的虚拟身份人员，不递归子部门
+  if (dept.staffs && dept.staffs.length > 0) {
+    dept.staffs.forEach(staff => {
+      if (staff.is_virtual) {
+        virtualStaffs.push({ deptId: dept.dept_id, staff })
+      }
+    })
+  }
+  
+  return virtualStaffs
+}
+
+// 切换部门选择（同时处理虚拟身份人员）
 const toggleDepartment = (dept: DepartmentInfo) => {
   const isSelected = isDepartmentSelected(dept.dept_id)
   
   if (isSelected) {
     // 取消选中部门
     internalSelectedDepartments.value.delete(dept.dept_id)
+    
+    // 取消选中该部门下所有具有虚拟身份的人员
+    const virtualStaffs = collectVirtualStaffs(dept)
+    virtualStaffs.forEach(({ deptId, staff }) => {
+      const deptKey = String(deptId)
+      const deptMembers = internalSelectedMembers.value.get(deptKey)
+      if (deptMembers && deptMembers.has(staff.staff_code)) {
+        deptMembers.delete(staff.staff_code)
+      }
+    })
   } else {
     // 选中部门
     internalSelectedDepartments.value.add(dept.dept_id)
+    
+    // 自动选中该部门下所有具有虚拟身份的人员
+    const virtualStaffs = collectVirtualStaffs(dept)
+    virtualStaffs.forEach(({ deptId, staff }) => {
+      const deptKey = String(deptId)
+      if (!internalSelectedMembers.value.has(deptKey)) {
+        internalSelectedMembers.value.set(deptKey, new Set())
+      }
+      const deptMembers = internalSelectedMembers.value.get(deptKey)!
+      deptMembers.add(staff.staff_code)
+    })
   }
 }
 

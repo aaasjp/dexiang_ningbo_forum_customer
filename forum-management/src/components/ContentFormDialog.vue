@@ -103,6 +103,9 @@ const selectedDepartmentStaffIds = ref([])
 const selectedTopicIds = ref([])
 const topicList = ref([])
 
+// 存储上一次的选中状态，用于检测部门的选中/取消
+const previousSelectedDepartmentStaffIds = ref([])
+
 // 监听弹窗显示
 watch(() => props.modelValue, (newVal) => {
   visible.value = newVal
@@ -116,6 +119,98 @@ watch(() => props.modelValue, (newVal) => {
 watch(visible, (newVal) => {
   emit('update:modelValue', newVal)
 })
+
+// 递归查找部门（在原始数据中）
+const findDepartmentInTree = (depts, deptId) => {
+  for (const dept of depts) {
+    if (dept.dept_id === deptId) return dept
+    if (dept.children && dept.children.length > 0) {
+      const found = findDepartmentInTree(dept.children, deptId)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+// 收集部门下一级（仅当前部门）所有具有虚拟身份的人员ID（不包括子部门）
+const collectVirtualStaffIds = (dept) => {
+  const virtualStaffIds = []
+  
+  // 只收集当前部门的虚拟身份人员，不递归子部门
+  if (dept.staffs && dept.staffs.length > 0) {
+    dept.staffs.forEach(staff => {
+      if (staff.is_virtual) {
+        virtualStaffIds.push(`staff_${dept.dept_id}_${staff.staff_code}`)
+      }
+    })
+  }
+  
+  return virtualStaffIds
+}
+
+// 监听选择的变化，自动处理虚拟身份人员
+watch(selectedDepartmentStaffIds, (newIds, oldIds) => {
+  if (!departmentTreeData.value.length) return
+  
+  const oldSet = new Set(oldIds || [])
+  const newSet = new Set(newIds || [])
+  
+  // 找出新增的部门ID
+  const addedDeptIds = []
+  newIds.forEach(id => {
+    if (!oldSet.has(id) && id.startsWith('dept_')) {
+      addedDeptIds.push(parseInt(id.replace('dept_', '')))
+    }
+  })
+  
+  // 找出移除的部门ID
+  const removedDeptIds = []
+  oldIds.forEach(id => {
+    if (!newSet.has(id) && id.startsWith('dept_')) {
+      removedDeptIds.push(parseInt(id.replace('dept_', '')))
+    }
+  })
+  
+  let needUpdate = false
+  const updatedIds = [...newIds]
+  
+  // 处理新增的部门：自动选中虚拟身份人员
+  addedDeptIds.forEach(deptId => {
+    const dept = findDepartmentInTree(departmentTreeData.value, deptId)
+    if (dept) {
+      const virtualStaffIds = collectVirtualStaffIds(dept)
+      virtualStaffIds.forEach(staffId => {
+        if (!updatedIds.includes(staffId)) {
+          updatedIds.push(staffId)
+          needUpdate = true
+        }
+      })
+    }
+  })
+  
+  // 处理移除的部门：取消选中虚拟身份人员
+  removedDeptIds.forEach(deptId => {
+    const dept = findDepartmentInTree(departmentTreeData.value, deptId)
+    if (dept) {
+      const virtualStaffIds = collectVirtualStaffIds(dept)
+      virtualStaffIds.forEach(staffId => {
+        const index = updatedIds.indexOf(staffId)
+        if (index > -1) {
+          updatedIds.splice(index, 1)
+          needUpdate = true
+        }
+      })
+    }
+  })
+  
+  // 如果有变化，更新选择状态
+  if (needUpdate) {
+    // 使用 nextTick 避免死循环
+    setTimeout(() => {
+      selectedDepartmentStaffIds.value = updatedIds
+    }, 0)
+  }
+}, { deep: true })
 
 // 将部门树数据转换为包含人员的树形结构
 const transformDepartmentTree = (depts) => {
