@@ -206,7 +206,7 @@ const fetchUsersList = async () => {
         points: formatNumber(item.total_points || 0),
         role: item.forum_tag || '普通用户',
         isAdmin: item.role === 1 || item.role === 2, // 1=部门管理员, 2=超级管理员
-        isVirtualRole: item.is_virtual_role === 1, // 是否为小助手
+        isVirtualRole: item.is_virtual, // 是否为小助手
         status: item.is_forbidden === 0 ? 'active' : 'inactive',
         originalData: item
       }))
