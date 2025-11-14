@@ -279,10 +279,10 @@ const goBack = () => {
   router.back()
 }
 
-// 存储实际的图片文件
-const imageFiles = ref<File[]>([])
+// 上传中状态
+const uploading = ref(false)
 
-// 上传图片
+// 上传图片 - 立即上传到服务器
 const uploadImage = () => {
   // 创建文件选择器
   const input = document.createElement('input')
@@ -290,35 +290,50 @@ const uploadImage = () => {
   input.accept = 'image/*'
   input.multiple = true
   
-  input.onchange = (e: Event) => {
+  input.onchange = async (e: Event) => {
     const target = e.target as HTMLInputElement
     const files = target.files
     
-    if (files) {
-      Array.from(files).forEach(file => {
-        if (uploadedImages.value.length >= 9) {
-          //ElMessage.warning('最多只能上传9张图片')
-          return
-        }
-        
-        // 验证文件大小（最大5MB）
-        if (file.size > 5 * 1024 * 1024) {
-          //ElMessage.error(`图片 ${file.name} 超过5MB限制`)
-          return
-        }
-        
-        // 存储文件对象
-        imageFiles.value.push(file)
-        
-        // 创建预览 URL
-        const reader = new FileReader()
-        reader.onload = (event) => {
-          if (event.target?.result) {
-            uploadedImages.value.push(event.target.result as string)
-          }
-        }
-        reader.readAsDataURL(file)
-      })
+    if (!files || files.length === 0) return
+    
+    // 检查数量限制
+    if (uploadedImages.value.length + files.length > 9) {
+      //ElMessage.warning('最多上传9张图片')
+      return
+    }
+    
+    // 验证文件大小（最大5MB）
+    const validFiles: File[] = []
+    for (const file of Array.from(files)) {
+      if (file.size > 5 * 1024 * 1024) {
+        //ElMessage.error(`图片 ${file.name} 超过5MB限制`)
+        continue
+      }
+      validFiles.push(file)
+    }
+    
+    if (validFiles.length === 0) return
+    
+    try {
+      uploading.value = true
+      
+      // 上传图片到服务器
+      const response = await uploadImages(validFiles)
+      
+      if (response.code === 200 && response.data.image_urls && response.data.image_urls.length > 0) {
+        // 将上传成功的图片URL添加到列表
+        uploadedImages.value.push(...response.data.image_urls)
+        //ElMessage.success(`成功上传${response.data.success_count}张图片`)
+      }
+      
+      if (response.data.error_count && response.data.error_count > 0) {
+        //ElMessage.warning(`有${response.data.error_count}张图片上传失败`)
+      }
+    } catch (error) {
+      console.error('图片上传失败:', error)
+      //ElMessage.error('图片上传失败，请重试')
+    } finally {
+      uploading.value = false
     }
   }
   
@@ -328,7 +343,6 @@ const uploadImage = () => {
 // 删除图片
 const removeImage = (index: number) => {
   uploadedImages.value.splice(index, 1)
-  imageFiles.value.splice(index, 1)
 }
 
 // 处理图片点击
@@ -451,50 +465,8 @@ const handleSubmit = async () => {
   try {
     isSubmitting.value = true
 
-    // 1. 处理图片上传
-    let imageUrls: string[] = []
-    
-    if (isEditMode.value) {
-      // 编辑模式：区分已有URL和新上传的文件
-      const existingUrls: string[] = []
-      const newFiles: File[] = []
-      
-      uploadedImages.value.forEach((img, index) => {
-        if (img.startsWith('http://') || img.startsWith('https://')) {
-          // 已有的URL
-          existingUrls.push(img)
-        } else {
-          // 新上传的文件（base64）
-          if (imageFiles.value[index]) {
-            newFiles.push(imageFiles.value[index])
-          }
-        }
-      })
-      
-      // 上传新文件
-      if (newFiles.length > 0) {
-        const uploadRes = await uploadImages(newFiles)
-        if (uploadRes.code === 200 && uploadRes.data.image_urls) {
-          imageUrls = [...existingUrls, ...uploadRes.data.image_urls]
-        } else {
-          //ElMessage.error('图片上传失败')
-          return
-        }
-      } else {
-        imageUrls = existingUrls
-      }
-    } else {
-      // 新建模式：上传所有图片
-      if (imageFiles.value.length > 0) {
-        const uploadRes = await uploadImages(imageFiles.value)
-        if (uploadRes.code === 200 && uploadRes.data.image_urls) {
-          imageUrls = uploadRes.data.image_urls
-        } else {
-          //ElMessage.error('图片上传失败')
-          return
-        }
-      }
-    }
+    // 1. 图片已经在上传时获取了URL，直接使用
+    const imageUrls = uploadedImages.value
 
     // 2. 提取部门ID和员工工号
     const relatedDeptIds: number[] = []
