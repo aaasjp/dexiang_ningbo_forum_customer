@@ -622,9 +622,7 @@ onUnmounted(() => {
 <style scoped>
 .publish-page {
   width: 100%;
-  
-  min-height: 100vh;
-  background: #F5F5F5;
+  background: #FFFFFF;
   overflow-x: hidden;
   padding-bottom: 20px;
 }

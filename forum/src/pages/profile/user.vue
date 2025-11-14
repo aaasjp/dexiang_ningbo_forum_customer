@@ -305,7 +305,6 @@ const handlePostLike = async (post: Post) => {
 .user-profile-page {
   width: 100%;
   max-width: 100vw;
-  min-height: 100vh;
   background: #fff;
   overflow-x: hidden;
 }

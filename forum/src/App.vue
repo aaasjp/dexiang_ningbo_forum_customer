@@ -44,11 +44,9 @@ body {
 
 #app {
   width: 100%;
-  min-height: 100vh;
   max-width: 600px;
   margin: 0 auto;
-  background: #f5f5f5;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
   position: relative;
 }
 </style>

@@ -138,8 +138,7 @@ onMounted(() => {
 .user-list-page {
   width: 100%;
   max-width: 100vw;
-  min-height: 100vh;
-  background: #F5F5F5;
+  background: #FFFFFF;
   overflow-x: hidden;
 }
 

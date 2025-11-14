@@ -95,8 +95,7 @@ const handleSubmit = () => {
 <style scoped>
 .post-create-page {
   width: 100%;
-  min-height: 100vh;
-  background: #f5f5f5;
+  background: #ffffff;
 }
 
 .header {

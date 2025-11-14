@@ -122,7 +122,6 @@ const handleAnswer = (question: QuestionItem, event: Event) => {
 <style scoped>
 .mentions-page {
   width: 100%;
-  min-height: 100vh;
   background: #FFFFFF;
   overflow-x: hidden;
 }

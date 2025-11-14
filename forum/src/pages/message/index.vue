@@ -306,8 +306,6 @@ const handleMessageClick = async (message: any) => {
 <style scoped>
 .message-page {
   width: 100%;
-  
-  min-height: 100vh;
   background: #fff;
   overflow-x: hidden;
 }

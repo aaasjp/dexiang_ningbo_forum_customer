@@ -111,8 +111,12 @@ const onReport = () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 600px;
   z-index: 100;
   border-bottom: 1px solid #F5F5F5;
 }

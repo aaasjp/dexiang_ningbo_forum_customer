@@ -56,8 +56,10 @@
 
       <!-- 空状态 -->
       <div v-if="displayTopics.length === 0" class="empty-state">
-        <div class="empty-icon">🔍</div>
-        <div class="empty-text">未找到相关话题</div>
+        <div class="empty-icon">
+          <img src="../../assets/images/empty/follow_empty.png" alt="暂无话题" width="130" height="130" />
+        </div>
+        <div class="empty-text">暂无话题</div>
       </div>
     </div>
   </div>
@@ -127,8 +129,7 @@ onMounted(() => {
 .topic-page {
   width: 100%;
   max-width: 100vw;
-  min-height: 100vh;
-  background: #F5F5F5;
+  background: #FFFFFF;
   overflow-x: hidden;
   position: relative;
 }
@@ -331,19 +332,35 @@ white-space: nowrap;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
-  min-height: 400px;
+  padding: 80px 40px;
 }
 
 .empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-  opacity: 0.5;
+  margin-bottom: 30px;
+  animation: float 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon img {
+  display: block;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .empty-text {
   font-size: 14px;
   color: #999;
+  text-align: center;
+  line-height: 1.6;
 }
 </style>
 

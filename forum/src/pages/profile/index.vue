@@ -261,9 +261,7 @@ const handlePostLike = async (post: Post) => {
 <style scoped>
 .profile-page {
   width: 100%;
-  
-  min-height: 100vh;
-  background: #F5F5F5;
+  background: #FFFFFF;
   overflow-x: hidden;
 }
 

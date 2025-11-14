@@ -168,9 +168,7 @@ const handleItemClick = async (item: any) => {
 <style scoped>
 .message-detail-page {
   width: 100%;
-  
-  min-height: 100vh;
-  background: #F5F5F5;
+  background: #FFFFFF;
   overflow-x: hidden;
 }
 

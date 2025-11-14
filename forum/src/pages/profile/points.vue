@@ -103,8 +103,7 @@ const formatDate = (dateStr: string) => {
 <style scoped>
 .points-page {
   width: 100%;
-  min-height: 100vh;
-  background: #F5F5F5;
+  background: #FFFFFF;
   overflow-x: hidden;
 }
 

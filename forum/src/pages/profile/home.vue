@@ -85,8 +85,7 @@ const goBack = () => {
 <style scoped>
 .profile-home-page {
   width: 100%;
-  min-height: 100vh;
-  background: #f5f5f5;
+  background: #ffffff;
 }
 
 .header {

@@ -111,7 +111,7 @@ const getCategoryName = (category: string) => {
     suggest: '建议',
     help: '求助',
     complain: '吐槽',
-    free: '自由提问'
+    free: '' // 自由不展示
   }
   return categoryMap[category] || ''
 }

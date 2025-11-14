@@ -130,9 +130,12 @@ const circleRadius = computed(() => {
 const circleCenterX = computed(() => maskWidth.value / 2)
 const circleCenterY = computed(() => {
   const navHeight = 44
+  const isPC = window.innerWidth > 768
   // 圆心位置：考虑导航栏，图片实际显示在 44px 下方区域的中心
   // 图片中心 = 44 + (视口高度 - 44) / 2
-  return navHeight + (maskHeight.value - navHeight) / 2
+  // PC端需要额外偏移15px
+  const baseY = navHeight + (maskHeight.value - navHeight) / 2
+  return isPC ? baseY + 15 : baseY
 })
 
 // 占位符大小（等于圆的直径）
@@ -338,7 +341,6 @@ onUnmounted(() => {
 <style scoped>
 .avatar-edit-page {
   width: 100%;
-  min-height: 100vh;
   background: #000;
   overflow-x: hidden;
   display: flex;

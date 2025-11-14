@@ -767,9 +767,9 @@ onMounted(async () => {
 .post-detail-page {
   width: 100%;
   max-width: 100vw;
-  min-height: 100vh;
   background: #fff;
   overflow-x: hidden;
+  padding-top: 48px;
   padding-bottom: 70px;
 }
 

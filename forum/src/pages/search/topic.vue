@@ -280,7 +280,6 @@ onMounted(() => {
 <style scoped>
 .search-page {
   width: 100%;
-  min-height: 100vh;
   background: #fff;
   overflow-x: hidden;
 }

@@ -22,13 +22,11 @@ const showTabBar = computed(() => {
 <style scoped>
 .layout {
   width: 100%;
-  min-height: 100vh;
-  background: #f5f5f5;
+  background: #ffffff;
 }
 
 .content {
   width: 100%;
-  min-height: 100vh;
 }
 
 .content.with-tabbar {
