@@ -1,4 +1,4 @@
-import { get, post, put } from './request'
+import { get, post, put, del } from './request'
 
 // 话题类型
 export interface TopicInfo {
@@ -217,5 +217,12 @@ export function getMyFavorites(page = 1, pageSize = 20) {
     page,
     page_size: pageSize
   })
+}
+
+/**
+ * 删除问题
+ */
+export function deleteQuestion(questionId: number) {
+  return del(`/api/questions/delete/${questionId}`)
 }
 

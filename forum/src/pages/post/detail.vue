@@ -110,7 +110,7 @@ import PostContent from '../../components/post/PostContent.vue'
 import CommentList from '../../components/post/CommentList.vue'
 import ActionBar from '../../components/post/ActionBar.vue'
 import ReplyInput from '../../components/post/ReplyInput.vue'
-import { getQuestionDetail, toggleLikeQuestion, toggleFavoriteQuestion, updateQuestionStatus } from '../../api/question'
+import { getQuestionDetail, toggleLikeQuestion, toggleFavoriteQuestion, updateQuestionStatus, deleteQuestion } from '../../api/question'
 import { getAnswersByQuestion, createAnswer, toggleLikeAnswer, markAnswerAsUseful, updateAnswer, deleteAnswer } from '../../api/answer'
 import { toggleFollowUser } from '../../api/user'
 import { getDepartmentTree } from '../../api/department'
@@ -328,8 +328,23 @@ const handleShare = () => {
 }
 
 // 处理删除
-const handleDelete = () => {
-  //ElMessage.warning('确认删除该帖子？')
+const handleDelete = async () => {
+  // 确认删除
+  if (!confirm('确定要删除这个问题吗？删除后将无法恢复。')) {
+    return
+  }
+  
+  try {
+    const questionId = postData.value.question_id || Number(route.query.id || route.params.id)
+    await deleteQuestion(questionId)
+    
+    // 删除成功后返回上一页
+    //ElMessage.success('删除成功')
+    router.back()
+  } catch (error) {
+    console.error('删除失败:', error)
+    alert('删除失败，请稍后重试')
+  }
 }
 
 // 处理举报
