@@ -46,9 +46,16 @@
     </div>
 
     <!-- 话题标签 -->
-    <div class="post-topic" v-if="post.topic" @click.stop="handleTopicClick">
-      <span class="topic-icon">#</span>
-      <span class="topic-text">{{ post.topic }}</span>
+    <div class="post-topics-wrapper" v-if="post.topics && post.topics.length > 0">
+      <div 
+        class="post-topic" 
+        v-for="topic in post.topics" 
+        :key="topic.topic_id"
+        @click.stop="handleTopicClick(topic.topic_id)"
+      >
+        <span class="topic-icon">#</span>
+        <span class="topic-text">{{ topic.title }}</span>
+      </div>
     </div>
 
     <!-- 帖子底部 -->
@@ -152,10 +159,8 @@ const handleAuthorClick = () => {
 }
 
 // 处理话题点击 - 跳转到话题详情页
-const handleTopicClick = () => {
-  // 从 topics 数组中获取第一个话题的 ID
-  if (props.post.topics && props.post.topics.length > 0 && props.post.topics[0]) {
-    const topicId = props.post.topics[0].topic_id
+const handleTopicClick = (topicId: number) => {
+  if (topicId) {
     router.push(`/topic/${topicId}`)
   }
 }
