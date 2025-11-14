@@ -130,13 +130,22 @@ const transformDepartmentTree = (depts) => {
     
     // 添加人员节点
     if (dept.staffs && dept.staffs.length > 0) {
-      const staffNodes = dept.staffs.map(staff => ({
-        id: `staff_${dept.dept_id}_${staff.staff_code}`,
-        name: staff.name,
-        type: 'staff',
-        dept_id: dept.dept_id,
-        staff_code: staff.staff_code
-      }))
+      const staffNodes = dept.staffs.map(staff => {
+        // 如果是虚拟角色，在括号中显示虚拟角色名称
+        const displayName = staff.is_virtual 
+          ? `${staff.name}（${staff.virtual_staff_name}）` 
+          : staff.name
+        
+        return {
+          id: `staff_${dept.dept_id}_${staff.staff_code}`,
+          name: displayName,
+          type: 'staff',
+          dept_id: dept.dept_id,
+          staff_code: staff.staff_code,
+          is_virtual: staff.is_virtual,
+          virtual_staff_name: staff.virtual_staff_name
+        }
+      })
       node.children.push(...staffNodes)
     }
     
@@ -158,12 +167,24 @@ const departmentTreeWithStaff = computed(() => {
 // 初始化表单数据
 const initFormData = () => {
   if (props.data) {
-    // 初始化部门（只显示部门ID）
+    const selectedIds = []
+    
+    // 初始化部门
     if (props.data.related_depts && props.data.related_depts.length > 0) {
-      selectedDepartmentStaffIds.value = props.data.related_depts.map(d => `dept_${d.dept_id}`)
-    } else {
-      selectedDepartmentStaffIds.value = []
+      selectedIds.push(...props.data.related_depts.map(d => `dept_${d.dept_id}`))
     }
+    
+    // 初始化人员
+    if (props.data.related_staffs && props.data.related_staffs.length > 0) {
+      selectedIds.push(...props.data.related_staffs.map(s => {
+        // 需要知道人员所属的部门ID，这里假设 related_staffs 包含 dept_id
+        // 如果后端返回的数据结构不同，需要调整
+        const deptId = s.dept_id || (props.data.related_depts && props.data.related_depts.length > 0 ? props.data.related_depts[0].dept_id : 0)
+        return `staff_${deptId}_${s.staff_code}`
+      }))
+    }
+    
+    selectedDepartmentStaffIds.value = selectedIds
 
     // 初始化话题
     if (props.data.topics && props.data.topics.length > 0) {
@@ -198,9 +219,10 @@ const loadTopics = async () => {
   }
 }
 
-// 从选中的ID中提取部门ID列表
-const extractDepartmentIds = () => {
+// 从选中的ID中提取部门ID和人员代码列表
+const extractDepartmentStaffData = () => {
   const deptIds = new Set()
+  const staffCodes = []
   
   selectedDepartmentStaffIds.value.forEach(id => {
     if (id.startsWith('dept_')) {
@@ -208,16 +230,21 @@ const extractDepartmentIds = () => {
       const deptId = parseInt(id.replace('dept_', ''))
       deptIds.add(deptId)
     } else if (id.startsWith('staff_')) {
-      // 人员节点，提取部门ID
+      // 人员节点，提取部门ID和员工代码
       const parts = id.split('_')
-      if (parts.length >= 2) {
+      if (parts.length >= 3) {
         const deptId = parseInt(parts[1])
+        const staffCode = parts.slice(2).join('_') // 支持员工代码中可能包含下划线
         deptIds.add(deptId)
+        staffCodes.push(staffCode)
       }
     }
   })
   
-  return Array.from(deptIds)
+  return {
+    dept_ids: Array.from(deptIds),
+    staff_codes: staffCodes
+  }
 }
 
 // 处理话题选择变化
@@ -265,8 +292,10 @@ const handleConfirm = async () => {
   
   await formRef.value.validate((valid) => {
     if (valid) {
+      const { dept_ids, staff_codes } = extractDepartmentStaffData()
       const result = {
-        dept_ids: extractDepartmentIds(),
+        dept_ids: dept_ids,
+        staff_codes: staff_codes,
         topic_ids: selectedTopicIds.value
       }
       emit('confirm', result)

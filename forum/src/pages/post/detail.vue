@@ -205,7 +205,11 @@ const loadDepartmentData = async () => {
         // 添加员工信息
         if (dept.staffs) {
           dept.staffs.forEach((staff: StaffInfo) => {
-            staffMap.value.set(staff.staff_code, staff.name)
+            // 如果是虚拟角色，在括号中显示虚拟角色名称
+            const displayName = staff.is_virtual && staff.virtual_staff_name
+              ? `${staff.name}（${staff.virtual_staff_name}）`
+              : staff.name
+            staffMap.value.set(staff.staff_code, displayName)
           })
         }
         

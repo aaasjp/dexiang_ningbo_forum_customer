@@ -364,18 +364,7 @@ const confirmBirthday = async () => {
   }
 }
 
-// 性别选择
-const showGenderPicker = () => {
-  tempGender.value = gender.value
-  showGenderModal.value = true
-  
-  // 等待 DOM 更新后滚动到选中位置
-  nextTick(() => {
-    scrollToSelected(genderColumn.value, tempGender.value)
-    setupScrollListener(genderColumn.value, (value) => tempGender.value = value)
-  })
-}
-
+// 性别选择确认
 const confirmGender = async () => {
   showGenderModal.value = false
   

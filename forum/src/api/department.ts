@@ -5,6 +5,8 @@ export interface StaffInfo {
   staff_code: string
   name: string
   is_anonymous_allowed?: boolean  // 是否允许匿名
+  is_virtual?: boolean  // 是否为虚拟角色
+  virtual_staff_name?: string  // 虚拟角色名称
 }
 
 // 部门信息类型

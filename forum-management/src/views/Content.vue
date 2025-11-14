@@ -75,7 +75,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="author" label="作者" width="120" />
-        <el-table-column prop="department" label="@部门" width="180">
+        <el-table-column prop="department" label="@部门/人员" width="180">
           <template #default="{ row }">
             <div class="text-content" :title="row.department">{{ row.department }}</div>
           </template>
@@ -266,28 +266,45 @@ const fetchQuestionsList = async () => {
     const res = await getQuestionsList(params)
     
     if (res.data && res.data.items) {
-      contentList.value = res.data.items.map((item, index) => ({
-        id: item.question_id,
-        sequence: (currentPage.value - 1) * pageSize.value + index + 1,
-        title: item.title,
-        author: item.asker_name,
-        department: item.related_depts && item.related_depts.length > 0 
-          ? item.related_depts.map(d => d.dept_name).join(', ')
-          : '-',
-        topic: item.topics && item.topics.length > 0 
-          ? item.topics.map(t => '#' + t.title).join(', ')
-          : '-',
-        views: item.view_count || 0,
-        replies: item.answer_count || 0,
-        likes: item.like_count || 0,
-        favorites: item.favorite_count || 0,
-        days_remaining: item.days_remaining || 0,
-        createTime: new Date(item.create_time).toLocaleString('zh-CN'),
-        status: item.is_offline === 1 ? 'offline' : 'online',
-        is_featured: item.is_featured || 0,
-        resolveStatus: item.status, // 添加解决状态字段，1=已解决，2=未解决
-        questionData: item // 保存原始数据
-      }))
+      contentList.value = res.data.items.map((item, index) => {
+        // 构建部门和人员的显示文本
+        const deptStaffList = []
+        
+        // 添加部门
+        if (item.related_depts && item.related_depts.length > 0) {
+          deptStaffList.push(...item.related_depts.map(d => d.dept_name))
+        }
+        
+        // 添加人员（包括虚拟角色）
+        if (item.related_staffs && item.related_staffs.length > 0) {
+          deptStaffList.push(...item.related_staffs.map(s => 
+            s.is_virtual && s.virtual_staff_name 
+              ? `${s.name}（${s.virtual_staff_name}）` 
+              : s.name
+          ))
+        }
+        
+        return {
+          id: item.question_id,
+          sequence: (currentPage.value - 1) * pageSize.value + index + 1,
+          title: item.title,
+          author: item.asker_name,
+          department: deptStaffList.length > 0 ? deptStaffList.join(', ') : '-',
+          topic: item.topics && item.topics.length > 0 
+            ? item.topics.map(t => '#' + t.title).join(', ')
+            : '-',
+          views: item.view_count || 0,
+          replies: item.answer_count || 0,
+          likes: item.like_count || 0,
+          favorites: item.favorite_count || 0,
+          days_remaining: item.days_remaining || 0,
+          createTime: new Date(item.create_time).toLocaleString('zh-CN'),
+          status: item.is_offline === 1 ? 'offline' : 'online',
+          is_featured: item.is_featured || 0,
+          resolveStatus: item.status, // 添加解决状态字段，1=已解决，2=未解决
+          questionData: item // 保存原始数据
+        }
+      })
       
       total.value = res.data.total || 0
     }

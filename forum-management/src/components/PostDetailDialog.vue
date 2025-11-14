@@ -17,9 +17,9 @@
             </div>
           </div>
         </div>
-        <div class="post-tag" :class="`tag-${getCategoryClass(postData.category)}`">
+        <!-- <div class="post-tag" v-if="getCategoryName(postData.category)" :class="`tag-${getCategoryClass(postData.category)}`">
           {{ getCategoryName(postData.category) }}
-        </div>
+        </div> -->
       </div>
 
       <!-- 精选标签和标题 -->
@@ -56,17 +56,27 @@
         </div>
       </div>
 
-      <!-- @部门 -->
-      <div class="post-departments" v-if="postData.related_depts && postData.related_depts.length > 0">
-        <div class="section-title">@部门</div>
+      <!-- @部门/人员 -->
+      <div class="post-departments" v-if="(postData.related_depts && postData.related_depts.length > 0) || (postData.related_staffs && postData.related_staffs.length > 0)">
+        <div class="section-title">@部门/人员</div>
         <div class="department-tags">
+          <!-- 部门标签 -->
           <el-tag
             v-for="dept in postData.related_depts"
-            :key="dept.dept_id"
+            :key="'dept_' + dept.dept_id"
             type="info"
             size="small"
           >
             {{ dept.dept_name }}
+          </el-tag>
+          <!-- 人员标签 -->
+          <el-tag
+            v-for="staff in postData.related_staffs"
+            :key="'staff_' + staff.staff_code"
+            type="warning"
+            size="small"
+          >
+            {{ staff.is_virtual && staff.virtual_staff_name ? `${staff.name}（${staff.virtual_staff_name}）` : staff.name }}
           </el-tag>
         </div>
       </div>
@@ -158,15 +168,15 @@ watch(visible, (newVal) => {
 })
 
 // 获取分类名称
-const getCategoryName = (category) => {
-  const categoryMap = {
-    '随便说说': '随便说说',
-    '求助类': '求助',
-    '建议类': '建议',
-    '吐槽类': '吐槽'
-  }
-  return categoryMap[category] || category || '推荐'
-}
+// const getCategoryName = (category) => {
+//   const categoryMap = {
+//     '随便说说': '随便说说',
+//     '求助类': '求助',
+//     '建议类': '建议',
+//     '吐槽类': '吐槽'
+//   }
+//   return categoryMap[category] || category || '推荐'
+// }
 
 // 获取分类样式类名
 const getCategoryClass = (category) => {

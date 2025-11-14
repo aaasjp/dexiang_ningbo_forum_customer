@@ -94,6 +94,7 @@ export interface CommentReply {
   points_awarded?: number  // 获得积分
   is_useful?: number  // 是否有用
   images?: string[]  // 图片
+  replies?: CommentReply[]  // 嵌套回复（支持多层回复）
 }
 
 // 帖子分类

@@ -127,7 +127,7 @@ export function transformAnswerToComment(answer: AnswerItem): Comment {
  * @param parentAnswererName - 父评论作者名字
  */
 export function transformAnswerToCommentReply(answer: AnswerItem, parentAnswererName: string = ''): CommentReply {
-  return {
+  const commentReply: CommentReply = {
     id: String(answer.answer_id),
     answer_id: answer.answer_id,
     author: answer.answerer_name,
@@ -149,6 +149,7 @@ export function transformAnswerToCommentReply(answer: AnswerItem, parentAnswerer
     // 递归处理嵌套的回复（支持多层回复）
     replies: answer.replies?.map(reply => transformAnswerToCommentReply(reply, answer.answerer_name)) || []
   }
+  return commentReply
 }
 
 /**
