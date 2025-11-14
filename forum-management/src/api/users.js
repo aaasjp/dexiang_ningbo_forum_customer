@@ -78,6 +78,24 @@ export function updateForumTag(staffCode, forumTag) {
 }
 
 /**
+ * 取消/恢复用户虚拟角色（小助手）
+ * @param {string} staffCode - 员工工号
+ * @param {number} status - 状态 (0取消虚拟角色, 1恢复虚拟角色)
+ * @param {number} deptId - 部门ID (可选)
+ */
+export function updateVirtualRole(staffCode, status, deptId) {
+  const params = { status }
+  if (deptId) {
+    params.dept_id = deptId
+  }
+  return request({
+    url: `/admin/staffs/virtual-role/${staffCode}`,
+    method: 'put',
+    params
+  })
+}
+
+/**
  * 获取当前用户信息
  */
 export function getCurrentUserProfile() {

@@ -11,10 +11,12 @@ export default defineConfig({
     }
   },
   server: {
+    host: '0.0.0.0', // 允许通过 IP 访问
+    port: 5174,
     proxy: {
       '/api': {
-        target: 'http://220.154.134.61:8000',
-        // target: 'http://10.129.114.106:8000',
+        // target: 'http://220.154.134.61:8000',
+        target: 'http://10.129.114.106:8000',
         changeOrigin: true,
         rewrite: (path) => path
       }

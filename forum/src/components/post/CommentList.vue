@@ -81,10 +81,10 @@
             </div>
           </div>
           
-          <!-- 子回复列表 -->
+          <!-- 子回复列表（扁平化展示所有层级） -->
           <div v-if="comment.replies && comment.replies.length > 0" class="replies-list">
             <div
-              v-for="reply in comment.replies"
+              v-for="reply in flattenReplies(comment.replies)"
               :key="reply.id"
               class="reply-item"
             >
@@ -227,6 +227,25 @@ const onReplyToReply = (reply: CommentReply, comment: Comment) => {
 
 const onLikeReply = (reply: CommentReply, comment: Comment) => {
   emit('like-reply', reply, comment)
+}
+
+// 扁平化回复列表（递归将所有层级的回复转换为一维数组）
+const flattenReplies = (replies: CommentReply[]): CommentReply[] => {
+  const result: CommentReply[] = []
+  
+  const flatten = (replyList: CommentReply[]) => {
+    replyList.forEach(reply => {
+      // 添加当前回复
+      result.push(reply)
+      // 如果有子回复，递归处理
+      if (reply.replies && reply.replies.length > 0) {
+        flatten(reply.replies)
+      }
+    })
+  }
+  
+  flatten(replies)
+  return result
 }
 
 // 处理图片点击

@@ -42,7 +42,7 @@
               height="18" />
             <div v-else class="checkbox"></div>
           </div>
-          <div class="member-name">@{{ staff.name }}</div>
+          <div class="member-name">@{{ staff.is_virtual ? `${staff.name}（@${staff.virtual_staff_name}）` : staff.name }}</div>
         </div>
       </div>
       

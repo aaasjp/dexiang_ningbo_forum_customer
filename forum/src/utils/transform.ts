@@ -145,7 +145,9 @@ export function transformAnswerToCommentReply(answer: AnswerItem, parentAnswerer
     is_official: answer.is_official,
     points_awarded: answer.points_awarded,
     is_useful: answer.is_useful,
-    images: answer.images
+    images: answer.images,
+    // 递归处理嵌套的回复（支持多层回复）
+    replies: answer.replies?.map(reply => transformAnswerToCommentReply(reply, answer.answerer_name)) || []
   }
 }
 

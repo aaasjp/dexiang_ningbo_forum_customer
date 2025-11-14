@@ -21,7 +21,6 @@
           <el-option label="选择角色" value="" />
           <el-option label="普通用户" value="普通用户" />
           <el-option label="专家" value="专家" />
-          <el-option label="管理员" value="管理员" />
         </el-select>
 
         <el-input
@@ -49,7 +48,6 @@
               <el-select v-model="row.role" size="small" @change="handleRoleChange(row)">
                 <el-option label="普通用户" value="普通用户" />
                 <el-option label="专家" value="专家" />
-                <el-option label="管理员" value="管理员" />
               </el-select>
             </template>
           </el-table-column>
@@ -87,6 +85,22 @@
               </el-tooltip>
             </template>
           </el-table-column>
+          <el-table-column label="小助手" width="150" align="center">
+            <template #default="{ row }">
+              <el-tooltip
+                :content="row.isVirtualRole ? '取消小助手' : '设为小助手'"
+                placement="top"
+                effect="dark"
+                popper-class="switch-tooltip"
+              >
+                <el-switch
+                  v-model="row.isVirtualRole"
+                  style="--el-switch-on-color: #fa8c16"
+                  @change="handleVirtualRoleChange(row)"
+                />
+              </el-tooltip>
+            </template>
+          </el-table-column>
           <el-table-column label="操作" width="150" align="center" fixed="right">
             <template #default="{ row }">
               <div class="action-buttons">
@@ -115,7 +129,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
-import { getUsersList, updateForbiddenStatus, updateDeptAdminStatus, adjustStaffPoints, updateForumTag } from '@/api/users'
+import { getUsersList, updateForbiddenStatus, updateDeptAdminStatus, adjustStaffPoints, updateForumTag, updateVirtualRole } from '@/api/users'
 import { getDepartmentTree } from '@/api/department'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -133,7 +147,6 @@ const departments = ref([])
 const roleMap = {
   '普通用户': 'user',
   '专家': 'expert',
-  '管理员': 'admin'
 }
 
 // 格式化数字
@@ -193,6 +206,7 @@ const fetchUsersList = async () => {
         points: formatNumber(item.total_points || 0),
         role: item.forum_tag || '普通用户',
         isAdmin: item.role === 1 || item.role === 2, // 1=部门管理员, 2=超级管理员
+        isVirtualRole: item.is_virtual_role === 1, // 是否为小助手
         status: item.is_forbidden === 0 ? 'active' : 'inactive',
         originalData: item
       }))
@@ -250,6 +264,27 @@ const handleAdminChange = async (row) => {
     console.error('更新管理员权限失败:', error)
     // 恢复原状态
     row.isAdmin = !row.isAdmin
+  }
+}
+
+// 处理小助手权限切换
+const handleVirtualRoleChange = async (row) => {
+  try {
+    const status = row.isVirtualRole ? 1 : 0
+    let deptId = null
+    
+    // 如果用户有部门信息，使用第一个部门
+    if (row.originalData.departments && row.originalData.departments.length > 0) {
+      deptId = row.originalData.departments[0].dept_id
+    }
+    
+    await updateVirtualRole(row.staffCode, status, deptId)
+    //ElMessage.success(row.isVirtualRole ? '已设为小助手' : '已取消小助手权限')
+    fetchUsersList()
+  } catch (error) {
+    console.error('更新小助手权限失败:', error)
+    // 恢复原状态
+    row.isVirtualRole = !row.isVirtualRole
   }
 }
 

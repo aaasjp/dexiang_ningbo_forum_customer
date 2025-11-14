@@ -205,7 +205,9 @@ const collectSelectedMembers = (depts: DepartmentInfo[]): string[] => {
       // 显示每个选中的成员
       dept.staffs.forEach(staff => {
         if (deptMembers.has(staff.staff_code)) {
-          selectedUsers.push(staff.name)
+          // 如果是虚拟员工，显示 "姓名（虚拟员工名称）"
+          const displayName = staff.is_virtual ? `${staff.name}（${staff.virtual_staff_name}）` : staff.name
+          selectedUsers.push(displayName)
         }
       })
     }
