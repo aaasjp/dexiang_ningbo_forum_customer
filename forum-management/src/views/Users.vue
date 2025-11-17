@@ -272,8 +272,8 @@ const fetchUsersList = async () => {
           ? item.departments[0].dept_name 
           : '-',
         points: formatNumber(item.total_points || 0),
-        roleId: item.tag_id || null, // 使用 tag_id 作为角色标识
-        roleName: item.forum_tag || '普通用户', // 保留名称用于显示
+        roleId: item.forum_tag_id || null, // 使用 forum_tag_id 作为角色标识
+        roleName: item.forum_tag || '-', // 使用 forum_tag 作为标签名称显示
         isAdmin: item.role === 1 || item.role === 2, // 1=部门管理员, 2=超级管理员
         isVirtualRole: item.is_virtual, // 是否为小助手
         isSuperAdmin: item.role === 2, // 2=超级管理员
@@ -386,7 +386,7 @@ const handleSuperAdminChange = async (row) => {
 
 // 处理角色变更
 const handleRoleChange = async (row) => {
-  const oldRoleId = row.originalData.tag_id
+  const oldRoleId = row.originalData.forum_tag_id
   const newRoleId = row.roleId
   
   if (oldRoleId === newRoleId) {
@@ -413,7 +413,7 @@ const handleRoleChange = async (row) => {
     ElMessage.success(`角色已修改为：${selectedTag.tag_name}`)
     
     // 更新原始数据
-    row.originalData.tag_id = newRoleId
+    row.originalData.forum_tag_id = newRoleId
     row.originalData.forum_tag = selectedTag.tag_name
     row.roleName = selectedTag.tag_name
   } catch (error) {
