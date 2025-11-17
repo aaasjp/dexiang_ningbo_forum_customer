@@ -17,11 +17,20 @@
           />
         </el-select>
         
-        <el-select v-model="selectedRole" placeholder="选择角色" style="width: 200px; margin-left: 16px; height: 44px" class="custom-select">
-          <el-option label="选择角色" value="" />
-          <el-option label="普通用户" value="普通用户" />
-          <el-option label="专家" value="专家" />
+        <el-select v-model="selectedRole" placeholder="选择标签" style="width: 200px; margin-left: 16px; height: 44px" class="custom-select">
+          <el-option label="选择标签" value="" />
+          <el-option 
+            v-for="tag in userTags" 
+            :key="tag.tag_id" 
+            :label="tag.tag_name" 
+            :value="tag.tag_id" 
+          />
         </el-select>
+        
+        <el-button class="add-tag-btn" @click="openTagsDialog">
+          <el-icon><Plus /></el-icon>
+          添加标签
+        </el-button>
 
         <el-input
           v-model="searchKeyword"
@@ -43,11 +52,15 @@
           <el-table-column prop="name" label="姓名" width="150" />
           <el-table-column prop="department" label="部门" width="150" />
           <el-table-column prop="points" label="积分" width="120" align="center" />
-          <el-table-column label="角色" width="200">
+          <el-table-column label="标签" width="200">
             <template #default="{ row }">
-              <el-select v-model="row.role" size="small" @change="handleRoleChange(row)">
-                <el-option label="普通用户" value="普通用户" />
-                <el-option label="专家" value="专家" />
+              <el-select v-model="row.roleId" size="small" @change="handleRoleChange(row)">
+                <el-option 
+                  v-for="tag in userTags" 
+                  :key="tag.tag_id" 
+                  :label="tag.tag_name" 
+                  :value="tag.tag_id" 
+                />
               </el-select>
             </template>
           </el-table-column>
@@ -101,6 +114,23 @@
               </el-tooltip>
             </template>
           </el-table-column>
+          <el-table-column label="超级管理员" width="150" align="center">
+            <template #default="{ row }">
+              <el-tooltip
+                :content="row.isSelf ? '不能操作自己' : (row.isSuperAdmin ? '取消超级管理员' : '设为超级管理员')"
+                placement="top"
+                effect="dark"
+                popper-class="switch-tooltip"
+              >
+                <el-switch
+                  v-model="row.isSuperAdmin"
+                  :disabled="row.isSelf"
+                  style="--el-switch-on-color: #fa8c16"
+                  @change="handleSuperAdminChange(row)"
+                />
+              </el-tooltip>
+            </template>
+          </el-table-column>
           <el-table-column label="操作" width="150" align="center" fixed="right">
             <template #default="{ row }">
               <div class="action-buttons">
@@ -123,15 +153,22 @@
         />
       </div>
     </div>
+
+    <!-- 标签管理弹框 -->
+    <UserTagsDialog
+      v-model="showTagsDialog"
+      @refresh="handleTagsRefresh"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { Search } from '@element-plus/icons-vue'
-import { getUsersList, updateForbiddenStatus, updateDeptAdminStatus, adjustStaffPoints, updateForumTag, updateVirtualRole } from '@/api/users'
+import { Search, Plus } from '@element-plus/icons-vue'
+import { getUsersList, updateForbiddenStatus, updateDeptAdminStatus, adjustStaffPoints, updateForumTag, updateVirtualRole, getUserTagsList, updateSuperAdminStatus, getCurrentUserProfile } from '@/api/users'
 import { getDepartmentTree } from '@/api/department'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import UserTagsDialog from '../components/UserTagsDialog.vue'
 
 const selectedDepartment = ref('')
 const selectedRole = ref('')
@@ -142,12 +179,9 @@ const total = ref(0)
 const usersList = ref([])
 const loading = ref(false)
 const departments = ref([])
-
-// 角色映射
-const roleMap = {
-  '普通用户': 'user',
-  '专家': 'expert',
-}
+const userTags = ref([])
+const showTagsDialog = ref(false)
+const currentUserStaffCode = ref('') // 当前登录用户的工号
 
 // 格式化数字
 const formatNumber = (num) => {
@@ -171,6 +205,40 @@ const fetchDepartments = async () => {
   }
 }
 
+// 获取当前用户信息
+const fetchCurrentUser = async () => {
+  try {
+    const res = await getCurrentUserProfile()
+    if (res.data && res.data.staff_code) {
+      currentUserStaffCode.value = res.data.staff_code
+    }
+  } catch (error) {
+    console.error('获取当前用户信息失败:', error)
+  }
+}
+
+// 获取用户标签列表
+const fetchUserTags = async () => {
+  try {
+    const res = await getUserTagsList({})
+    if (res.data && res.data.items) {
+      userTags.value = res.data.items
+    }
+  } catch (error) {
+    console.error('获取用户标签列表失败:', error)
+  }
+}
+
+// 打开标签管理弹框
+const openTagsDialog = () => {
+  showTagsDialog.value = true
+}
+
+// 标签更新后刷新
+const handleTagsRefresh = () => {
+  fetchUserTags()
+}
+
 // 获取用户列表
 const fetchUsersList = async () => {
   try {
@@ -185,7 +253,7 @@ const fetchUsersList = async () => {
     }
     
     if (selectedRole.value) {
-      params.forum_tag = selectedRole.value
+      params.tag_id = selectedRole.value
     }
     
     if (searchKeyword.value) {
@@ -204,9 +272,12 @@ const fetchUsersList = async () => {
           ? item.departments[0].dept_name 
           : '-',
         points: formatNumber(item.total_points || 0),
-        role: item.forum_tag || '普通用户',
+        roleId: item.tag_id || null, // 使用 tag_id 作为角色标识
+        roleName: item.forum_tag || '普通用户', // 保留名称用于显示
         isAdmin: item.role === 1 || item.role === 2, // 1=部门管理员, 2=超级管理员
         isVirtualRole: item.is_virtual, // 是否为小助手
+        isSuperAdmin: item.role === 2, // 2=超级管理员
+        isSelf: item.staff_code === currentUserStaffCode.value, // 是否是当前登录用户
         status: item.is_forbidden === 0 ? 'active' : 'inactive',
         originalData: item
       }))
@@ -215,7 +286,7 @@ const fetchUsersList = async () => {
     }
   } catch (error) {
     console.error('获取用户列表失败:', error)
-    //ElMessage.error('获取用户列表失败')
+    ElMessage.error('获取用户列表失败')
   } finally {
     loading.value = false
   }
@@ -237,10 +308,11 @@ const handleStatusChange = async (row) => {
   try {
     const isForbidden = row.status === 'inactive' ? 1 : 0
     await updateForbiddenStatus(row.staffCode, isForbidden)
-    //ElMessage.success(isForbidden === 1 ? '已禁用' : '已启用')
+    ElMessage.success(isForbidden === 1 ? '已禁用' : '已启用')
     fetchUsersList()
   } catch (error) {
     console.error('更新状态失败:', error)
+    ElMessage.error('更新状态失败')
     // 恢复原状态
     row.status = row.status === 'inactive' ? 'active' : 'inactive'
   }
@@ -254,14 +326,15 @@ const handleAdminChange = async (row) => {
       const deptId = row.originalData.departments[0].dept_id
       const status = row.isAdmin ? 1 : 0
       await updateDeptAdminStatus(row.staffCode, deptId, status)
-      //ElMessage.success(row.isAdmin ? '已设为管理员' : '已取消管理员权限')
+      ElMessage.success(row.isAdmin ? '已设为管理员' : '已取消管理员权限')
       fetchUsersList()
     } else {
-      //ElMessage.error('用户没有所属部门')
+      ElMessage.error('用户没有所属部门')
       row.isAdmin = !row.isAdmin
     }
   } catch (error) {
     console.error('更新管理员权限失败:', error)
+    ElMessage.error('更新管理员权限失败')
     // 恢复原状态
     row.isAdmin = !row.isAdmin
   }
@@ -279,42 +352,76 @@ const handleVirtualRoleChange = async (row) => {
     }
     
     await updateVirtualRole(row.staffCode, status, deptId)
-    //ElMessage.success(row.isVirtualRole ? '已设为小助手' : '已取消小助手权限')
+    ElMessage.success(row.isVirtualRole ? '已设为小助手' : '已取消小助手权限')
     fetchUsersList()
   } catch (error) {
     console.error('更新小助手权限失败:', error)
+    ElMessage.error('更新小助手权限失败')
     // 恢复原状态
     row.isVirtualRole = !row.isVirtualRole
   }
 }
 
+// 处理超级管理员权限切换
+const handleSuperAdminChange = async (row) => {
+  // 不能操作自己
+  if (row.isSelf) {
+    ElMessage.warning('不能操作自己')
+    row.isSuperAdmin = !row.isSuperAdmin
+    return
+  }
+  
+  try {
+    const status = row.isSuperAdmin ? 1 : 0
+    await updateSuperAdminStatus(row.staffCode, status)
+    ElMessage.success(row.isSuperAdmin ? '已设为超级管理员' : '已取消超级管理员权限')
+    fetchUsersList()
+  } catch (error) {
+    console.error('更新超级管理员权限失败:', error)
+    ElMessage.error('更新超级管理员权限失败')
+    // 恢复原状态
+    row.isSuperAdmin = !row.isSuperAdmin
+  }
+}
+
 // 处理角色变更
 const handleRoleChange = async (row) => {
-  const oldRole = row.originalData.forum_tag || '普通用户'
-  const newRole = row.role
+  const oldRoleId = row.originalData.tag_id
+  const newRoleId = row.roleId
   
-  if (oldRole === newRole) {
+  if (oldRoleId === newRoleId) {
+    return
+  }
+  
+  // 查找新角色的名称用于显示
+  const selectedTag = userTags.value.find(tag => tag.tag_id === newRoleId)
+  if (!selectedTag) {
+    ElMessage.error('未找到对应的标签')
+    row.roleId = oldRoleId
     return
   }
   
   try {
     console.log('修改用户角色：', {
       staffCode: row.staffCode,
-      oldRole,
-      newRole
+      oldRoleId,
+      newRoleId,
+      newRoleName: selectedTag.tag_name
     })
     
-    await updateForumTag(row.staffCode, newRole)
-    //ElMessage.success(`角色已修改为：${newRole}`)
+    await updateForumTag(row.staffCode, newRoleId)
+    ElMessage.success(`角色已修改为：${selectedTag.tag_name}`)
     
     // 更新原始数据
-    row.originalData.forum_tag = newRole
+    row.originalData.tag_id = newRoleId
+    row.originalData.forum_tag = selectedTag.tag_name
+    row.roleName = selectedTag.tag_name
   } catch (error) {
     console.error('修改角色失败:', error)
-    //ElMessage.error(error.message || '修改角色失败，请重试')
+    ElMessage.error('修改角色失败')
     
     // 恢复原角色
-    row.role = oldRole
+    row.roleId = oldRoleId
   }
 }
 
@@ -343,26 +450,27 @@ const handleAdjustPoints = async (row) => {
         })
         
         await adjustStaffPoints(row.staffCode, currentPoints, parseInt(newPoints))
-        //ElMessage.success('积分调整成功')
+        ElMessage.success('积分调整成功')
         await fetchUsersList()
       } catch (apiError) {
         console.error('积分调整接口调用失败:', apiError)
-        //ElMessage.error(apiError.message || '积分调整失败，请重试')
+        ElMessage.error('积分调整失败')
       }
     } else if (newPoints === String(currentPoints)) {
-      //ElMessage.info('积分未变化')
+      ElMessage.info('积分未变化')
     }
   } catch (error) {
     if (error !== 'cancel') {
       console.error('积分调整操作失败:', error)
-      //ElMessage.error('操作失败')
     }
   }
 }
 
 // 组件挂载时获取数据
 onMounted(() => {
+  fetchCurrentUser()
   fetchDepartments()
+  fetchUserTags()
   fetchUsersList()
 })
 </script>
@@ -442,6 +550,27 @@ onMounted(() => {
 .custom-input :deep(.el-input__inner) {
   height: 42px !important;
   line-height: 42px !important;
+}
+
+/* 添加角色按钮样式 */
+.add-tag-btn {
+  height: 44px;
+  margin-left: 8px;
+  padding: 0 16px;
+  background: linear-gradient(90deg, #FFBD39 0%, #FF7800 100%);
+  border: none;
+  border-radius: 4px;
+  color: #FFFFFF;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.add-tag-btn:hover {
+  opacity: 0.9;
+}
+
+.add-tag-btn :deep(.el-icon) {
+  margin-right: 4px;
 }
 </style>
 

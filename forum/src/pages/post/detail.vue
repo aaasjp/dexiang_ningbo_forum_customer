@@ -88,6 +88,34 @@
       </div>
     </div>
 
+    <!-- 删除问题确认弹窗 -->
+    <div v-if="showDeleteQuestionModal" class="modal-overlay" @click.self="showDeleteQuestionModal = false">
+      <div class="modal-content">
+        <div class="modal-title">删除问题</div>
+        <div class="modal-text">
+          确定要删除这个问题吗？删除后将无法恢复。
+        </div>
+        <div class="modal-buttons">
+          <button class="modal-btn cancel" @click="showDeleteQuestionModal = false">取消</button>
+          <button class="modal-btn confirm" @click="confirmDeleteQuestion">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除回答确认弹窗 -->
+    <div v-if="showDeleteAnswerModal" class="modal-overlay" @click.self="showDeleteAnswerModal = false">
+      <div class="modal-content">
+        <div class="modal-title">删除回答</div>
+        <div class="modal-text">
+          确定要删除这条回答吗？删除后将无法恢复。
+        </div>
+        <div class="modal-buttons">
+          <button class="modal-btn cancel" @click="showDeleteAnswerModal = false">取消</button>
+          <button class="modal-btn confirm" @click="confirmDeleteAnswer">删除</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 引导提示 -->
     <div v-if="showGuide" class="guide-overlay" @click.self="closeGuide">
       <div class="guide-wrapper" :style="guidePositionStyle">
@@ -159,6 +187,9 @@ const postContentRef = ref<InstanceType<typeof PostContent>>()
 
 // 状态
 const showSolveModal = ref(false)
+const showDeleteQuestionModal = ref(false)
+const showDeleteAnswerModal = ref(false)
+const deletingAnswerId = ref<number>()
 const showGuide = ref(false)
 const showReplyInput = ref(false)
 const replyToUser = ref<string>()
@@ -323,21 +354,23 @@ const handleEdit = () => {
 }
 
 // 处理删除
-const handleDelete = async () => {
-  // 确认删除
-  if (!confirm('确定要删除这个问题吗？删除后将无法恢复。')) {
-    return
-  }
-  
+const handleDelete = () => {
+  showDeleteQuestionModal.value = true
+}
+
+// 确认删除问题
+const confirmDeleteQuestion = async () => {
   try {
     const questionId = postData.value.question_id || Number(route.query.id || route.params.id)
     await deleteQuestion(questionId)
     
+    showDeleteQuestionModal.value = false
     // 删除成功后返回上一页
     //ElMessage.success('删除成功')
     router.back()
   } catch (error) {
     console.error('删除失败:', error)
+    showDeleteQuestionModal.value = false
     alert('删除失败，请稍后重试')
   }
 }
@@ -541,25 +574,34 @@ const handleEditComment = (comment: Comment) => {
 }
 
 // 处理删除评论
-const handleDeleteComment = async (comment: Comment) => {
+const handleDeleteComment = (comment: Comment) => {
   if (!comment.answer_id) {
     //ElMessage.warning('无法获取回答信息')
     return
   }
   
-  // 确认删除
-  if (!confirm('确定要删除这条回答吗？')) {
+  deletingAnswerId.value = comment.answer_id
+  showDeleteAnswerModal.value = true
+}
+
+// 确认删除回答
+const confirmDeleteAnswer = async () => {
+  if (!deletingAnswerId.value) {
     return
   }
   
   try {
-    await deleteAnswer(comment.answer_id)
+    await deleteAnswer(deletingAnswerId.value)
+    showDeleteAnswerModal.value = false
+    deletingAnswerId.value = undefined
     //ElMessage.success('删除成功')
     
     // 重新加载评论列表
     await loadPostData()
   } catch (error) {
     console.error('删除失败:', error)
+    showDeleteAnswerModal.value = false
+    deletingAnswerId.value = undefined
     //ElMessage.error('删除失败')
   }
 }

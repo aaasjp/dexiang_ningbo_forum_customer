@@ -65,15 +65,15 @@ export function adjustStaffPoints(staffCode, currentPoints, newPoints) {
 }
 
 /**
- * 修改用户标签（角色）
+ * 修改用户标签（角色）- 只有超级管理员可以操作
  * @param {string} staffCode - 员工工号
- * @param {string} forumTag - 新的标签值（如 '普通用户'、'专家'）
+ * @param {number} tagId - 标签ID
  */
-export function updateForumTag(staffCode, forumTag) {
+export function updateForumTag(staffCode, tagId) {
   return request({
     url: `/admin/staffs/forum-tag/${staffCode}`,
     method: 'put',
-    params: { forum_tag: forumTag }
+    params: { tag_id: tagId }
   })
 }
 
@@ -96,12 +96,80 @@ export function updateVirtualRole(staffCode, status, deptId) {
 }
 
 /**
+ * 取消/恢复超级管理员权限（只有超级管理员可以操作）
+ * @param {string} staffCode - 员工工号
+ * @param {number} status - 状态 (0取消权限, 1恢复权限)
+ */
+export function updateSuperAdminStatus(staffCode, status) {
+  return request({
+    url: `/admin/super-admins/status/${staffCode}`,
+    method: 'put',
+    params: { status }
+  })
+}
+
+/**
  * 获取当前用户信息
  */
 export function getCurrentUserProfile() {
   return request({
     url: '/user/profile',
     method: 'get'
+  })
+}
+
+/**
+ * 获取用户标签列表
+ * @param {Object} params - 查询参数
+ * @param {number} params.status - 状态筛选 (可选)
+ */
+export function getUserTagsList(params) {
+  return request({
+    url: '/admin/user-tags/list',
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 创建用户标签
+ * @param {Object} params - 标签参数
+ * @param {string} params.tag_name - 标签名称
+ * @param {string} params.tag_description - 标签描述 (可选)
+ * @param {number} params.sort_order - 排序 (可选，默认0)
+ * @param {number} params.status - 状态 (可选，默认1)
+ */
+export function createUserTag(params) {
+  return request({
+    url: '/admin/user-tags/create',
+    method: 'post',
+    params
+  })
+}
+
+/**
+ * 删除用户标签
+ * @param {number} tagId - 标签ID
+ */
+export function deleteUserTag(tagId) {
+  return request({
+    url: `/admin/user-tags/delete/${tagId}`,
+    method: 'delete'
+  })
+}
+
+/**
+ * 批量更新用户标签
+ * @param {Array} tags - 标签数组，每个标签包含：
+ *   - tag_id: 标签ID（新增时为null）
+ *   - tag_name: 标签名称
+ *   - operation: 操作方式（create新增，update更新，delete删除）
+ */
+export function batchUpdateUserTags(tags) {
+  return request({
+    url: '/admin/user-tags/batch-update',
+    method: 'put',
+    data: { tags }
   })
 }
 

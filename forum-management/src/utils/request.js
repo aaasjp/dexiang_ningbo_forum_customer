@@ -72,35 +72,9 @@ request.interceptors.response.use(
   error => {
     console.error('响应错误:', error)
     
-    let message = '网络错误,请稍后重试'
+    // 不在拦截器中显示错误提示，由业务代码自行处理
+    // 这样可以避免重复提示
     
-    if (error.response) {
-      // 优先检查 detail 字段
-      if (error.response.data?.detail) {
-        message = error.response.data.detail
-        ElMessage.error(message)
-        return Promise.reject(error)
-      }
-      
-      switch (error.response.status) {
-        case 401:
-          message = '未授权,请重新登录'
-          break
-        case 403:
-          message = '拒绝访问'
-          break
-        case 404:
-          message = '请求错误,未找到该资源'
-          break
-        case 500:
-          message = '服务器错误'
-          break
-        default:
-          message = error.response.data?.message || '请求失败'
-      }
-    }
-    
-    ElMessage.error(message)
     return Promise.reject(error)
   }
 )

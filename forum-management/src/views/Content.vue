@@ -305,7 +305,7 @@ const fetchQuestionsList = async () => {
     }
   } catch (error) {
     console.error('获取问题列表失败:', error)
-    //ElMessage.error('获取问题列表失败')
+    ElMessage.error('获取问题列表失败')
   } finally {
     loading.value = false
   }
@@ -327,10 +327,11 @@ const handleStatusChange = async (row) => {
   try {
     const isOffline = row.status === 'offline' ? 1 : 0
     await updateOfflineStatus(row.id, isOffline)
-    //ElMessage.success(isOffline === 1 ? '已下线' : '已上线')
+    ElMessage.success(isOffline === 1 ? '已下线' : '已上线')
     fetchQuestionsList()
   } catch (error) {
     console.error('更新状态失败:', error)
+    ElMessage.error('更新状态失败')
     // 恢复原状态
     row.status = row.status === 'offline' ? 'online' : 'offline'
   }
@@ -359,10 +360,10 @@ const handleToggleInappropriate = async (row) => {
     // 这里需要调用相应的 API
     // await updateInappropriateStatus(row.id, newStatus)
     row.is_inappropriate = newStatus
-    //ElMessage.success(newStatus === 1 ? '已标记不当言论' : '已取消不当言论标记')
+    ElMessage.success(newStatus === 1 ? '已标记不当言论' : '已取消不当言论标记')
   } catch (error) {
     console.error('更新不当言论标记失败:', error)
-    //ElMessage.error('更新不当言论标记失败')
+    ElMessage.error('更新不当言论标记失败')
   }
 }
 
@@ -371,12 +372,13 @@ const handleDeleteConfirm = async () => {
   
   try {
     await deleteQuestion(currentDeleteId.value)
-    //ElMessage.success('删除成功')
+    ElMessage.success('删除成功')
     showDeleteDialog.value = false
     currentDeleteId.value = null
     fetchQuestionsList()
   } catch (error) {
     console.error('删除失败:', error)
+    ElMessage.error('删除失败')
   }
 }
 
@@ -395,13 +397,13 @@ const handleEdit = (row) => {
 const handleEditConfirm = async (data) => {
   try {
     await transferQuestion(currentEditData.value.question_id, data)
-    //ElMessage.success('编辑成功')
+    ElMessage.success('编辑成功')
     showEditDialog.value = false
     currentEditData.value = null
     fetchQuestionsList()
   } catch (error) {
     console.error('编辑失败:', error)
-    //ElMessage.error('编辑失败')
+    ElMessage.error('编辑失败')
   }
 }
 
@@ -426,12 +428,12 @@ const handleDelete = (row) => {
 const handleToggleFeatured = async (row) => {
   try {
     await markFeatured(row.id, row.is_featured)
-    //ElMessage.success(row.is_featured === 1 ? '已标记精选' : '已取消精选')
+    ElMessage.success(row.is_featured === 1 ? '已标记精选' : '已取消精选')
   } catch (error) {
     console.error('更新精选状态失败:', error)
     // 恢复原状态
     row.is_featured = row.is_featured === 1 ? 0 : 1
-    //ElMessage.error('更新精选状态失败')
+    ElMessage.error('更新精选状态失败')
   }
 }
 

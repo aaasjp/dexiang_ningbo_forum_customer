@@ -115,7 +115,7 @@ const fetchPointsRulesList = async () => {
     }
   } catch (error) {
     console.error('获取积分规则列表失败:', error)
-    //ElMessage.error('获取积分规则列表失败')
+    ElMessage.error('获取积分规则列表失败')
   } finally {
     loading.value = false
   }
@@ -153,7 +153,7 @@ const handleFormConfirm = async (data) => {
         points: data.points,
         rule_description: data.action
       })
-      //ElMessage.success('编辑成功')
+      ElMessage.success('编辑成功')
     } else {
       // 新增逻辑
       await createRewardRule({
@@ -162,12 +162,13 @@ const handleFormConfirm = async (data) => {
         points: data.points,
         rule_description: data.action
       })
-      //ElMessage.success('新增成功')
+      ElMessage.success('新增成功')
     }
     showFormDialog.value = false
     fetchPointsRulesList()
   } catch (error) {
     console.error('保存失败:', error)
+    ElMessage.error('保存失败')
   }
 }
 
@@ -185,12 +186,13 @@ const handleDeleteConfirm = async () => {
   
   try {
     await deleteRewardRule(currentDeleteRow.value.id)
-    //ElMessage.success('删除成功')
+    ElMessage.success('删除成功')
     showDeleteDialog.value = false
     currentDeleteRow.value = null
     fetchPointsRulesList()
   } catch (error) {
     console.error('删除失败:', error)
+    ElMessage.error('删除失败')
   }
 }
 

@@ -36,12 +36,12 @@
           <div v-if="showMoreMenuId === comment.id" class="comment-more-menu">
             <!-- 帖子作者看到的选项 -->
             <div v-if="isOwnPost" class="menu-item" @click="handleUseful(comment)">
-              {{ comment.is_useful ? '取消有用' : '有用' }}
+              {{ comment.is_useful ? '取消采纳' : '采纳' }}
             </div>
             
             <!-- 回答作者看到的选项 -->
-            <div v-if="isOwnComment(comment)" class="menu-item" @click="handleEdit(comment)">修改回答</div>
-            <div v-if="isOwnComment(comment)" class="menu-item" @click="handleDelete(comment)">删除回答</div>
+            <!-- <div v-if="isOwnComment(comment)" class="menu-item" @click="handleEdit(comment)">修改</div> -->
+            <div v-if="isOwnComment(comment)" class="menu-item" @click="handleDelete(comment)">删除</div>
           </div>
           
           <div class="comment-text">{{ comment.content }}</div>

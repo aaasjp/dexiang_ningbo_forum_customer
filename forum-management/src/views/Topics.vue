@@ -140,7 +140,7 @@ const fetchTopicsList = async () => {
     }
   } catch (error) {
     console.error('获取话题列表失败:', error)
-    //ElMessage.error('获取话题列表失败')
+    ElMessage.error('获取话题列表失败')
   } finally {
     loading.value = false
   }
@@ -186,7 +186,7 @@ const handleTopicFormConfirm = async (data) => {
         description: data.description,
         cover_image: data.coverImage
       })
-      //ElMessage.success('编辑成功')
+      ElMessage.success('编辑成功')
     } else {
       // 创建话题
       await createTopic({
@@ -194,12 +194,13 @@ const handleTopicFormConfirm = async (data) => {
         description: data.description,
         cover_image: data.coverImage
       })
-      //ElMessage.success('创建成功')
+      ElMessage.success('创建成功')
     }
     showTopicDialog.value = false
     fetchTopicsList()
   } catch (error) {
     console.error('操作失败:', error)
+    ElMessage.error('操作失败')
   }
 }
 
