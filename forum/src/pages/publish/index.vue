@@ -269,6 +269,59 @@ const loadTopics = async () => {
     //ElMessage.error('获取话题列表失败')
   }
 }
+
+// 根据员工号数组查找员工姓名（用于编辑模式回显）
+const findStaffNamesByStaffCodes = (staffCodes: string[], depts: DepartmentInfo[]): string[] => {
+  const staffNames: string[] = []
+  
+  // 递归查找员工信息
+  const findInDepts = (departments: DepartmentInfo[]) => {
+    for (const dept of departments) {
+      if (dept.staffs && dept.staffs.length > 0) {
+        dept.staffs.forEach(staff => {
+          if (staffCodes.includes(staff.staff_code)) {
+            // 如果是虚拟员工，显示 "姓名（虚拟员工名称）"
+            const displayName = staff.is_virtual && staff.virtual_staff_name 
+              ? `${staff.name}（${staff.virtual_staff_name}）` 
+              : staff.name
+            staffNames.push(displayName)
+          }
+        })
+      }
+      
+      // 递归处理子部门
+      if (dept.children && dept.children.length > 0) {
+        findInDepts(dept.children)
+      }
+    }
+  }
+  
+  findInDepts(depts)
+  return staffNames
+}
+
+// 根据部门ID数组查找部门名称（用于编辑模式回显）
+const findDeptNamesByDeptIds = (deptIds: number[], depts: DepartmentInfo[]): string[] => {
+  const deptNames: string[] = []
+  
+  // 递归查找部门信息
+  const findInDepts = (departments: DepartmentInfo[]) => {
+    for (const dept of departments) {
+      if (deptIds.includes(dept.dept_id)) {
+        deptNames.push(dept.dept_name)
+      }
+      
+      // 递归处理子部门
+      if (dept.children && dept.children.length > 0) {
+        findInDepts(dept.children)
+      }
+    }
+  }
+  
+  findInDepts(depts)
+  return deptNames
+}
+
 // 是否可以发布
 const canPublish = computed(() => {
   return title.value.trim() !== '' && content.value.trim() !== ''
@@ -416,6 +469,7 @@ const loadEditData = async (questionId: number) => {
         
         // 重建selectedMembers
         const newSelectedMembers = new Map<string, Set<string>>()
+        const allMentionedNames: string[] = []
         
         if (data.related_dept_ids && data.related_dept_ids.length > 0) {
           data.related_dept_ids.forEach(deptId => {
@@ -423,6 +477,10 @@ const loadEditData = async (questionId: number) => {
               newSelectedMembers.set(String(deptId), new Set())
             }
           })
+          
+          // 将部门名称添加到显示列表
+          const deptNames = findDeptNamesByDeptIds(data.related_dept_ids, departments.value)
+          allMentionedNames.push(...deptNames)
         }
         
         if (data.related_staff_codes && data.related_staff_codes.length > 0) {
@@ -439,10 +497,13 @@ const loadEditData = async (questionId: number) => {
             }
           })
           
-          // 更新mentionedUsers显示
-          mentionedUsers.value = data.related_staff_codes
+          // 将员工姓名添加到显示列表
+          const staffNames = findStaffNamesByStaffCodes(data.related_staff_codes, departments.value)
+          allMentionedNames.push(...staffNames)
         }
         
+        // 更新mentionedUsers显示 - 包含部门名称和员工姓名
+        mentionedUsers.value = allMentionedNames
         selectedMembers.value = newSelectedMembers
       }
     } else {

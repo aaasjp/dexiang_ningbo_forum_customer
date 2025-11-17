@@ -48,11 +48,24 @@
         </div>
       </div>
 
+      <!-- 图片上传按钮区域 -->
+      <div v-if="uploadedImages.length < 1" class="image-upload-section">
+        <div class="upload-btn" @click="uploadImage">
+          <img src="../../assets/images/icon/image.png" alt="上传图片" class="upload-icon" width="20" height="20" />
+        </div>
+      </div>
+
       <!-- 底部工具栏 -->
       <div class="toolbar">
         <div class="toolbar-left">
-          <div class="toolbar-item" @click="uploadImage">
-            <img src="../../assets/images/icon/image.png" alt="上传图片" class="action-icon" width="20" height="20" />
+          <!-- 匿名选择 -->
+          <div class="anonymous-selector" @click="toggleAnonymous">
+            <div class="checkbox" :class="{ checked: isAnonymous }">
+              <el-icon v-if="isAnonymous" :size="16" color="#1A1A1A">
+                <Check />
+              </el-icon>
+            </div>
+            <span class="anonymous-label">匿名</span>
           </div>
         </div>
         <button 
@@ -69,7 +82,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue'
-import { Close } from '@element-plus/icons-vue'
+import { Close, Check } from '@element-plus/icons-vue'
 import { uploadImages } from '../../api/upload'
 import { useImageViewerStore } from '../../stores/imageViewer'
 
@@ -85,7 +98,7 @@ withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  'send': [data: { text: string, images: string[] }]
+  'send': [data: { text: string, images: string[], isAnonymous: boolean }]
   'cancel-reply': []
   'focus': []
   'blur': []
@@ -97,6 +110,7 @@ const inputValue = ref('')
 const uploadedImages = ref<string[]>([])
 const isKeyboardActive = ref(false)
 const uploading = ref(false)
+const isAnonymous = ref(false)
 
 // 是否可以发送
 const canSend = computed(() => {
@@ -130,7 +144,7 @@ const uploadImage = () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = 'image/*'
-  input.multiple = true
+  input.multiple = false
   
   input.onchange = async (e: Event) => {
     const target = e.target as HTMLInputElement
@@ -138,9 +152,9 @@ const uploadImage = () => {
     
     if (!files || files.length === 0) return
     
-    // 检查数量限制
-    if (uploadedImages.value.length + files.length > 9) {
-      //ElMessage.warning('最多上传9张图片')
+    // 检查数量限制（评论区只允许上传1张图片）
+    if (uploadedImages.value.length >= 1) {
+      //ElMessage.warning('评论区最多上传1张图片')
       return
     }
     
@@ -181,18 +195,25 @@ const handleImageClick = (imageUrl: string) => {
   imageViewerStore.open(imageUrl)
 }
 
+// 切换匿名状态
+const toggleAnonymous = () => {
+  isAnonymous.value = !isAnonymous.value
+}
+
 // 发送
 const handleSend = () => {
   if (!canSend.value) return
   
   emit('send', {
     text: inputValue.value.trim(),
-    images: [...uploadedImages.value]
+    images: [...uploadedImages.value],
+    isAnonymous: isAnonymous.value
   })
   
   // 清空输入
   inputValue.value = ''
   uploadedImages.value = []
+  isAnonymous.value = false
   
   // 重置高度
   if (textareaRef.value) {
@@ -212,6 +233,7 @@ const handleOverlayClick = () => {
   emit('cancel-reply')
   inputValue.value = ''
   uploadedImages.value = []
+  isAnonymous.value = false
 }
 
 // 设置编辑内容（用于回填数据）
@@ -363,8 +385,31 @@ defineExpose({
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-  /* margin-bottom: 12px; */
   padding: 0 16px 12px 16px;
+}
+
+/* 图片上传按钮区域 */
+.image-upload-section {
+  padding: 0 16px 0 8px;
+  border-bottom: 1px solid #F5F5F5;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.upload-btn:active {
+  opacity: 0.6;
+}
+
+.upload-icon {
+  display: block;
 }
 
 .image-preview-item {
@@ -412,15 +457,37 @@ defineExpose({
   gap: 16px;
 }
 
-.toolbar-item {
+/* 匿名选择器 */
+.anonymous-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #F7F7F7;
+  border: 2px solid #E5E5E5;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.toolbar-item:active {
-  opacity: 0.6;
+.checkbox.checked {
+  background: #FFDD00;
+  border-color: #FFDD00;
+}
+
+.anonymous-label {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 400;
+  font-size: 14px;
+  color: #1A1A1A;
 }
 
 .send-btn {

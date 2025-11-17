@@ -42,10 +42,6 @@
             <!-- 回答作者看到的选项 -->
             <div v-if="isOwnComment(comment)" class="menu-item" @click="handleEdit(comment)">修改回答</div>
             <div v-if="isOwnComment(comment)" class="menu-item" @click="handleDelete(comment)">删除回答</div>
-            
-            <!-- 所有人看到的选项 -->
-            <div class="menu-item" @click="handleShare(comment)">分享</div>
-            <div v-if="!isOwnComment(comment)" class="menu-item" @click="handleReport(comment)">举报</div>
           </div>
           
           <div class="comment-text">{{ comment.content }}</div>
@@ -160,8 +156,6 @@ interface Emits {
   (e: 'more', comment: Comment): void
   (e: 'reply-to-reply', reply: CommentReply, comment: Comment): void
   (e: 'like-reply', reply: CommentReply, comment: Comment): void
-  (e: 'share', comment: Comment): void
-  (e: 'report', comment: Comment): void
   (e: 'useful', comment: Comment): void
   (e: 'edit', comment: Comment): void
   (e: 'delete', comment: Comment): void
@@ -209,16 +203,6 @@ const handleEdit = (comment: Comment) => {
 const handleDelete = (comment: Comment) => {
   showMoreMenuId.value = null
   emit('delete', comment)
-}
-
-const handleShare = (comment: Comment) => {
-  showMoreMenuId.value = null
-  emit('share', comment)
-}
-
-const handleReport = (comment: Comment) => {
-  showMoreMenuId.value = null
-  emit('report', comment)
 }
 
 const onReplyToReply = (reply: CommentReply, comment: Comment) => {
@@ -374,9 +358,10 @@ const handleImageClick = (imageUrl: string) => {
   width: 80px;
   height: 80px;
   border-radius: 8px;
-  object-fit: cover;
+  object-fit: cover;  /* 保持宽高比，裁剪多余部分，不拉伸 */
   cursor: pointer;
   transition: transform 0.2s;
+  background: #f0f0f0;
 }
 
 .comment-image:active {
@@ -530,9 +515,10 @@ const handleImageClick = (imageUrl: string) => {
   width: 60px;
   height: 60px;
   border-radius: 6px;
-  object-fit: cover;
+  object-fit: cover;  /* 保持宽高比，裁剪多余部分，不拉伸 */
   cursor: pointer;
   transition: transform 0.2s;
+  background: #f0f0f0;
 }
 
 .reply-image:active {

@@ -7,9 +7,7 @@
       @back="goBack"
       @search="goToSearch"
       @edit="handleEdit"
-      @share="handleShare"
       @delete="handleDelete"
-      @report="handleReport"
     />
 
     <!-- 帖子内容 -->
@@ -45,8 +43,6 @@
       @more="handleMoreComment"
       @reply-to-reply="handleReplyToReply"
       @like-reply="handleLikeReply"
-      @share="handleShareComment"
-      @report="handleReportComment"
       @useful="handleUsefulComment"
       @edit="handleEditComment"
       @delete="handleDeleteComment"
@@ -326,11 +322,6 @@ const handleEdit = () => {
   })
 }
 
-// 处理分享
-const handleShare = () => {
-  //ElMessage.success('分享链接已复制')
-}
-
 // 处理删除
 const handleDelete = async () => {
   // 确认删除
@@ -349,11 +340,6 @@ const handleDelete = async () => {
     console.error('删除失败:', error)
     alert('删除失败，请稍后重试')
   }
-}
-
-// 处理举报
-const handleReport = () => {
-  //ElMessage.info('举报功能开发中...')
 }
 
 // 处理关注
@@ -503,16 +489,6 @@ const handleLikeReply = (reply: CommentReply, comment: Comment) => {
   }
 }
 
-// 处理分享评论
-const handleShareComment = (_comment: Comment) => {
-  //ElMessage.success('评论链接已复制')
-}
-
-// 处理举报评论
-const handleReportComment = (_comment: Comment) => {
-  //ElMessage.info('举报功能开发中...')
-}
-
 // 处理采纳回答为有用/取消有用
 const handleUsefulComment = async (comment: Comment) => {
   try {
@@ -659,7 +635,7 @@ const handleCommentSubmit = (text: string) => {
 }
 
 // 处理回复发送
-const handleReplySend = async (data: { text: string, images: string[] }) => {
+const handleReplySend = async (data: { text: string, images: string[], isAnonymous: boolean }) => {
   try {
     const questionId = postData.value.question_id || Number(route.query.id || route.params.id)
     
@@ -676,7 +652,8 @@ const handleReplySend = async (data: { text: string, images: string[] }) => {
         question_id: questionId,
         parent_answer_id: currentReplyAnswerId.value || null,
         content: data.text,
-        images: data.images
+        images: data.images,
+        is_anonymous: data.isAnonymous ? 1 : 0
       }
       
       await createAnswer(answerData)

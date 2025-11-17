@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Response Test</title>
+</head>
+<body>
+    <h1>测试回答API返回数据</h1>
+    <button onclick="testAPI()">测试API</button>
+    <pre id="result"></pre>
+    
+    <script>
+    async function testAPI() {
+        try {
+            const response = await fetch('/api/answers/list/question/1');
+            const data = await response.json();
+            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+            console.log('API Response:', data);
+            
+            // 检查头像字段
+            if (data.data && data.data.items && data.data.items.length > 0) {
+                console.log('First answer:', data.data.items[0]);
+                console.log('answerer_avatar:', data.data.items[0].answerer_avatar);
+            }
+        } catch (error) {
+            document.getElementById('result').textContent = 'Error: ' + error.message;
+            console.error('Error:', error);
+        }
+    }
+    </script>
+</body>
+</html>

@@ -66,14 +66,10 @@
         <el-table-column prop="sequence" label="序号" width="80" align="center" />
         <el-table-column label="标题" min-width="200">
           <template #default="{ row }">
-            <div class="title-content">
-              <span class="title-text">{{ row.title }}</span>
-              <span v-if="row.resolveStatus" :class="['resolve-status', `status-${row.resolveStatus}`]">
-                {{ row.resolveStatus === 1 ? '已解决' : '未解决' }}
-              </span>
-            </div>
+            <div class="text-content" :title="row.title">{{ row.title }}</div>
           </template>
         </el-table-column>
+        
         <el-table-column prop="author" label="作者" width="120" />
         <el-table-column prop="department" label="@部门/人员" width="180">
           <template #default="{ row }">
@@ -85,59 +81,56 @@
             <div class="text-content" :title="row.topic">{{ row.topic }}</div>
           </template>
         </el-table-column>
+        <el-table-column prop="type" label="展示类型" width="120" align="center" />
         <el-table-column prop="views" label="浏览" width="80" align="center" />
         <el-table-column prop="replies" label="回答" width="80" align="center" />
         <el-table-column prop="likes" label="点赞" width="80" align="center" />
         <el-table-column prop="favorites" label="收藏" width="80" align="center" />
-        <el-table-column prop="countdown" label="倒计时" width="100" align="center">
-        <template #default="{ row }">
-          <span :class="['countdown-tag', row.days_remaining < 2 ? 'countdown-tag-expired' : 'countdown-tag-active']">
-            {{ row.days_remaining }}
-          </span>天
-        </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180" align="center" />
-        <el-table-column label="精选" width="100" align="center">
+        <el-table-column label="倒计时" width="100" align="center">
           <template #default="{ row }">
-            <span 
-              :class="['status-tag', row.is_featured === 1 ? 'status-featured' : 'status-not-featured']"
-              @click="handleToggleFeatured(row)"
-              style="cursor: pointer;"
-            >
-              {{ row.is_featured === 1 ? '标记精选' : '取消精选' }}
-            </span>
+            <span :class="['countdown-tag', row.hours_remaining < 48 ? 'countdown-tag-expired' : 'countdown-tag-active']">
+              {{ row.hours_remaining }}
+            </span>小时
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" align="center" fixed="right">
+        <el-table-column prop="createTime" label="创建时间" width="180" align="center" />
+        <el-table-column label="解决状态" width="100" align="center">
           <template #default="{ row }">
-            <div class="action-buttons">
-              <el-tooltip
-                :content="row.status === 'online' ? '下线' : '上线'"
-                placement="top"
-                effect="dark"
-                popper-class="switch-tooltip"
-              >
-                <el-switch
-                  v-model="row.status"
-                  active-value="online"
-                  inactive-value="offline"
-                  style="--el-switch-on-color: #fa8c16"
-                  @change="handleStatusChange(row)"
-                />
-              </el-tooltip>
-              <el-button link type="warning" @click="handleEdit(row)">编辑</el-button>
-              <el-button link type="warning" @click="handleDetail(row)">详情</el-button>
-              <el-button link type="info" @click="handleDelete(row)">删除</el-button>
-              <!-- <el-dropdown @command="(cmd) => { currentDeleteId = row.id; handleCommand(cmd); }" popper-class="dark-dropdown">
-                <el-icon class="more-icon" style="color: #999;"><MoreFilled /></el-icon>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item command="delete">删除内容</el-dropdown-item>
-                    <el-dropdown-item command="manage">管理内容</el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown> -->
-            </div>
+            <span v-if="row.resolveStatus" :class="['resolve-status', `status-${row.resolveStatus}`]">
+              {{ row.resolveStatus === 1 ? '已解决' : '未解决' }}
+            </span>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="精选" width="80" align="center">
+          <template #default="{ row }">
+            <el-switch
+              v-model="row.is_featured"
+              :active-value="1"
+              :inactive-value="0"
+              style="--el-switch-on-color: #fa8c16"
+              @change="handleToggleFeatured(row)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="80" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-dropdown @command="(cmd) => handleCommand(cmd, row)" popper-class="dark-dropdown">
+              <el-icon class="more-icon" style="color: #999;"><MoreFilled /></el-icon>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="detail">详情</el-dropdown-item>
+                  <el-dropdown-item command="edit">编辑</el-dropdown-item>
+                  <el-dropdown-item command="toggleInappropriate">
+                    {{ row.is_inappropriate ? '取消不当言论' : '标记不当言论' }}
+                  </el-dropdown-item>
+                  <el-dropdown-item command="toggleOnline">
+                    {{ row.status === 'online' ? '下线' : '上线' }}
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete">删除</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </template>
         </el-table-column>
       </el-table>
@@ -293,14 +286,16 @@ const fetchQuestionsList = async () => {
           topic: item.topics && item.topics.length > 0 
             ? item.topics.map(t => '#' + t.title).join(', ')
             : '-',
+          type: item.type || '-',
           views: item.view_count || 0,
           replies: item.answer_count || 0,
           likes: item.like_count || 0,
           favorites: item.favorite_count || 0,
-          days_remaining: item.days_remaining || 0,
+          hours_remaining: (item.days_remaining || 0) * 24, // 转换为小时
           createTime: new Date(item.create_time).toLocaleString('zh-CN'),
           status: item.is_offline === 1 ? 'offline' : 'online',
           is_featured: item.is_featured || 0,
+          is_inappropriate: item.is_inappropriate || 0, // 不当言论标记
           resolveStatus: item.status, // 添加解决状态字段，1=已解决，2=未解决
           questionData: item // 保存原始数据
         }
@@ -341,11 +336,33 @@ const handleStatusChange = async (row) => {
   }
 }
 
-const handleCommand = (command) => {
-  if (command === 'delete') {
+const handleCommand = (command, row) => {
+  currentDeleteId.value = row.id
+  
+  if (command === 'detail') {
+    handleDetail(row)
+  } else if (command === 'edit') {
+    handleEdit(row)
+  } else if (command === 'toggleInappropriate') {
+    handleToggleInappropriate(row)
+  } else if (command === 'toggleOnline') {
+    handleStatusChange(row)
+  } else if (command === 'delete') {
     showDeleteDialog.value = true
-  } else if (command === 'manage') {
-    console.log('管理内容')
+  }
+}
+
+// 处理不当言论标记切换
+const handleToggleInappropriate = async (row) => {
+  try {
+    const newStatus = row.is_inappropriate ? 0 : 1
+    // 这里需要调用相应的 API
+    // await updateInappropriateStatus(row.id, newStatus)
+    row.is_inappropriate = newStatus
+    //ElMessage.success(newStatus === 1 ? '已标记不当言论' : '已取消不当言论标记')
+  } catch (error) {
+    console.error('更新不当言论标记失败:', error)
+    //ElMessage.error('更新不当言论标记失败')
   }
 }
 
@@ -408,12 +425,12 @@ const handleDelete = (row) => {
 // 处理精选切换
 const handleToggleFeatured = async (row) => {
   try {
-    const newFeaturedStatus = row.is_featured === 1 ? 0 : 1
-    await markFeatured(row.id, newFeaturedStatus)
-    //ElMessage.success(newFeaturedStatus === 1 ? '已标记精选' : '已取消精选')
-    fetchQuestionsList()
+    await markFeatured(row.id, row.is_featured)
+    //ElMessage.success(row.is_featured === 1 ? '已标记精选' : '已取消精选')
   } catch (error) {
     console.error('更新精选状态失败:', error)
+    // 恢复原状态
+    row.is_featured = row.is_featured === 1 ? 0 : 1
     //ElMessage.error('更新精选状态失败')
   }
 }
@@ -493,42 +510,13 @@ onMounted(() => {
   background: #ffffff;
 }
 
-/* 状态标签 */
-.status-tag {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 2px;
-  font-size: 12px;
-  transition: all 0.3s;
-}
-
-.status-featured {
+/* 倒计时标签 */
+.countdown-tag-expired {
   color: #FF7800;
   font-weight: 500;
 }
-
-.status-not-featured {
-  color: #999999;
-}
-.countdown-tag-expired {
-  color: #FF7800;
-}
 .countdown-tag-active {
   color: #999999;
-}
-
-.status-tag:hover {
-  opacity: 0.8;
-}
-
-.status-online {
-  /* background: #e6f7ff; */
-  color: #FF7800;
-}
-
-.status-offline {
-  /* background: #f5f5f5; */
-  color: #1A1A1A;
 }
 
 /* 文本内容样式 */
@@ -538,37 +526,23 @@ onMounted(() => {
   white-space: nowrap;
 }
 
-/* 标题内容样式 */
-.title-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.title-text {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+/* 解决状态样式 */
 .resolve-status {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 4px 12px;
   border-radius: 2px;
   font-size: 12px;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .status-1 {
   color: #52C41A;
-  background: #F6FFED;
+  /* background: #F6FFED; */
 }
 
 .status-2 {
   color: #FF4D4F;
-  background: #FFF1F0;
+  /* background: #FFF1F0; */
 }
 
 .pagination {

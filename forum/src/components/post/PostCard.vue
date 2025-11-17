@@ -383,24 +383,15 @@ const handleTopicClick = (topicId: number) => {
   overflow: hidden;
   background: #f0f0f0;
   max-width: 100%;
-}
-
-.image-count-1  {
   width: 108px;
   height: 108px;
-  border-radius: 8px 8px 8px 8px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.image-count-2  {
-  width: 108px;
-  height: 108px;
-  border-radius: 8px 8px 8px 8px;
-}
-
-.image-count-3 {
-  width: 108px;
-  height: 108px;
-  border-radius: 8px 8px 8px 8px;
+.image-item:active {
+  transform: scale(0.95);
 }
 
 

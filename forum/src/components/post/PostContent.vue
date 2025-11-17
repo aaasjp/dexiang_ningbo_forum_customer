@@ -63,10 +63,14 @@
       <div 
         ref="solveStatusBtn"
         class="solve-status" 
-        :class="{ 'solve-solved': solved }"
+        :class="{ 
+          'solve-solved': solved,
+          'clickable': canChangeSolveStatus,
+          'disabled': !canChangeSolveStatus
+        }"
         @click="canChangeSolveStatus && onSolveClick()"
       >
-        <span :class="['status-text', { solved: solved }]">
+        <span :class="['status-text', { solved: solved, disabled: !canChangeSolveStatus }]">
           {{ solved ? '已解决' : '未解决' }}
         </span>
       </div>
@@ -280,22 +284,29 @@ defineExpose({
   border-radius: 8px;
   overflow: hidden;
   background: #f0f0f0;
-  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
+.post-image:active {
+  transform: scale(0.98);
+}
+
+/* 单张图片：限高200px，最大宽度100%，自适应不拉伸 */
 .post-image.image-count-1 {
-  width: 108px;
-  height: 108px;
+  max-width: 100%;
+  max-height: 200px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
-.post-image.image-count-2 {
-  width: 108px;
-  height: 108px;
-}
-
+/* 多张图片：固定尺寸，裁剪显示 */
+.post-image.image-count-2,
 .post-image.image-count-3 {
   width: 108px;
   height: 108px;
+  object-fit: cover;
 }
 
 /* 话题标签 */
@@ -386,19 +397,24 @@ defineExpose({
   border-radius: 14px;
   transition: all 0.2s;
   margin-top: 8px;
-
 }
+
 .solve-solved{
   background: #ECF8ED;
 }
 
 .solve-status.clickable {
   cursor: pointer;
-  background: #ECF8ED;
 }
 
 .solve-status.clickable:active {
   transform: scale(0.98);
+}
+
+/* 不可点击状态 - 灰色 */
+.solve-status.disabled {
+  background: #F5F5F5 !important;
+  cursor: not-allowed;
 }
 
 .status-text {
@@ -407,11 +423,15 @@ defineExpose({
   font-size: 12px;
   color: #FF0D04;
   line-height: 1;
-  background: #FFF3F2;
 }
 
 .status-text.solved {
   color: #1DAD13;
+}
+
+/* 不可点击状态的文字 - 灰色 */
+.status-text.disabled {
+  color: #999999 !important;
 }
 </style>
 

@@ -12,16 +12,26 @@ import { onMounted } from 'vue'
 import Layout from './components/layout/Layout.vue'
 import ImageViewer from './components/common/ImageViewer.vue'
 import { useUserStore } from './stores/user'
+import { refreshMockSession } from './api/request'
 
 const userStore = useUserStore()
 
 // 应用初始化时获取用户信息
 onMounted(async () => {
   try {
-    // 如果 localStorage 中没有用户信息，或者需要刷新，则从服务器获取
-    if (!userStore.userProfile) {
-      await userStore.fetchUserProfile()
+    // 检查 URL 中是否有 session 参数
+    const urlParams = new URLSearchParams(window.location.search)
+    const sessionFromUrl = urlParams.get('session')
+    
+    if (sessionFromUrl) {
+      // 如果 URL 中有 session 参数，刷新 MOCK_SESSION
+      refreshMockSession()
+      console.log('从 URL 获取到 session 参数，已更新 MOCK_SESSION')
     }
+    
+    // 不管 localStorage 中有没有用户信息，都强制从服务器重新获取
+    await userStore.fetchUserProfile(true)
+    console.log('用户信息已更新到 localStorage')
   } catch (error) {
     console.error('初始化用户信息失败:', error)
   }

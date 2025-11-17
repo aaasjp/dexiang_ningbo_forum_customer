@@ -19,7 +19,8 @@
           <Search />
         </el-icon>
       </div>
-      <div class="more-btn" @click="toggleMoreMenu">
+      <!-- 只有自己的帖子才显示更多按钮（编辑和删除） -->
+      <div v-if="isOwnPost" class="more-btn" @click="toggleMoreMenu">
         <el-icon :size="20">
           <More />
         </el-icon>
@@ -29,14 +30,7 @@
     <!-- 更多菜单 - 自己的帖子 -->
     <div v-if="showMenu && isOwnPost" class="more-menu">
       <div class="menu-item" @click="onEdit">编辑</div>
-      <div class="menu-item" @click="onShare">分享</div>
       <div class="menu-item" @click="onDelete">删除</div>
-    </div>
-
-    <!-- 更多菜单 - 他人的帖子 -->
-    <div v-if="showMenu && !isOwnPost" class="more-menu">
-      <div class="menu-item" @click="onShare">分享</div>
-      <div class="menu-item" @click="onReport">举报</div>
     </div>
   </div>
 </template>
@@ -58,9 +52,7 @@ interface Emits {
   (e: 'back'): void
   (e: 'search'): void
   (e: 'edit'): void
-  (e: 'share'): void
   (e: 'delete'): void
-  (e: 'report'): void
 }
 
 withDefaults(defineProps<Props>(), {
@@ -88,19 +80,9 @@ const onEdit = () => {
   emit('edit')
 }
 
-const onShare = () => {
-  showMenu.value = false
-  emit('share')
-}
-
 const onDelete = () => {
   showMenu.value = false
   emit('delete')
-}
-
-const onReport = () => {
-  showMenu.value = false
-  emit('report')
 }
 </script>
 

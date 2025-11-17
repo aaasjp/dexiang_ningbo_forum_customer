@@ -4,8 +4,31 @@ import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse 
 // const BASE_URL = 'http://220.154.134.61:8000'
 // const BASE_URL = 'http://10.129.114.106:8000'
 
-// 模拟的gw_session（对中文进行编码以符合 HTTP header 规范）
-const MOCK_SESSION = encodeURIComponent('appid=500883957,name=王十二,depatment=人力资源部,orgId=2,jobTitle=普通员工, gender=2, status=1,jobNo=staff010')
+// 从 URL 中获取 session 参数
+function getSessionFromUrl(): string | null {
+  const urlParams = new URLSearchParams(window.location.search)
+  return urlParams.get('session')
+}
+
+// 获取 MOCK_SESSION：优先从 URL 获取，如果没有则使用默认值
+function getMockSession(): string {
+  const urlSession = getSessionFromUrl()
+  if (urlSession) {
+    // URL 中的 session 可能已经编码，也可能未编码，这里确保编码
+    return encodeURIComponent(decodeURIComponent(urlSession))
+  }
+  // 默认的 session（对中文进行编码以符合 HTTP header 规范）
+  return encodeURIComponent('appid=500883957,name=王十二,depatment=人力资源部,orgId=2,jobTitle=普通员工, gender=2, status=1,jobNo=staff010')
+}
+
+// 模拟的gw_session
+let MOCK_SESSION = getMockSession()
+
+// 导出函数以便在需要时重新获取 session
+export function refreshMockSession(): string {
+  MOCK_SESSION = getMockSession()
+  return MOCK_SESSION
+}
 
 // 统一响应格式
 export interface ApiResponse<T = any> {

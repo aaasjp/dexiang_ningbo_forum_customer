@@ -24,6 +24,12 @@ const routes = [
     meta: { title: '话题管理' }
   },
   {
+    path: '/topics/:id/content',
+    name: 'TopicContent',
+    component: () => import('../views/TopicContent.vue'),
+    meta: { title: '管理内容' }
+  },
+  {
     path: '/users',
     name: 'Users',
     component: () => import('../views/Users.vue'),

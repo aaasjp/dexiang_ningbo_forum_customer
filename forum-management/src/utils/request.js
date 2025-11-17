@@ -1,6 +1,30 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-const GW_SESSION = encodeURIComponent('appid=500883957,name=张三,depatment=人力资源部,orgId=2,jobTitle=管理员, gender=2, status=1,jobNo=staff001')
+
+// 从 URL 中获取 session 参数
+function getSessionFromUrl() {
+  const urlParams = new URLSearchParams(window.location.search)
+  return urlParams.get('session')
+}
+
+// 获取 GW_SESSION：优先从 URL 获取，如果没有则使用默认值
+function getGwSession() {
+  const urlSession = getSessionFromUrl()
+  if (urlSession) {
+    // URL 中的 session 可能已经编码，也可能未编码，这里确保编码
+    return encodeURIComponent(decodeURIComponent(urlSession))
+  }
+  // 默认的 session（对中文进行编码以符合 HTTP header 规范）
+  return encodeURIComponent('appid=500883957,name=张三,depatment=人力资源部,orgId=2,jobTitle=管理员, gender=2, status=1,jobNo=staff001')
+}
+
+let GW_SESSION = getGwSession()
+
+// 导出函数以便在需要时重新获取 session
+export function refreshGwSession() {
+  GW_SESSION = getGwSession()
+  return GW_SESSION
+}
 
 // 创建 axios 实例
 const request = axios.create({

@@ -1,12 +1,18 @@
 <template>
   <div class="avatar-component" :style="avatarStyle">
-    <img v-if="src" :src="src" :alt="name" class="avatar-img" />
+    <img 
+      v-if="shouldShowImage" 
+      :src="src" 
+      :alt="name" 
+      class="avatar-img"
+      @error="handleImageError"
+    />
     <span v-else class="avatar-text">{{ displayText }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 defineOptions({
   name: 'Avatar'
@@ -28,6 +34,34 @@ const props = withDefaults(defineProps<Props>(), {
   fontSize: 0, // 0表示自动计算
   bgColor: '',
   textColor: '#FFFFFF'
+})
+
+// 图片加载错误状态
+const imageError = ref(false)
+
+// 判断是否应该显示图片
+const shouldShowImage = computed(() => {
+  // 如果图片加载失败，不显示图片
+  if (imageError.value) return false
+  
+  // 如果没有src，不显示图片
+  if (!props.src) return false
+  
+  // 过滤掉无效的src值
+  const invalidValues = ['null', 'undefined', 'none', '']
+  if (invalidValues.includes(props.src.toLowerCase().trim())) return false
+  
+  return true
+})
+
+// 处理图片加载错误
+const handleImageError = () => {
+  imageError.value = true
+}
+
+// 当 src 改变时重置错误状态
+watch(() => props.src, () => {
+  imageError.value = false
 })
 
 // 预设的颜色数组 - 多种颜色供随机选择
@@ -95,7 +129,7 @@ const avatarStyle = computed(() => ({
   width: typeof props.size === 'number' ? `${props.size}px` : props.size,
   height: typeof props.size === 'number' ? `${props.size}px` : props.size,
   fontSize: computedFontSize.value,
-  backgroundColor: props.src ? 'transparent' : computedBgColor.value,
+  backgroundColor: shouldShowImage.value ? 'transparent' : computedBgColor.value,
   color: props.textColor
 }))
 </script>

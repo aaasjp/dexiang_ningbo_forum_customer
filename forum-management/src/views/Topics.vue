@@ -82,11 +82,14 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { MoreFilled } from '@element-plus/icons-vue'
 import { getTopicsList, createTopic, updateTopic, deleteTopic } from '@/api/topics'
 import TopicFormDialog from '../components/TopicFormDialog.vue'
 import DeleteConfirmDialog from '../components/DeleteConfirmDialog.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+
+const router = useRouter()
 
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -202,9 +205,7 @@ const handleTopicFormConfirm = async (data) => {
 
 // 处理管理内容
 const handleManageContent = (topic) => {
-  //ElMessage.info(`查看话题"${topic.title}"下的内容列表`)
-  // 这里可以跳转到内容管理页面，筛选该话题下的内容
-  // 或者打开一个弹窗显示该话题下的问题列表
+  router.push(`/topics/${topic.id}/content`)
 }
 
 // 处理删除话题

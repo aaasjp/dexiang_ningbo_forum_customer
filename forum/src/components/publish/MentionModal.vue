@@ -76,6 +76,11 @@ watch(() => props.show, (newVal) => {
     internalSelectedDepartments.value = new Set()
     props.selectedMembers.forEach((members, deptId) => {
       internalSelectedMembers.value.set(deptId, new Set(members))
+      
+      // 如果该部门下没有选中的员工（Set为空），说明只选中了部门本身
+      if (members.size === 0) {
+        internalSelectedDepartments.value.add(Number(deptId))
+      }
     })
   }
 })
