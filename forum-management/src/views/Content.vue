@@ -89,13 +89,7 @@
         <el-table-column prop="replies" label="回答" width="80" align="center" />
         <el-table-column prop="likes" label="点赞" width="80" align="center" />
         <el-table-column prop="favorites" label="收藏" width="80" align="center" />
-        <el-table-column label="倒计时" width="100" align="center">
-          <template #default="{ row }">
-            <span :class="['countdown-tag', row.hours_remaining < 48 ? 'countdown-tag-expired' : 'countdown-tag-active']">
-              {{ row.hours_remaining }}
-            </span>小时
-          </template>
-        </el-table-column>
+        <el-table-column label="倒计时" prop="hours_remaining" width="120" align="center"/>
         <el-table-column prop="createTime" label="创建时间" width="180" align="center" />
         <el-table-column label="解决状态" width="100" align="center">
           <template #default="{ row }">
@@ -125,7 +119,7 @@
                   <el-dropdown-item command="detail">详情</el-dropdown-item>
                   <el-dropdown-item command="edit">编辑</el-dropdown-item>
                   <el-dropdown-item command="toggleInappropriate">
-                    {{ row.is_inappropriate ? '取消不当言论' : '标记不当言论' }}
+                    {{ row.is_illegal ? '取消违规标记' : '标记不当言论' }}
                   </el-dropdown-item>
                   <el-dropdown-item command="toggleOnline">
                     {{ row.status === 'online' ? '下线' : '上线' }}
@@ -265,6 +259,7 @@ const fetchQuestionsList = async () => {
     
     if (res.data && res.data.items) {
       contentList.value = res.data.items.map((item, index) => {
+        console.log(item)
         // 构建部门和人员的显示文本
         const deptStaffList = []
         
@@ -296,16 +291,16 @@ const fetchQuestionsList = async () => {
           replies: item.answer_count || 0,
           likes: item.like_count || 0,
           favorites: item.favorite_count || 0,
-          hours_remaining: (item.days_remaining || 0) * 24, // 转换为小时
+          hours_remaining: item.hours_remaining || 0, // 转换为小时
           createTime: new Date(item.create_time).toLocaleString('zh-CN'),
           status: item.is_offline === 1 ? 'offline' : 'online',
           is_featured: item.is_featured || 0,
-          is_inappropriate: item.is_inappropriate || 0, // 不当言论标记
+          is_illegal: item.is_illegal || 0, // 违规标记
           resolveStatus: item.status, // 添加解决状态字段，1=已解决，2=未解决
           questionData: item // 保存原始数据
         }
       })
-      
+      console.log(contentList.value)
       total.value = res.data.total || 0
     }
   } catch (error) {
@@ -361,9 +356,9 @@ const handleCommand = (command, row) => {
 // 处理不当言论标记切换
 const handleToggleInappropriate = async (row) => {
   try {
-    const newStatus = row.is_inappropriate ? 0 : 1
+    const newStatus = row.is_illegal ? 0 : 1
     await toggleInappropriate(row.id, newStatus)
-    row.is_inappropriate = newStatus
+    row.is_illegal = newStatus
     ElMessage.success(newStatus === 1 ? '已标记为违规言论' : '已取消违规标记')
     // 刷新列表以获取最新数据（包括可能的积分变化）
     fetchQuestionsList()
