@@ -1,14 +1,17 @@
 <template>
-  <el-dialog
+  <FormDialog
     v-model="visible"
-    title="编辑内容"
+    title="编辑"
+    :form-data="formData"
+    :rules="formRules"
     width="600px"
-    :close-on-click-modal="false"
+    @confirm="handleConfirm"
+    @cancel="handleCancel"
     @close="handleClose"
   >
-    <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
+    <template #form="{ formData }">
       <!-- 选择部门/人员 -->
-      <el-form-item label="@部门/人员" prop="departments">
+      <el-form-item label="解决部门" prop="departments" label-position="top">
         <el-tree-select
           v-model="selectedDepartmentStaffIds"
           :data="departmentTreeWithStaff"
@@ -32,14 +35,14 @@
       </el-form-item>
 
       <!-- 选择话题 - 使用下拉选择器 -->
-      <el-form-item label="所属话题" prop="topics">
+      <el-form-item label="所属话题" prop="topics" label-position="top">
         <el-select
           v-model="selectedTopicIds"
           multiple
           filterable
-          placeholder="请选择话题（最多3个）"
+          placeholder="请选择话题（最多5个）"
           style="width: 100%"
-          :max-collapse-tags="3"
+          :max-collapse-tags="5"
           @change="handleTopicChange"
         >
           <el-option
@@ -54,24 +57,33 @@
             </div>
           </el-option>
         </el-select>
-        <div class="hint-text">最多选择3个话题</div>
+        <div class="hint-text">最多选择5个话题</div>
       </el-form-item>
-    </el-form>
 
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button class="cancel-btn" @click="handleCancel">取消</el-button>
-        <el-button class="confirm-btn" @click="handleConfirm">确定</el-button>
-      </span>
+      <!-- 问题类型 -->
+      <el-form-item label="问题类型" prop="category" label-position="top">
+        <el-select
+          v-model="formData.category"
+          placeholder="请选择问题类型"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="type in questionTypes"
+            :key="type.value"
+            :label="type.label"
+            :value="type.value"
+          />
+        </el-select>
+      </el-form-item>
     </template>
-  </el-dialog>
-
+  </FormDialog>
 </template>
 
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { getDepartmentTree } from '@/api/department'
 import { getTopicsList } from '@/api/topics'
+import FormDialog from './FormDialog.vue'
 
 const props = defineProps({
   modelValue: {
@@ -87,12 +99,12 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'confirm'])
 
 const visible = ref(props.modelValue)
-const formRef = ref(null)
 
 // 表单数据
 const formData = ref({
   departments: [],
-  topics: []
+  topics: [],
+  category: ''
 })
 
 // 部门人员选择相关
@@ -102,6 +114,14 @@ const selectedDepartmentStaffIds = ref([])
 // 话题相关
 const selectedTopicIds = ref([])
 const topicList = ref([])
+
+// 问题类型选项
+const questionTypes = [
+  { label: '随便说说', value: '随便说说' },
+  { label: '求助类', value: '求助类' },
+  { label: '建议类', value: '建议类' },
+  { label: '吐槽类', value: '吐槽类' }
+]
 
 // 存储上一次的选中状态，用于检测部门的选中/取消
 const previousSelectedDepartmentStaffIds = ref([])
@@ -259,24 +279,41 @@ const departmentTreeWithStaff = computed(() => {
   return transformDepartmentTree(departmentTreeData.value)
 })
 
+// 在部门树中递归查找员工所属的部门ID
+const findStaffDeptId = (depts, staffCode) => {
+  for (const dept of depts) {
+    // 在当前部门的员工中查找
+    if (dept.staffs && dept.staffs.length > 0) {
+      const staff = dept.staffs.find(s => s.staff_code === staffCode)
+      if (staff) {
+        return dept.dept_id
+      }
+    }
+    // 递归查找子部门
+    if (dept.children && dept.children.length > 0) {
+      const deptId = findStaffDeptId(dept.children, staffCode)
+      if (deptId) {
+        return deptId
+      }
+    }
+  }
+  return null
+}
+
 // 初始化表单数据
 const initFormData = () => {
   if (props.data) {
     const selectedIds = []
     
-    // 初始化部门
-    if (props.data.related_depts && props.data.related_depts.length > 0) {
-      selectedIds.push(...props.data.related_depts.map(d => `dept_${d.dept_id}`))
+    // 初始化部门 - 使用 related_dept_ids
+    if (props.data.related_dept_ids && props.data.related_dept_ids.length > 0) {
+      selectedIds.push(...props.data.related_dept_ids.map(deptId => `dept_${deptId}`))
     }
     
-    // 初始化人员
-    if (props.data.related_staffs && props.data.related_staffs.length > 0) {
-      selectedIds.push(...props.data.related_staffs.map(s => {
-        // 需要知道人员所属的部门ID，这里假设 related_staffs 包含 dept_id
-        // 如果后端返回的数据结构不同，需要调整
-        const deptId = s.dept_id || (props.data.related_depts && props.data.related_depts.length > 0 ? props.data.related_depts[0].dept_id : 0)
-        return `staff_${deptId}_${s.staff_code}`
-      }))
+    // 初始化人员 - 使用 related_staff_codes，需要在部门树中查找对应的部门ID
+    if (props.data.related_staff_codes && props.data.related_staff_codes.length > 0) {
+      // 等待部门树加载完成后再处理人员回填
+      // 这部分逻辑会在 watch departmentTreeData 中处理
     }
     
     selectedDepartmentStaffIds.value = selectedIds
@@ -287,6 +324,9 @@ const initFormData = () => {
     } else {
       selectedTopicIds.value = []
     }
+
+    // 初始化问题类型
+    formData.value.category = props.data.category || ''
   }
 }
 
@@ -296,6 +336,20 @@ const loadDepartments = async () => {
     const res = await getDepartmentTree({})
     if (res.data && res.data.departments) {
       departmentTreeData.value = res.data.departments
+      // 部门树加载完成后，处理人员回填
+      if (props.data && props.data.related_staff_codes && props.data.related_staff_codes.length > 0) {
+        const staffIds = []
+        props.data.related_staff_codes.forEach(staffCode => {
+          const deptId = findStaffDeptId(departmentTreeData.value, staffCode)
+          if (deptId) {
+            staffIds.push(`staff_${deptId}_${staffCode}`)
+          }
+        })
+        // 合并部门和人员选择
+        if (staffIds.length > 0) {
+          selectedDepartmentStaffIds.value = [...selectedDepartmentStaffIds.value, ...staffIds]
+        }
+      }
     }
   } catch (error) {
     console.error('获取部门列表失败:', error)
@@ -344,8 +398,8 @@ const extractDepartmentStaffData = () => {
 
 // 处理话题选择变化
 const handleTopicChange = (value) => {
-  if (value.length > 3) {
-    selectedTopicIds.value = value.slice(0, 3)
+  if (value.length > 5) {
+    selectedTopicIds.value = value.slice(0, 5)
   }
 }
 
@@ -378,25 +432,26 @@ const formRules = {
         }
       }
     }
+  ],
+  category: [
+    { 
+      required: true, 
+      message: '请选择问题类型', 
+      trigger: 'change'
+    }
   ]
 }
 
 // 确认
-const handleConfirm = async () => {
-  if (!formRef.value) return
-  
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      const { dept_ids, staff_codes } = extractDepartmentStaffData()
-      const result = {
-        dept_ids: dept_ids,
-        staff_codes: staff_codes,
-        topic_ids: selectedTopicIds.value
-      }
-      emit('confirm', result)
-      visible.value = false
-    }
-  })
+const handleConfirm = () => {
+  const { dept_ids, staff_codes } = extractDepartmentStaffData()
+  const result = {
+    dept_ids: dept_ids,
+    staff_codes: staff_codes,
+    topic_ids: selectedTopicIds.value,
+    category: formData.value.category
+  }
+  emit('confirm', result)
 }
 
 // 取消
@@ -406,9 +461,9 @@ const handleCancel = () => {
 
 // 关闭时重置
 const handleClose = () => {
-  formRef.value?.resetFields()
   selectedDepartmentStaffIds.value = []
   selectedTopicIds.value = []
+  formData.value.category = ''
 }
 </script>
 
@@ -417,44 +472,6 @@ const handleClose = () => {
   margin-top: 8px;
   font-size: 12px;
   color: #999;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.cancel-btn {
-  width: 120px;
-  height: 44px;
-  background: #FAFAFA;
-  border: none;
-  color: #4D4D4D;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.cancel-btn:hover {
-  background: #F0F0F0;
-}
-
-.confirm-btn {
-  width: 120px;
-  height: 44px;
-  background: #FF7800;
-  border: none;
-  color: #FFFFFF;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.confirm-btn:hover {
-  background: #FF8C1A;
-}
-
-.confirm-btn:active {
-  background: #E66D00;
 }
 </style>
 

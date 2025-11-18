@@ -1,55 +1,57 @@
 <template>
-  <el-dialog
-    :model-value="modelValue"
-    width="640px"
-    :show-close="false"
-    :before-close="handleClose"
-    class="user-tags-dialog"
-  >
-    <template #header>
-      <div class="dialog-header">
-        <span class="dialog-title">添加标签</span>
-        <el-button class="add-new-btn" @click="addNewTag">
-          <el-icon><Plus /></el-icon>
-          添加标签
-        </el-button>
-      </div>
-    </template>
-
-    <div class="dialog-content">
-      <div class="tags-list">
-        <div class="header-row">
-          <div class="col-sequence">序号</div>
-          <div class="col-name">标签</div>
-          <div class="col-action">操作</div>
-        </div>
-        <div 
-          v-for="(tag, index) in tagsList" 
-          :key="tag.tag_id || `new-${index}`"
-          class="tag-row"
-        >
-          <div class="col-sequence">{{ index + 1 }}</div>
-          <div class="col-name">
-            <el-input
-              v-model="tag.tag_name"
-              placeholder="请输入标签名字"
-              class="tag-input"
-            />
+  <transition name="dialog-fade">
+    <div v-if="visible" class="custom-dialog-overlay" @click.self="handleClose">
+      <div class="custom-dialog" style="width: 640px">
+        <!-- Header -->
+        <div class="custom-dialog-header">
+          <div class="custom-dialog-title">添加标签</div>
+          <div class="header-actions">
+            <el-button class="add-new-btn" @click="addNewTag">
+              <el-icon><Plus /></el-icon>
+              添加标签
+            </el-button>
+            
           </div>
-          <div class="col-action">
-            <span class="delete-btn" @click="handleDelete(index)">删除</span>
+        </div>
+        
+        <!-- Body -->
+        <div class="custom-dialog-body">
+          <div class="tags-list">
+            <div class="header-row">
+              <div class="col-sequence">序号</div>
+              <div class="col-name">标签</div>
+              <div class="col-action">操作</div>
+            </div>
+            <div 
+              v-for="(tag, index) in tagsList" 
+              :key="tag.tag_id || `new-${index}`"
+              class="tag-row"
+            >
+              <div class="col-sequence">{{ index + 1 }}</div>
+              <div class="col-name">
+                <el-input
+                  v-model="tag.tag_name"
+                  placeholder="请输入标签名字"
+                  class="tag-input"
+                />
+              </div>
+              <div class="col-action">
+                <span class="delete-btn" @click="handleDelete(index)">删除</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="custom-dialog-footer">
+          <div class="dialog-footer">
+            <el-button class="cancel-btn" @click="handleClose">取消</el-button>
+            <el-button class="confirm-btn" @click="handleConfirm">确定</el-button>
           </div>
         </div>
       </div>
     </div>
-
-    <template #footer>
-      <div class="dialog-footer">
-        <el-button class="cancel-btn" @click="handleClose">取消</el-button>
-        <el-button class="confirm-btn" @click="handleConfirm">确定</el-button>
-      </div>
-    </template>
-  </el-dialog>
+  </transition>
 </template>
 
 <script setup>
@@ -67,10 +69,22 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'refresh'])
 
+const visible = ref(props.modelValue)
 const tagsList = ref([])
 const loading = ref(false)
 const originalTagsList = ref([]) // 保存原始数据用于取消时恢复和对比
 const deletedTagIds = ref([]) // 记录删除的标签ID
+
+watch(() => props.modelValue, (newVal) => {
+  visible.value = newVal
+  if (newVal) {
+    fetchTagsList()
+  }
+})
+
+watch(visible, (newVal) => {
+  emit('update:modelValue', newVal)
+})
 
 // 获取标签列表
 const fetchTagsList = async () => {
@@ -94,13 +108,6 @@ const fetchTagsList = async () => {
     loading.value = false
   }
 }
-
-// 监听弹框打开
-watch(() => props.modelValue, (val) => {
-  if (val) {
-    fetchTagsList()
-  }
-})
 
 // 添加新标签
 const addNewTag = () => {
@@ -188,7 +195,7 @@ const handleClose = () => {
   // 恢复原始数据，清空当前修改状态
   tagsList.value = JSON.parse(JSON.stringify(originalTagsList.value))
   deletedTagIds.value = []
-  emit('update:modelValue', false)
+  visible.value = false
 }
 
 // 在组件外部添加一个用于打开并添加新行的方法
@@ -198,29 +205,51 @@ defineExpose({
 </script>
 
 <style scoped>
-.user-tags-dialog :deep(.el-dialog) {
-  max-height: 80vh;
+/* 遮罩层 */
+.custom-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* 弹框主体 */
+.custom-dialog {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
 }
 
-.user-tags-dialog :deep(.el-dialog__header) {
-  padding: 20px 24px;
-  border-bottom: 1px solid #f0f0f0;
-  flex-shrink: 0;
-}
-
-.dialog-header {
+/* Header */
+.custom-dialog-header {
+  padding: 20px 40px;
+  border-bottom: 1px solid #e5e5e5;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
+  flex-shrink: 0;
 }
 
-.dialog-title {
+.custom-dialog-title {
   font-size: 16px;
   font-weight: 500;
-  color: #333333;
+  color: #1a1a1a;
+  line-height: 24px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .add-new-btn {
@@ -231,6 +260,9 @@ defineExpose({
   color: #FA8C16;
   font-size: 14px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .add-new-btn:hover {
@@ -238,27 +270,62 @@ defineExpose({
 }
 
 .add-new-btn :deep(.el-icon) {
-  margin-right: 4px;
   font-weight: bold;
 }
 
-.user-tags-dialog :deep(.el-dialog__body) {
-  padding: 24px;
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
+.custom-dialog-close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999999;
+  transition: color 0.3s;
 }
 
-.user-tags-dialog :deep(.el-dialog__footer) {
-  padding: 16px 24px;
-  border-top: 1px solid #f0f0f0;
+.custom-dialog-close:hover {
+  color: #fa8c16;
+}
+
+/* Body */
+.custom-dialog-body {
+  padding: 40px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Footer */
+.custom-dialog-footer {
+  padding: 0 40px 40px;
   flex-shrink: 0;
 }
 
-.dialog-content {
-  width: 100%;
+/* 动画 */
+.dialog-fade-enter-active,
+.dialog-fade-leave-active {
+  transition: opacity 0.3s;
 }
 
+.dialog-fade-enter-active .custom-dialog,
+.dialog-fade-leave-active .custom-dialog {
+  transition: transform 0.3s;
+}
+
+.dialog-fade-enter-from,
+.dialog-fade-leave-to {
+  opacity: 0;
+}
+
+.dialog-fade-enter-from .custom-dialog,
+.dialog-fade-leave-to .custom-dialog {
+  transform: scale(0.9);
+}
+
+/* 标签列表 */
 .tags-list {
   width: 100%;
 }
@@ -286,7 +353,7 @@ defineExpose({
 }
 
 .col-sequence {
-  width: 80px;
+  width: 50px;
   text-align: center;
 }
 
@@ -306,7 +373,26 @@ defineExpose({
 
 .tag-input :deep(.el-input__wrapper) {
   height: 40px;
-  box-shadow: 0 0 0 1px #dcdfe6 inset !important;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px #d9d9d9 inset;
+  padding: 8px 12px;
+}
+
+.tag-input :deep(.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #fa8c16 inset;
+}
+
+.tag-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #fa8c16 inset;
+}
+
+.tag-input :deep(.el-input__inner) {
+  color: #1a1a1a;
+  font-size: 14px;
+}
+
+.tag-input :deep(.el-input__inner::placeholder) {
+  color: #bfbfbf;
 }
 
 .delete-btn {
@@ -321,36 +407,40 @@ defineExpose({
 
 .dialog-footer {
   display: flex;
-  justify-content: center;
-  gap: 16px;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
 }
 
 .cancel-btn {
   width: 120px;
   height: 44px;
-  background: #F5F5F5;
+  background: #FAFAFA;
   border: none;
+  color: #4D4D4D;
   border-radius: 4px;
-  color: #666666;
   font-size: 14px;
 }
 
 .cancel-btn:hover {
-  background: #E8E8E8;
+  background: #F0F0F0;
 }
 
 .confirm-btn {
   width: 120px;
   height: 44px;
-  background: linear-gradient(90deg, #FFBD39 0%, #FF7800 100%);
+  background: #FF7800;
   border: none;
-  border-radius: 4px;
   color: #FFFFFF;
+  border-radius: 4px;
   font-size: 14px;
 }
 
 .confirm-btn:hover {
-  opacity: 0.9;
+  background: #FF8C1A;
+}
+
+.confirm-btn:active {
+  background: #E66D00;
 }
 </style>
-

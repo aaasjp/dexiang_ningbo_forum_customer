@@ -140,7 +140,7 @@ watch(visible, (newVal, oldVal) => {
 /* Header */
 .custom-dialog-header {
   padding: 20px 40px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #e5e5e5;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -174,7 +174,7 @@ watch(visible, (newVal, oldVal) => {
 
 /* Body */
 .custom-dialog-body {
-  padding: 40px;
+  padding: 40px 40px 40px;
   overflow-y: auto;
   flex: 1;
 }

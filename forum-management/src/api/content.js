@@ -21,6 +21,17 @@ export function getQuestionsList(params) {
 }
 
 /**
+ * 获取问题详情 (管理端)
+ * @param {number} questionId - 问题ID
+ */
+export function getQuestionDetail(questionId) {
+  return request({
+    url: `/questions/detail/${questionId}`,
+    method: 'get'
+  })
+}
+
+/**
  * 标记精选
  * @param {number} questionId - 问题ID
  * @param {number} isFeatured - 是否精选 (0否, 1是)
@@ -80,6 +91,19 @@ export function deleteAnswer(answerId) {
   return request({
     url: `/admin/answers/delete/${answerId}`,
     method: 'delete'
+  })
+}
+
+/**
+ * 更换问题关联的话题
+ * @param {number} questionId - 问题ID
+ * @param {Array<number>} topicIds - 新的话题ID列表（可以为空列表，表示移除所有话题）
+ */
+export function updateQuestionTopics(questionId, topicIds) {
+  return request({
+    url: `/admin/questions/update-topics/${questionId}`,
+    method: 'put',
+    data: topicIds
   })
 }
 

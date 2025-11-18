@@ -13,7 +13,7 @@
         </div>
         
         <!-- Body -->
-        <div class="custom-dialog-body">
+        <div class="custom-dialog-body" style="padding-top: 54px;">
           <!-- 搜索区 -->
           <div class="filter-section">
             <el-input

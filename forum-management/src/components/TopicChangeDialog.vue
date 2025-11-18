@@ -1,45 +1,49 @@
 <template>
-  <el-dialog
+  <FormDialog
     v-model="visible"
     title="编辑"
+    :form-data="formData"
+    :rules="formRules"
     width="520px"
-    :close-on-click-modal="false"
+    @confirm="handleConfirm"
+    @cancel="handleCancel"
     @close="handleClose"
   >
-    <el-form ref="formRef" :model="formData" :rules="formRules" label-position="top" class="topic-change-form" style="padding: 30px 0 80px 0;">
-      <el-form-item label="更换所属话题" prop="topicId">
+    <template #form="{ formData }">
+      <el-form-item label="所属话题" prop="topicIds" label-position="top">
         <el-select
-          v-model="formData.topicId"
+          v-model="formData.topicIds"
+          multiple
           filterable
-          placeholder="请选择所属话题"
+          placeholder="请选择话题（最多5个）"
           style="width: 100%; height: 40px;"
+          :max-collapse-tags="5"
+          @change="handleTopicChange"
         >
           <el-option
             v-for="topic in topicList"
             :key="topic.topic_id"
-            :label="topic.title"
+            :label="'#' + topic.title"
             :value="topic.topic_id"
           >
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span>{{ topic.title }}</span>
+              <span>#{{ topic.title }}</span>
+              <span style="font-size: 12px; color: #999;">{{ topic.question_count || 0 }}讨论</span>
             </div>
           </el-option>
         </el-select>
+        <div class="hint-text">最多选择5个话题</div>
       </el-form-item>
-    </el-form>
-
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button class="cancel-btn" @click="handleCancel">取消</el-button>
-        <el-button class="confirm-btn" @click="handleConfirm">确定</el-button>
-      </span>
     </template>
-  </el-dialog>
+  </FormDialog>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
 import { getTopicsList } from '@/api/topics'
+import { updateQuestionTopics } from '@/api/content'
+import { ElMessage } from 'element-plus'
+import FormDialog from './FormDialog.vue'
 
 const props = defineProps({
   modelValue: {
@@ -59,11 +63,10 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'confirm'])
 
 const visible = ref(props.modelValue)
-const formRef = ref(null)
 
 // 表单数据
 const formData = ref({
-  topicId: null
+  topicIds: []
 })
 
 // 话题列表
@@ -84,14 +87,15 @@ watch(visible, (newVal) => {
 
 // 初始化表单数据
 const initFormData = () => {
-  if (props.data && props.data.topics && props.data.topics.length > 0) {
-    // 如果问题有话题，默认选择第一个
-    formData.value.topicId = props.data.topics[0].topic_id
-  } else if (props.currentTopicId) {
-    // 否则使用当前话题ID
-    formData.value.topicId = props.currentTopicId
+  if (props.data) {
+    // 初始化话题（与 ContentFormDialog 保持一致）
+    if (props.data.topics && props.data.topics.length > 0) {
+      formData.value.topicIds = props.data.topics.map(t => t.topic_id)
+    } else {
+      formData.value.topicIds = []
+    }
   } else {
-    formData.value.topicId = null
+    formData.value.topicIds = []
   }
 }
 
@@ -107,30 +111,33 @@ const loadTopics = async () => {
   }
 }
 
-// 表单验证规则
+// 处理话题选择变化
+const handleTopicChange = (value) => {
+  if (value.length > 5) {
+    formData.value.topicIds = value.slice(0, 5)
+  }
+}
+
+// 表单验证规则（话题可以为空，表示移除所有话题）
 const formRules = {
-  topicId: [
-    { 
-      required: true, 
-      message: '请选择所属话题', 
-      trigger: 'change'
-    }
-  ]
+  topicIds: []
 }
 
 // 确认
 const handleConfirm = async () => {
-  if (!formRef.value) return
-  
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      const result = {
-        topic_ids: [formData.value.topicId]
-      }
-      emit('confirm', result)
-      visible.value = false
+  try {
+    // 使用新的 API 接口提交
+    if (props.data && props.data.question_id) {
+      await updateQuestionTopics(props.data.question_id, formData.value.topicIds)
+      ElMessage.success('更新话题成功')
+      emit('confirm')
+    } else {
+      ElMessage.error('问题ID不存在')
     }
-  })
+  } catch (error) {
+    console.error('更新话题失败:', error)
+    ElMessage.error('更新话题失败')
+  }
 }
 
 // 取消
@@ -140,109 +147,15 @@ const handleCancel = () => {
 
 // 关闭时重置
 const handleClose = () => {
-  formRef.value?.resetFields()
-  formData.value.topicId = null
+  formData.value.topicIds = []
 }
 </script>
 
 <style scoped>
-/* 表单样式 */
-.topic-change-form :deep(.el-form-item) {
-  margin-bottom: 24px;
-}
-
-.topic-change-form :deep(.el-form-item__label) {
-  font-size: 14px;
-  color: #1a1a1a;
-  font-weight: 400;
-  line-height: 22px;
-  margin-bottom: 8px;
-  padding: 0;
-}
-
-.topic-change-form :deep(.el-form-item.is-required:not(.is-no-asterisk)>.el-form-item__label:before) {
-  color: #ff4d4f;
-  margin-right: 4px;
-}
-
-/* Select 选择器样式 */
-.topic-change-form :deep(.el-select) {
-  width: 100%;
-}
-
-.topic-change-form :deep(.el-select .el-input__wrapper) {
-  height: 40px;
-  border-radius: 4px;
-  box-shadow: 0 0 0 1px #d9d9d9 inset;
-  padding: 0 12px;
-}
-
-.topic-change-form :deep(.el-select .el-input__wrapper:hover) {
-  box-shadow: 0 0 0 1px #fa8c16 inset;
-}
-
-.topic-change-form :deep(.el-select .el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px #fa8c16 inset;
-}
-
-.topic-change-form :deep(.el-select .el-input__inner) {
-  height: 38px;
-  line-height: 38px;
-  color: #1a1a1a;
-  font-size: 14px;
-}
-
-.topic-change-form :deep(.el-select .el-input__inner::placeholder) {
-  color: #bfbfbf;
-}
-
-.topic-change-form :deep(.el-select .el-input__suffix) {
-  display: flex;
-  align-items: center;
-}
-
-.topic-change-form :deep(.el-select .el-icon) {
-  font-size: 14px;
+.hint-text {
+  margin-top: 8px;
+  font-size: 12px;
   color: #999;
-}
-
-/* Dialog footer */
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.cancel-btn {
-  width: 120px;
-  height: 44px;
-  background: #FAFAFA;
-  border: none;
-  color: #4D4D4D;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.cancel-btn:hover {
-  background: #F0F0F0;
-}
-
-.confirm-btn {
-  width: 120px;
-  height: 44px;
-  background: #FF7800;
-  border: none;
-  color: #FFFFFF;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.confirm-btn:hover {
-  background: #FF8C1A;
-}
-
-.confirm-btn:active {
-  background: #E66D00;
 }
 </style>
 

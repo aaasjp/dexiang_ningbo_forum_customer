@@ -60,7 +60,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { getTopicQuestions } from '@/api/topics'
-import { transferQuestion } from '@/api/content'
+import { getQuestionDetail } from '@/api/content'
 import TopicChangeDialog from '../components/TopicChangeDialog.vue'
 import { ElMessage } from 'element-plus'
 
@@ -117,40 +117,28 @@ watch([currentPage, pageSize], () => {
 })
 
 // 处理编辑
-const handleEdit = (row) => {
-  currentEditData.value = row.questionData
-  showEditDialog.value = true
+const handleEdit = async (row) => {
+  try {
+    // 获取完整的问题详情（包括话题信息）
+    const res = await getQuestionDetail(row.id)
+    if (res.data) {
+      currentEditData.value = res.data
+      showEditDialog.value = true
+    } else {
+      ElMessage.error('获取问题详情失败')
+    }
+  } catch (error) {
+    console.error('获取问题详情失败:', error)
+    ElMessage.error('获取问题详情失败')
+  }
 }
 
 // 处理编辑确认
-const handleEditConfirm = async (data) => {
-  try {
-    // 构建完整的转办数据，保留原有的部门和人员信息
-    const transferData = {
-      dept_ids: [],
-      staff_codes: [],
-      topic_ids: data.topic_ids
-    }
-    
-    // 保留原有的部门信息
-    if (currentEditData.value.related_depts && currentEditData.value.related_depts.length > 0) {
-      transferData.dept_ids = currentEditData.value.related_depts.map(d => d.dept_id)
-    }
-    
-    // 保留原有的人员信息
-    if (currentEditData.value.related_staffs && currentEditData.value.related_staffs.length > 0) {
-      transferData.staff_codes = currentEditData.value.related_staffs.map(s => s.staff_code)
-    }
-    
-    await transferQuestion(currentEditData.value.question_id, transferData)
-    ElMessage.success('编辑成功')
-    showEditDialog.value = false
-    currentEditData.value = null
-    fetchQuestionList()
-  } catch (error) {
-    console.error('编辑失败:', error)
-    ElMessage.error('编辑失败')
-  }
+const handleEditConfirm = () => {
+  // 弹框内部已经处理了 API 调用，这里只需要刷新列表
+  showEditDialog.value = false
+  currentEditData.value = null
+  fetchQuestionList()
 }
 
 // 组件挂载时获取数据

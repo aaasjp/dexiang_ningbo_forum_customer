@@ -6,7 +6,7 @@
     :close-on-click-modal="false"
     @close="handleClose"
   >
-    <div class="post-detail" v-if="postData">
+    <div class="post-detail" v-if="postData" style="padding-top: 46px;">
       <!-- 帖子头部 -->
       <div class="post-header">
         <div class="author-info">

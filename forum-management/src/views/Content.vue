@@ -183,7 +183,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { Search, MoreFilled, ArrowDown } from '@element-plus/icons-vue'
-import { getQuestionsList, deleteQuestion, updateOfflineStatus, transferQuestion, markFeatured } from '@/api/content'
+import { getQuestionsList, getQuestionDetail, deleteQuestion, updateOfflineStatus, transferQuestion, markFeatured } from '@/api/content'
 import { getDepartmentTree } from '@/api/department'
 import DeleteConfirmDialog from '../components/DeleteConfirmDialog.vue'
 import ContentFormDialog from '../components/ContentFormDialog.vue'
@@ -388,9 +388,20 @@ const handleDeleteCancel = () => {
 }
 
 // 处理编辑
-const handleEdit = (row) => {
-  currentEditData.value = row.questionData
-  showEditDialog.value = true
+const handleEdit = async (row) => {
+  try {
+    // 获取完整的问题详情（包括话题、部门、人员信息）
+    const res = await getQuestionDetail(row.id)
+    if (res.data) {
+      currentEditData.value = res.data
+      showEditDialog.value = true
+    } else {
+      ElMessage.error('获取问题详情失败')
+    }
+  } catch (error) {
+    console.error('获取问题详情失败:', error)
+    ElMessage.error('获取问题详情失败')
+  }
 }
 
 // 处理编辑确认
@@ -408,9 +419,20 @@ const handleEditConfirm = async (data) => {
 }
 
 // 处理详情
-const handleDetail = (row) => {
-  currentDetailData.value = row.questionData
-  showDetailDialog.value = true
+const handleDetail = async (row) => {
+  try {
+    // 获取完整的问题详情
+    const res = await getQuestionDetail(row.id)
+    if (res.data) {
+      currentDetailData.value = res.data
+      showDetailDialog.value = true
+    } else {
+      ElMessage.error('获取问题详情失败')
+    }
+  } catch (error) {
+    console.error('获取问题详情失败:', error)
+    ElMessage.error('获取问题详情失败')
+  }
 }
 
 // 打开操作记录弹框

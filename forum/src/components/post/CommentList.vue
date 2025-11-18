@@ -195,10 +195,10 @@ const handleUseful = (comment: Comment) => {
   emit('useful', comment)
 }
 
-const handleEdit = (comment: Comment) => {
-  showMoreMenuId.value = null
-  emit('edit', comment)
-}
+// const handleEdit = (comment: Comment) => {
+//   showMoreMenuId.value = null
+//   emit('edit', comment)
+// }
 
 const handleDelete = (comment: Comment) => {
   showMoreMenuId.value = null
