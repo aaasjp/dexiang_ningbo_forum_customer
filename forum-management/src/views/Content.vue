@@ -81,7 +81,7 @@
             <div class="text-content" :title="row.topic">{{ row.topic }}</div>
           </template>
         </el-table-column>
-        <el-table-column prop="type" label="展示类型" width="120" align="center" />
+        <!-- <el-table-column prop="type" label="展示类型" width="120" align="center" /> -->
         <el-table-column prop="views" label="浏览" width="80" align="center" />
         <el-table-column prop="replies" label="回答" width="80" align="center" />
         <el-table-column prop="likes" label="点赞" width="80" align="center" />
