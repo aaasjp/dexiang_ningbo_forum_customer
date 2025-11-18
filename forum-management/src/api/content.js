@@ -126,4 +126,17 @@ export function exportQuestions(params) {
   })
 }
 
+/**
+ * 取消/恢复问题违规标记
+ * @param {number} questionId - 问题ID
+ * @param {number} isIllegal - 是否违规 (0取消违规标记, 1标记为违规)
+ */
+export function toggleInappropriate(questionId, isIllegal) {
+  return request({
+    url: `/admin/questions/toggle-illegal/${questionId}`,
+    method: 'put',
+    params: { is_illegal: isIllegal }
+  })
+}
+
 

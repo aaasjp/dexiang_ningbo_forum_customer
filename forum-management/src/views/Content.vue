@@ -186,7 +186,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { Search, MoreFilled, ArrowDown } from '@element-plus/icons-vue'
-import { getQuestionsList, getQuestionDetail, deleteQuestion, updateOfflineStatus, transferQuestion, markFeatured, exportQuestions } from '@/api/content'
+import { getQuestionsList, getQuestionDetail, deleteQuestion, updateOfflineStatus, transferQuestion, markFeatured, exportQuestions, toggleInappropriate } from '@/api/content'
 import { getDepartmentTree } from '@/api/department'
 import DeleteConfirmDialog from '../components/DeleteConfirmDialog.vue'
 import ContentFormDialog from '../components/ContentFormDialog.vue'
@@ -362,13 +362,14 @@ const handleCommand = (command, row) => {
 const handleToggleInappropriate = async (row) => {
   try {
     const newStatus = row.is_inappropriate ? 0 : 1
-    // 这里需要调用相应的 API
-    // await updateInappropriateStatus(row.id, newStatus)
+    await toggleInappropriate(row.id, newStatus)
     row.is_inappropriate = newStatus
-    ElMessage.success(newStatus === 1 ? '已标记不当言论' : '已取消不当言论标记')
+    ElMessage.success(newStatus === 1 ? '已标记为违规言论' : '已取消违规标记')
+    // 刷新列表以获取最新数据（包括可能的积分变化）
+    fetchQuestionsList()
   } catch (error) {
-    console.error('更新不当言论标记失败:', error)
-    ElMessage.error('更新不当言论标记失败')
+    console.error('更新违规标记失败:', error)
+    ElMessage.error('更新违规标记失败')
   }
 }
 
