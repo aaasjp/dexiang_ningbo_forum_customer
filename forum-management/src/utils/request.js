@@ -61,6 +61,11 @@ request.interceptors.response.use(
   response => {
     const res = response.data
     
+    // 如果是 blob 类型的响应（如文件下载），直接返回
+    if (response.config.responseType === 'blob') {
+      return res
+    }
+    
     // 如果返回的状态码不是 200,则显示错误信息
     if (res.code !== 200) {
       //ElMessage.error(res.message || '请求失败')

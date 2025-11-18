@@ -57,7 +57,10 @@
           </el-input>
         </div>
 
-        <div class="operation-record" @click="openLogsDialog">操作记录</div>
+        <div class="action-buttons">
+          <div class="export-button" @click="handleExport">导出</div>
+          <div class="operation-record" @click="openLogsDialog">操作记录</div>
+        </div>
       </div>
 
       <!-- 表格 -->
@@ -183,7 +186,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { Search, MoreFilled, ArrowDown } from '@element-plus/icons-vue'
-import { getQuestionsList, getQuestionDetail, deleteQuestion, updateOfflineStatus, transferQuestion, markFeatured } from '@/api/content'
+import { getQuestionsList, getQuestionDetail, deleteQuestion, updateOfflineStatus, transferQuestion, markFeatured, exportQuestions } from '@/api/content'
 import { getDepartmentTree } from '@/api/department'
 import DeleteConfirmDialog from '../components/DeleteConfirmDialog.vue'
 import ContentFormDialog from '../components/ContentFormDialog.vue'
@@ -221,10 +224,12 @@ const fetchDepartments = async () => {
   }
 }
 
-// 状态映射
+// 状态映射 - 将页面选项映射为API状态值
 const statusMap = {
-  'online': 0, // 已上线对应状态0(待解决)
-  'offline': 3  // 已下线对应状态3(已关闭)
+  '待解决': 0,
+  '已解决': 1,
+  '未解决': 2,
+  '已关闭': 3
 }
 
 // 计算倒计时
@@ -459,6 +464,60 @@ const handleToggleFeatured = async (row) => {
   }
 }
 
+// 处理导出
+const handleExport = async () => {
+  try {
+    // 构建导出参数，与列表查询参数保持一致
+    const params = {}
+    
+    if (searchKeyword.value) {
+      params.keyword = searchKeyword.value
+    }
+    
+    if (selectedStatus.value) {
+      params.status = statusMap[selectedStatus.value]
+    }
+    
+    if (dateRange.value && dateRange.value.length === 2 && dateRange.value[0] && dateRange.value[1]) {
+      params.start_time = dateRange.value[0]
+      params.end_time = dateRange.value[1]
+    }
+    
+    ElMessage.info('正在导出，请稍候...')
+    
+    const res = await exportQuestions(params)
+    
+    // 创建下载链接
+    const blob = new Blob([res], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    
+    // 生成文件名：问题列表_YYYYMMDD_HHMMSS.csv
+    const now = new Date()
+    const dateStr = now.getFullYear() + 
+                   String(now.getMonth() + 1).padStart(2, '0') + 
+                   String(now.getDate()).padStart(2, '0') + '_' +
+                   String(now.getHours()).padStart(2, '0') + 
+                   String(now.getMinutes()).padStart(2, '0') + 
+                   String(now.getSeconds()).padStart(2, '0')
+    link.download = `问题列表_${dateStr}.csv`
+    
+    // 触发下载
+    document.body.appendChild(link)
+    link.click()
+    
+    // 清理
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败')
+  }
+}
+
 // 组件挂载时获取数据
 onMounted(() => {
   fetchDepartments()
@@ -504,7 +563,26 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 16px;
+}
+
+.export-button {
+  width: 120px;
+  height: 44px;
+  line-height: 44px;
+  background: #FFFFFF;
+  border: 1px solid #FF7800;
+  border-radius: 4px;
+  font-weight: 400;
+  font-size: 14px;
+  color: #FF7800;
+  text-align: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.export-button:hover {
+  background: #FFF7F0;
 }
 
 .more-icon {

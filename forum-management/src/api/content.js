@@ -107,4 +107,23 @@ export function updateQuestionTopics(questionId, topicIds) {
   })
 }
 
+/**
+ * 导出问题列表 (CSV格式)
+ * @param {Object} params - 查询参数
+ * @param {string} params.category - 问题分类 (可选)
+ * @param {number} params.status - 状态 (可选)
+ * @param {number} params.dept_id - 部门ID (可选)
+ * @param {string} params.keyword - 关键词 (可选)
+ * @param {string} params.start_time - 开始时间 (可选)
+ * @param {string} params.end_time - 结束时间 (可选)
+ */
+export function exportQuestions(params) {
+  return request({
+    url: '/admin/questions/export',
+    method: 'get',
+    params,
+    responseType: 'blob' // 设置响应类型为blob以便下载文件
+  })
+}
+
 
