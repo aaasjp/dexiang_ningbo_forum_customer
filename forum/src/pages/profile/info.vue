@@ -476,7 +476,8 @@ onMounted(() => {
 <style scoped>
 .profile-info-page {
   width: 100%;
-  background: #FFFFFF;
+  min-height: 100vh;
+  background: #F7F7F7;
   overflow-x: hidden;
 }
 

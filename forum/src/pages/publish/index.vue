@@ -46,7 +46,7 @@
             ref="contentInput"
             v-model="content"
             class="content-input"
-            placeholder="对问题补充说明，更好的获得答案（选填）"
+            placeholder="对问题补充说明，更好的获得答案（必填）"
             rows="4"
             @focus="handleInputFocus"
             @blur="handleInputBlur"
