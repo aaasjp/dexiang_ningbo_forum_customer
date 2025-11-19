@@ -89,7 +89,9 @@
 
       <!-- 空状态 -->
       <div v-if="!isSearching && searchKeyword && searchResults.length === 0" class="empty-result">
-        <div class="empty-icon">🔍</div>
+        <div class="empty-icon">
+          <img src="../../assets/images/empty/follow_empty.png" alt="暂无数据" width="130" height="130" />
+        </div>
         <div class="empty-text">未找到"{{ searchKeyword }}"相关话题</div>
         <div class="empty-hint">换个关键词试试吧</div>
       </div>
@@ -476,21 +478,38 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
+  padding: 80px 40px;
 }
 
 .empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-  opacity: 0.5;
+  margin-bottom: 30px;
+  animation: float 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon img {
+  display: block;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .empty-text {
   font-family: PingFang SC, PingFang SC;
-  font-weight: 500;
-  font-size: 15px;
-  color: #666;
+  font-weight: 400;
+  font-size: 14px;
+  color: #999;
   margin-bottom: 8px;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .empty-hint {
@@ -498,6 +517,7 @@ onMounted(() => {
   font-weight: 400;
   font-size: 13px;
   color: #999;
+  text-align: center;
 }
 
 /* 搜索历史 */

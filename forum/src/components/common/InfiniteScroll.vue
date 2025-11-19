@@ -40,7 +40,9 @@
     <!-- 空状态 -->
     <div v-if="isEmpty && !loading" class="empty-state">
       <slot name="empty">
-        <div class="empty-icon">{{ emptyIcon }}</div>
+        <div class="empty-icon">
+          <img src="../../assets/images/empty/follow_empty.png" alt="暂无数据" width="130" height="130" />
+        </div>
         <div class="empty-text">{{ emptyText }}</div>
       </slot>
     </div>
@@ -347,14 +349,29 @@ defineExpose({
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
+  padding: 80px 40px;
   min-height: 400px;
 }
 
 .empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-  opacity: 0.5;
+  margin-bottom: 30px;
+  animation: float 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon img {
+  display: block;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .empty-text {
@@ -362,6 +379,8 @@ defineExpose({
   font-weight: 400;
   font-size: 14px;
   color: #999;
+  text-align: center;
+  line-height: 1.6;
 }
 
 .scroll-content {

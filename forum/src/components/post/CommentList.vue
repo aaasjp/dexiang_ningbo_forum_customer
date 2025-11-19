@@ -280,6 +280,16 @@ const handleImageClick = (imageUrl: string) => {
   display: block;
   width: 130px;
   height: 130px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .empty-text {
@@ -289,6 +299,7 @@ const handleImageClick = (imageUrl: string) => {
   color: #999;
   text-align: center;
   margin-top: 16px;
+  line-height: 1.6;
 }
 
 /* 评论列表 */

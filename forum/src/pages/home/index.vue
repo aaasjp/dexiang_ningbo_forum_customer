@@ -501,6 +501,8 @@ onMounted(() => {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   border-bottom: 1px solid #F5F5F5;
+  position: relative;
+  z-index: 50;
 }
 
 .follow-list::-webkit-scrollbar {
@@ -770,18 +772,32 @@ onMounted(() => {
 }
 
 .empty-state {
-  padding: 60px 20px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
 }
 
 .empty-state .empty-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
+  margin-bottom: 30px;
+  animation: float 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state .empty-icon img {
+  display: block;
 }
 
 .empty-state .empty-text {
+  font-family: PingFang SC, PingFang SC;
+  font-weight: 400;
   font-size: 14px;
   color: #999;
+  text-align: center;
+  line-height: 1.6;
   margin-bottom: 0;
 }
 </style>
