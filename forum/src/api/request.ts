@@ -1,4 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios'
+import { ElMessage } from 'element-plus'
 
 // API基础URL
 // const BASE_URL = 'http://220.154.134.61:8000'
@@ -72,9 +73,16 @@ instance.interceptors.response.use(
       return response.data as any
     }
     
-    // 业务错误
-    console.error('业务错误:', message)
-    return Promise.reject(new Error(message || '请求失败'))
+    // 业务错误 - 优先使用 detail 字段
+    const errorMsg = (response.data as any)?.detail || message || '请求失败'
+    console.error('业务错误:', errorMsg)
+    ElMessage({
+      message: errorMsg,
+      type: 'error',
+      showClose: false,
+      customClass: 'custom-error-message'
+    })
+    return Promise.reject(new Error(errorMsg))
   },
   (error) => {
     // HTTP错误
@@ -83,34 +91,60 @@ instance.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response
       
-      switch (status) {
-        case 400:
-          console.error('请求参数错误')
-          break
-        case 401:
-          console.error('未认证')
-          break
-        case 403:
-          console.error('无权限')
-          break
-        case 404:
-          console.error('资源不存在')
-          break
-        case 500:
-          console.error('服务器内部错误')
-          break
-        default:
-          console.error(`请求失败: ${status}`)
+      // 优先使用 detail 字段，其次使用 message 字段
+      let errorMsg = data?.detail || data?.message || '请求失败'
+      
+      // 如果没有 detail 或 message，则根据状态码提供默认消息
+      if (!data?.detail && !data?.message) {
+        switch (status) {
+          case 400:
+            errorMsg = '请求参数错误'
+            break
+          case 401:
+            errorMsg = '未认证'
+            break
+          case 403:
+            errorMsg = '无权限'
+            break
+          case 404:
+            errorMsg = '资源不存在'
+            break
+          case 500:
+            errorMsg = '服务器内部错误'
+            break
+          default:
+            errorMsg = `请求失败: ${status}`
+        }
       }
       
-      return Promise.reject(new Error(data?.message || '请求失败'))
+      console.error('错误信息:', errorMsg)
+      ElMessage({
+        message: errorMsg,
+        type: 'error',
+        showClose: false,
+        customClass: 'custom-error-message'
+      })
+      return Promise.reject(new Error(errorMsg))
     }
     
     if (error.request) {
-      console.error('网络错误，请检查网络连接')
-      return Promise.reject(new Error('网络错误'))
+      const errorMsg = '网络错误，请检查网络连接'
+      console.error(errorMsg)
+      ElMessage({
+        message: errorMsg,
+        type: 'error',
+        showClose: false,
+        customClass: 'custom-error-message'
+      })
+      return Promise.reject(new Error(errorMsg))
     }
     
+    ElMessage({
+      message: error.message || '未知错误',
+      type: 'error',
+      showClose: false,
+      customClass: 'custom-error-message'
+    })
     return Promise.reject(error)
   }
 )

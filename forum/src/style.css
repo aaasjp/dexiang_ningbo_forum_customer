@@ -115,3 +115,12 @@ img {
 a, button, [role="button"] {
   touch-action: manipulation;
 }
+
+/* 隐藏自定义错误消息的图标 */
+.custom-error-message .el-message__icon {
+  display: none !important;
+}
+
+.custom-error-message .el-message__content {
+  padding-left: 0 !important;
+}
