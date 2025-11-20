@@ -123,26 +123,52 @@ const processDepartments = (depts: DepartmentInfo[]): DepartmentWithExpanded[] =
   }))
 }
 
+// 递归展开所有部门和人员（用于部门名称匹配时）
+const expandAllDepartments = (depts: DepartmentInfo[]): DepartmentWithExpanded[] => {
+  return depts.map(dept => ({
+    ...dept,
+    expanded: true,
+    children: dept.children ? expandAllDepartments(dept.children) : []
+  }))
+}
+
 // 递归搜索部门和成员
 const searchDepartments = (depts: DepartmentInfo[], keyword: string): DepartmentWithExpanded[] => {
   const results: DepartmentWithExpanded[] = []
   
   for (const dept of depts) {
     const deptMatch = dept.dept_name.toLowerCase().includes(keyword.toLowerCase())
-    const memberMatch = dept.staffs?.some(staff => 
-      staff.name.toLowerCase().includes(keyword.toLowerCase())
-    ) || false
     
+    // 如果部门名称匹配，展开显示该部门的所有内容（所有员工和所有子部门）
+    if (deptMatch) {
+      results.push({
+        ...dept,
+        expanded: true,
+        staffs: dept.staffs, // 显示所有员工
+        children: dept.children ? expandAllDepartments(dept.children) : [] // 展开所有子部门
+      })
+      continue // 部门匹配后直接继续下一个
+    }
+    
+    // 部门名称不匹配，过滤匹配的员工
+    const filteredStaffs = dept.staffs?.filter(staff => 
+      staff.name.toLowerCase().includes(keyword.toLowerCase()) ||
+      (staff.virtual_staff_name && staff.virtual_staff_name.toLowerCase().includes(keyword.toLowerCase()))
+    ) || []
+    
+    // 递归搜索子部门
     let childResults: DepartmentWithExpanded[] = []
     if (dept.children && dept.children.length > 0) {
       childResults = searchDepartments(dept.children, keyword)
     }
     
-    if (deptMatch || memberMatch || childResults.length > 0) {
+    // 如果有匹配的员工或子部门，显示该部门
+    if (filteredStaffs.length > 0 || childResults.length > 0) {
       results.push({
         ...dept,
         expanded: true, // 搜索时自动展开
-        children: childResults
+        staffs: filteredStaffs, // 只显示匹配的员工
+        children: childResults // 只显示匹配的子部门
       })
     }
   }

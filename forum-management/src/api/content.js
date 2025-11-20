@@ -139,4 +139,30 @@ export function toggleInappropriate(questionId, isIllegal) {
   })
 }
 
+/**
+ * 获取问题的回答列表 (管理端)
+ * @param {number} questionId - 问题ID
+ * @param {Object} params - 查询参数
+ * @param {number} params.page - 页码 (默认1)
+ * @param {number} params.page_size - 每页大小 (默认50)
+ */
+export function getAnswersList(questionId, params) {
+  return request({
+    url: `/admin/answers/list/question/${questionId}`,
+    method: 'get',
+    params
+  })
+}
+
+/**
+ * 删除回答 (管理端)
+ * @param {number} answerId - 回答ID
+ */
+export function deleteAnswerById(answerId) {
+  return request({
+    url: `/admin/answers/delete/${answerId}`,
+    method: 'delete'
+  })
+}
+
 

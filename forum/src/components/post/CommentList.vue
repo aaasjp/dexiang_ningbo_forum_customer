@@ -366,7 +366,7 @@ const handleImageClick = (imageUrl: string) => {
 }
 
 .comment-image {
-  width: 80px;
+  max-width: 200px;
   height: 80px;
   border-radius: 8px;
   object-fit: cover;  /* 保持宽高比，裁剪多余部分，不拉伸 */

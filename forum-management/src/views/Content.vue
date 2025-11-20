@@ -116,6 +116,7 @@
               <el-icon class="more-icon" style="color: #999;"><MoreFilled /></el-icon>
               <template #dropdown>
                 <el-dropdown-menu>
+                  <el-dropdown-item command="answerList">回答列表</el-dropdown-item>
                   <el-dropdown-item command="detail">详情</el-dropdown-item>
                   <el-dropdown-item command="edit">编辑</el-dropdown-item>
                   <el-dropdown-item command="toggleInappropriate">
@@ -174,6 +175,12 @@
       title="操作记录"
       width="1200px"
     />
+
+    <!-- 回答列表弹框 -->
+    <AnswerListDialog
+      v-model="showAnswerListDialog"
+      :question-id="currentQuestionId"
+    />
   </div>
 </template>
 
@@ -186,6 +193,7 @@ import DeleteConfirmDialog from '../components/DeleteConfirmDialog.vue'
 import ContentFormDialog from '../components/ContentFormDialog.vue'
 import PostDetailDialog from '../components/PostDetailDialog.vue'
 import LogsDialog from '../components/LogsDialog.vue'
+import AnswerListDialog from '../components/AnswerListDialog.vue'
 import { ElMessage } from 'element-plus'
 
 const selectedType = ref('')
@@ -200,9 +208,11 @@ const showDeleteDialog = ref(false)
 const showEditDialog = ref(false)
 const showDetailDialog = ref(false)
 const showLogsDialog = ref(false)
+const showAnswerListDialog = ref(false)
 const currentDeleteId = ref(null)
 const currentEditData = ref(null)
 const currentDetailData = ref(null)
+const currentQuestionId = ref(null)
 const loading = ref(false)
 const departments = ref([])
 
@@ -272,8 +282,8 @@ const fetchQuestionsList = async () => {
         if (item.related_staffs && item.related_staffs.length > 0) {
           deptStaffList.push(...item.related_staffs.map(s => 
             s.is_virtual && s.virtual_staff_name 
-              ? `${s.name}（${s.virtual_staff_name}）` 
-              : s.name
+              ? `${s.staff_name}（${s.virtual_staff_name}）` 
+              : s.staff_name
           ))
         }
         
@@ -342,6 +352,8 @@ const handleCommand = (command, row) => {
     handleDetail(row)
   } else if (command === 'edit') {
     handleEdit(row)
+  } else if (command === 'answerList') {
+    handleAnswerList(row)
   } else if (command === 'toggleInappropriate') {
     handleToggleInappropriate(row)
   } else if (command === 'toggleOnline') {
@@ -428,6 +440,12 @@ const handleDetail = async (row) => {
 // 打开操作记录弹框
 const openLogsDialog = () => {
   showLogsDialog.value = true
+}
+
+// 打开回答列表弹框
+const handleAnswerList = (row) => {
+  currentQuestionId.value = row.id
+  showAnswerListDialog.value = true
 }
 
 // 处理删除
