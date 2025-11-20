@@ -12,6 +12,14 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
+// 条件引入 vconsole（仅在 URL 参数包含 istest=1 时）
+const urlParams = new URLSearchParams(window.location.search)
+if (urlParams.get('istest') === '1') {
+  import('vconsole').then((module) => {
+    new module.default()
+  })
+}
+
 const app = createApp(App)
 const pinia = createPinia()
 
