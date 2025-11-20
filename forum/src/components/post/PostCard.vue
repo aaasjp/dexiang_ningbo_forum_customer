@@ -145,6 +145,7 @@ const handleAuthorClick = () => {
   
   // 使用 staff_code 或 asker_code 跳转到个人主页
   const staffCode = props.post.author.staff_code || props.post.asker_code
+  console.log("🚀 ~ handleAuthorClick ~ staffCode:", staffCode,currentUserStaffCode.value)
   if (!staffCode) {
     return
   }
@@ -154,7 +155,7 @@ const handleAuthorClick = () => {
     router.push('/profile')
   } else {
     // 否则跳转到他人主页
-    router.push(`/profile/home/${staffCode}`)
+    router.push(`/profile/user?code=${staffCode}`)
   }
 }
 
