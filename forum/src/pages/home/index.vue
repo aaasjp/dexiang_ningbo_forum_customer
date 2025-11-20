@@ -135,6 +135,13 @@ import { getQuestionList, toggleLikeQuestion } from '../../api/question'
 import { getFollowedUsers } from '../../api/user'
 import { transformQuestionToPost, mapCategoryToApi } from '../../utils/transform'
 import { useInfiniteScroll } from '../../composables/useInfiniteScroll'
+import { useScrollKeepAlive } from '../../composables/useScrollKeepAlive'
+
+defineOptions({
+  name: 'Home'
+})
+
+useScrollKeepAlive()
 
 const router = useRouter()
 

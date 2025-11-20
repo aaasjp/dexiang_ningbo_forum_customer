@@ -86,6 +86,13 @@ import {
   type MessageItem,
   type SystemMessage
 } from '../../api/message'
+import { useScrollKeepAlive } from '../../composables/useScrollKeepAlive'
+
+defineOptions({
+  name: 'Message'
+})
+
+useScrollKeepAlive()
 
 const router = useRouter()
 
@@ -360,12 +367,12 @@ const handleMessageClick = async (message: any) => {
 .message-info {
   flex: 1;
   min-width: 0;
-  padding-right: 12px;
+  padding-right: 30px;
 }
 
 .message-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   margin-bottom: 6px;
 }
@@ -378,6 +385,9 @@ const handleMessageClick = async (message: any) => {
 }
 
 .time {
+  position: absolute;
+  right: 16px;
+  top: 16px;
   font-family: PingFang SC, PingFang SC;
   font-weight: 400;
   font-size: 12px;
@@ -398,6 +408,9 @@ const handleMessageClick = async (message: any) => {
 }
 
 .unread-dot {
+  position: absolute;
+  bottom: 20px;
+  right: 16px;
   width: 8px;
   height: 8px;
   border-radius: 50%;

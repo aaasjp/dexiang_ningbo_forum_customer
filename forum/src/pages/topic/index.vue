@@ -71,6 +71,13 @@ import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
 import { getTopicList } from '../../api/topic'
 import type { Topic } from '../../api/topic'
+import { useScrollKeepAlive } from '../../composables/useScrollKeepAlive'
+
+defineOptions({
+  name: 'Topic'
+})
+
+useScrollKeepAlive()
 
 const router = useRouter()
 

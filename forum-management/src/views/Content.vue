@@ -305,7 +305,6 @@ const fetchQuestionsList = async () => {
     }
   } catch (error) {
     console.error('获取问题列表失败:', error)
-    ElMessage.error('获取问题列表失败')
   } finally {
     loading.value = false
   }
@@ -331,7 +330,6 @@ const handleStatusChange = async (row) => {
     fetchQuestionsList()
   } catch (error) {
     console.error('更新状态失败:', error)
-    ElMessage.error('更新状态失败')
     // 恢复原状态
     row.status = row.status === 'offline' ? 'online' : 'offline'
   }
@@ -364,7 +362,6 @@ const handleToggleInappropriate = async (row) => {
     fetchQuestionsList()
   } catch (error) {
     console.error('更新违规标记失败:', error)
-    ElMessage.error('更新违规标记失败')
   }
 }
 
@@ -379,7 +376,6 @@ const handleDeleteConfirm = async () => {
     fetchQuestionsList()
   } catch (error) {
     console.error('删除失败:', error)
-    ElMessage.error('删除失败')
   }
 }
 
@@ -396,12 +392,9 @@ const handleEdit = async (row) => {
     if (res.data) {
       currentEditData.value = res.data
       showEditDialog.value = true
-    } else {
-      ElMessage.error('获取问题详情失败')
     }
   } catch (error) {
     console.error('获取问题详情失败:', error)
-    ElMessage.error('获取问题详情失败')
   }
 }
 
@@ -415,7 +408,6 @@ const handleEditConfirm = async (data) => {
     fetchQuestionsList()
   } catch (error) {
     console.error('编辑失败:', error)
-    ElMessage.error('编辑失败')
   }
 }
 
@@ -427,12 +419,9 @@ const handleDetail = async (row) => {
     if (res.data) {
       currentDetailData.value = res.data
       showDetailDialog.value = true
-    } else {
-      ElMessage.error('获取问题详情失败')
     }
   } catch (error) {
     console.error('获取问题详情失败:', error)
-    ElMessage.error('获取问题详情失败')
   }
 }
 
@@ -456,7 +445,6 @@ const handleToggleFeatured = async (row) => {
     console.error('更新精选状态失败:', error)
     // 恢复原状态
     row.is_featured = row.is_featured === 1 ? 0 : 1
-    ElMessage.error('更新精选状态失败')
   }
 }
 
@@ -510,7 +498,6 @@ const handleExport = async () => {
     ElMessage.success('导出成功')
   } catch (error) {
     console.error('导出失败:', error)
-    ElMessage.error('导出失败')
   }
 }
 

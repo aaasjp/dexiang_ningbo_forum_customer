@@ -66,10 +66,12 @@ request.interceptors.response.use(
       return res
     }
     
-    // 如果返回的状态码不是 200,则显示错误信息
+    // 如果返回的状态码不是 200，统一处理错误提示
     if (res.code !== 200) {
-      //ElMessage.error(res.message || '请求失败')
-      return Promise.reject(new Error(res.message || '请求失败'))
+      // 优先显示 detail 字段的信息，如果没有则显示"服务异常"
+      const errorMessage = res.detail || '服务异常'
+      ElMessage.error(errorMessage)
+      return Promise.reject(new Error(errorMessage))
     }
     
     return res
@@ -77,9 +79,22 @@ request.interceptors.response.use(
   error => {
     console.error('响应错误:', error)
     
-    // 不在拦截器中显示错误提示，由业务代码自行处理
-    // 这样可以避免重复提示
+    // 统一处理网络错误或其他异常
+    let errorMessage = '服务异常'
     
+    // 如果有响应数据，尝试从中获取 detail
+    if (error.response && error.response.data) {
+      errorMessage = error.response.data.detail || errorMessage
+    } else if (error.message) {
+      // 如果是网络错误等，显示错误消息
+      if (error.message.includes('timeout')) {
+        errorMessage = '请求超时，请稍后重试'
+      } else if (error.message.includes('Network Error')) {
+        errorMessage = '网络连接失败，请检查网络'
+      }
+    }
+    
+    ElMessage.error(errorMessage)
     return Promise.reject(error)
   }
 )

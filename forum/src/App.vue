@@ -1,7 +1,11 @@
 <template>
-  <div id="app">
+  <div class="app-container">
     <Layout>
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <keep-alive :include="['Home', 'Topic', 'Message', 'Profile']">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </Layout>
     <ImageViewer />
   </div>
@@ -52,11 +56,13 @@ body {
   background: #e5e5e5;
 }
 
-#app {
+#app,
+.app-container {
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
   background: #ffffff;
   position: relative;
+  /* 移除 min-height: 100vh，让内容自然撑开高度 */
 }
 </style>

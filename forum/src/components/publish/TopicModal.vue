@@ -1,5 +1,5 @@
 <template>
-  <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
+  <div v-if="show" class="modal-overlay" @click.self="$emit('close')" @touchmove.self.prevent>
     <div class="modal-content topic-modal">
       <div class="modal-header">
         <div class="modal-title">添加话题</div>
@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import type { Topic } from '@/api/topic'
 import { searchTopics } from '@/api/topic'
@@ -49,6 +49,37 @@ const emit = defineEmits<{
   close: []
   select: [topicName: string]
 }>()
+
+// 记录滚动位置
+const scrollTop = ref(0)
+
+// 监听显示状态，锁定背景滚动
+watch(() => props.show, (newVal) => {
+  if (newVal) {
+    scrollTop.value = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollTop.value}px`
+    document.body.style.width = '100%'
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.body.style.overflow = ''
+    window.scrollTo(0, scrollTop.value)
+  }
+})
+
+// 组件卸载时恢复背景滚动
+onUnmounted(() => {
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.width = ''
+  document.body.style.overflow = ''
+  if (props.show) {
+    window.scrollTo(0, scrollTop.value)
+  }
+})
 
 const searchText = ref('')
 const searchResults = ref<Topic[]>([])
@@ -197,6 +228,9 @@ const handleSelectTopic = (topicName: string) => {
   flex: 1;
   overflow-y: auto;
   padding: 0 16px 16px;
+  /* 防止 iOS 滚动穿透和回弹 */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .topic-item {

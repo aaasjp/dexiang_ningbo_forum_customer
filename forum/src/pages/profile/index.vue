@@ -92,6 +92,14 @@ import { getMyQuestions, type QuestionItem, toggleLikeQuestion } from '../../api
 import { getMyAnswers, type AnswerItem } from '../../api/answer'
 import { transformQuestionToPost } from '../../utils/transform'
 import type { Post } from '../../types/post'
+import { useScrollKeepAlive } from '../../composables/useScrollKeepAlive'
+
+defineOptions({
+  name: 'Profile'
+})
+
+useScrollKeepAlive()
+
 const router = useRouter()
 
 // 当前激活的 tab

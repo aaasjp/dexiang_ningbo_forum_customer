@@ -26,7 +26,7 @@ export function getQuestionsList(params) {
  */
 export function getQuestionDetail(questionId) {
   return request({
-    url: `/questions/detail/${questionId}`,
+    url: `/admin/questions/detail/${questionId}`,
     method: 'get'
   })
 }

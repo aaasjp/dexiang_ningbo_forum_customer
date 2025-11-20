@@ -115,7 +115,6 @@ const fetchPointsRulesList = async () => {
     }
   } catch (error) {
     console.error('获取积分规则列表失败:', error)
-    ElMessage.error('获取积分规则列表失败')
   } finally {
     loading.value = false
   }
@@ -168,7 +167,6 @@ const handleFormConfirm = async (data) => {
     fetchPointsRulesList()
   } catch (error) {
     console.error('保存失败:', error)
-    ElMessage.error('保存失败')
   }
 }
 
@@ -192,7 +190,6 @@ const handleDeleteConfirm = async () => {
     fetchPointsRulesList()
   } catch (error) {
     console.error('删除失败:', error)
-    ElMessage.error('删除失败')
   }
 }
 

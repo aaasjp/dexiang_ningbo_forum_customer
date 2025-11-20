@@ -286,7 +286,6 @@ const fetchUsersList = async () => {
     }
   } catch (error) {
     console.error('获取用户列表失败:', error)
-    ElMessage.error('获取用户列表失败')
   } finally {
     loading.value = false
   }
@@ -312,7 +311,6 @@ const handleStatusChange = async (row) => {
     fetchUsersList()
   } catch (error) {
     console.error('更新状态失败:', error)
-    ElMessage.error('更新状态失败')
     // 恢复原状态
     row.status = row.status === 'inactive' ? 'active' : 'inactive'
   }
@@ -334,7 +332,6 @@ const handleAdminChange = async (row) => {
     }
   } catch (error) {
     console.error('更新管理员权限失败:', error)
-    ElMessage.error('更新管理员权限失败')
     // 恢复原状态
     row.isAdmin = !row.isAdmin
   }
@@ -356,7 +353,6 @@ const handleVirtualRoleChange = async (row) => {
     fetchUsersList()
   } catch (error) {
     console.error('更新小助手权限失败:', error)
-    ElMessage.error('更新小助手权限失败')
     // 恢复原状态
     row.isVirtualRole = !row.isVirtualRole
   }
@@ -378,7 +374,6 @@ const handleSuperAdminChange = async (row) => {
     fetchUsersList()
   } catch (error) {
     console.error('更新超级管理员权限失败:', error)
-    ElMessage.error('更新超级管理员权限失败')
     // 恢复原状态
     row.isSuperAdmin = !row.isSuperAdmin
   }
@@ -418,7 +413,6 @@ const handleRoleChange = async (row) => {
     row.roleName = selectedTag.tag_name
   } catch (error) {
     console.error('修改角色失败:', error)
-    ElMessage.error('修改角色失败')
     
     // 恢复原角色
     row.roleId = oldRoleId
@@ -454,7 +448,6 @@ const handleAdjustPoints = async (row) => {
         await fetchUsersList()
       } catch (apiError) {
         console.error('积分调整接口调用失败:', apiError)
-        ElMessage.error('积分调整失败')
       }
     } else if (newPoints === String(currentPoints)) {
       ElMessage.info('积分未变化')

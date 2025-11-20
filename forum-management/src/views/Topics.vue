@@ -140,7 +140,6 @@ const fetchTopicsList = async () => {
     }
   } catch (error) {
     console.error('获取话题列表失败:', error)
-    ElMessage.error('获取话题列表失败')
   } finally {
     loading.value = false
   }
@@ -200,7 +199,6 @@ const handleTopicFormConfirm = async (data) => {
     fetchTopicsList()
   } catch (error) {
     console.error('操作失败:', error)
-    ElMessage.error('操作失败')
   }
 }
 
@@ -224,7 +222,6 @@ const handleDeleteConfirm = async () => {
     fetchTopicsList()
   } catch (error) {
     console.error('删除失败:', error)
-    ElMessage.error('删除失败')
   }
 }
 

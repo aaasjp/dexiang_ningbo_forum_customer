@@ -168,7 +168,6 @@ const fetchDashboardData = async () => {
     }
   } catch (error) {
     console.error('获取 Dashboard 数据失败:', error)
-    ElMessage.error('获取数据失败')
   } finally {
     loading.value = false
   }

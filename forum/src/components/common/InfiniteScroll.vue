@@ -107,9 +107,9 @@ const pullDistance = ref(0)
 const startY = ref(0)
 const isPulling = ref(false)
 
-// 显示加载更多指示器
+// 显示加载更多指示器（下拉刷新时不显示）
 const showLoadingMore = computed(() => {
-  return props.loading && !props.isEmpty && !isLoadingMore.value
+  return props.loading && !props.isEmpty && !isLoadingMore.value && pullStatus.value !== 'refreshing'
 })
 
 // 刷新文案

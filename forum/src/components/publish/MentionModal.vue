@@ -1,5 +1,5 @@
 <template>
-  <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
+  <div v-if="show" class="modal-overlay" @click.self="$emit('close')" @touchmove.self.prevent>
     <div class="modal-content mention-modal">
       <div class="modal-header">
         <div class="modal-title">@部门/人员</div>
@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, provide } from 'vue'
+import { ref, computed, watch, provide, onUnmounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import type { DepartmentInfo, StaffInfo } from '@/api/department'
 // @ts-ignore
@@ -68,9 +68,19 @@ const internalSelectedDepartments = ref<Set<number>>(new Set())
 // 内部维护部门展开状态
 const departmentExpandedState = ref<Map<number, boolean>>(new Map())
 
+// 记录滚动位置
+const scrollTop = ref(0)
+
 // 监听弹窗打开，初始化内部状态
 watch(() => props.show, (newVal) => {
   if (newVal) {
+    // 锁定背景滚动（兼容 iOS）
+    scrollTop.value = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollTop.value}px`
+    document.body.style.width = '100%'
+    document.body.style.overflow = 'hidden'
+    
     // 深拷贝外部的选择状态
     internalSelectedMembers.value = new Map()
     internalSelectedDepartments.value = new Set()
@@ -82,6 +92,25 @@ watch(() => props.show, (newVal) => {
         internalSelectedDepartments.value.add(Number(deptId))
       }
     })
+  } else {
+    // 恢复背景滚动
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.body.style.overflow = ''
+    window.scrollTo(0, scrollTop.value)
+  }
+})
+
+// 组件卸载时恢复背景滚动
+onUnmounted(() => {
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.width = ''
+  document.body.style.overflow = ''
+  // 如果组件卸载时弹窗是打开的，尝试恢复滚动位置（虽然此时可能没法准确恢复）
+  if (props.show) {
+    window.scrollTo(0, scrollTop.value)
   }
 })
 
@@ -449,6 +478,9 @@ provide('isMemberSelected', isMemberSelected)
   flex: 1;
   overflow-y: auto;
   padding: 0 16px 16px;
+  /* 防止 iOS 滚动穿透和回弹 */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 </style>
 

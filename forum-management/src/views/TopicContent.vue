@@ -105,7 +105,6 @@ const fetchQuestionList = async () => {
     }
   } catch (error) {
     console.error('获取问题列表失败:', error)
-    ElMessage.error('获取问题列表失败')
   } finally {
     loading.value = false
   }
@@ -124,12 +123,9 @@ const handleEdit = async (row) => {
     if (res.data) {
       currentEditData.value = res.data
       showEditDialog.value = true
-    } else {
-      ElMessage.error('获取问题详情失败')
     }
   } catch (error) {
     console.error('获取问题详情失败:', error)
-    ElMessage.error('获取问题详情失败')
   }
 }
 

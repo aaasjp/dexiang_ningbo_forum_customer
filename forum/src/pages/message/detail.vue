@@ -168,7 +168,7 @@ const handleItemClick = async (item: any) => {
 <style scoped>
 .message-detail-page {
   width: 100%;
-  background: #FFFFFF;
+  background: #F5F5F5;
   overflow-x: hidden;
 }
 
@@ -302,8 +302,8 @@ const handleItemClick = async (item: any) => {
 /* 未读红点 */
 .unread-dot {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 6px;
+  right: 6px;
   width: 8px;
   height: 8px;
   border-radius: 50%;
