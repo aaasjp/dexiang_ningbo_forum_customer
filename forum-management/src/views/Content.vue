@@ -10,7 +10,7 @@
         <div class="filter-left">
           <el-select v-model="selectedType" placeholder="全部类型" style="width: 200px; height: 44px" class="custom-select">
             <el-option label="全部类型" value="" />
-            <el-option label="随便说说" value="随便说说" />
+            <el-option label="自由提问" value="自由提问" />
             <el-option label="求助类" value="求助类" />
             <el-option label="建议类" value="建议类" />
             <el-option label="吐槽类" value="吐槽类" />

@@ -26,7 +26,7 @@
           <!-- 回答列表 -->
           <div v-else class="answer-list">
             <div 
-              v-for="(answer, index) in answerList" 
+              v-for="answer in answerList" 
               :key="answer.answer_id" 
               class="answer-item"
             >
@@ -83,7 +83,9 @@
         <!-- Footer -->
         <div class="custom-dialog-footer">
           <button class="cancel-btn" @click="handleClose">取消</button>
-          <button class="download-btn" disabled>下载</button>
+          <button class="download-btn" @click="handleExport" :disabled="exporting">
+            {{ exporting ? '导出中...' : '下载' }}
+          </button>
         </div>
       </div>
     </div>
@@ -93,7 +95,7 @@
 <script setup>
 import { ref, watch, nextTick } from 'vue'
 import { Loading } from '@element-plus/icons-vue'
-import { getAnswersList, deleteAnswerById } from '@/api/content'
+import { getAnswersList, deleteAnswerById, exportAnswers } from '@/api/content'
 import { ElMessage } from 'element-plus'
 
 const props = defineProps({
@@ -111,6 +113,7 @@ const emit = defineEmits(['update:modelValue'])
 
 const visible = ref(props.modelValue)
 const loading = ref(false)
+const exporting = ref(false)
 const answerList = ref([])
 const currentPage = ref(1)
 const pageSize = ref(50)
@@ -199,6 +202,52 @@ const handleDelete = async (answer) => {
 const previewImage = (imageUrl) => {
   // TODO: 实现图片预览功能
   window.open(imageUrl, '_blank')
+}
+
+// 导出回答列表
+const handleExport = async () => {
+  if (!props.questionId) {
+    ElMessage.warning('问题ID不存在')
+    return
+  }
+
+  try {
+    exporting.value = true
+    ElMessage.info('正在导出，请稍候...')
+    
+    const res = await exportAnswers(props.questionId)
+    
+    // 创建下载链接
+    const blob = new Blob([res], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    
+    // 生成文件名：回答列表_问题ID_YYYYMMDD_HHMMSS.csv
+    const now = new Date()
+    const dateStr = now.getFullYear() + 
+                   String(now.getMonth() + 1).padStart(2, '0') + 
+                   String(now.getDate()).padStart(2, '0') + '_' +
+                   String(now.getHours()).padStart(2, '0') + 
+                   String(now.getMinutes()).padStart(2, '0') + 
+                   String(now.getSeconds()).padStart(2, '0')
+    link.download = `回答列表_${props.questionId}_${dateStr}.csv`
+    
+    // 触发下载
+    document.body.appendChild(link)
+    link.click()
+    
+    // 清理
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    
+    ElMessage.success('导出成功')
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('导出失败')
+  } finally {
+    exporting.value = false
+  }
 }
 
 // 关闭弹框

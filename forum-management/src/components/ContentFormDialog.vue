@@ -117,7 +117,7 @@ const topicList = ref([])
 
 // 问题类型选项
 const questionTypes = [
-  { label: '随便说说', value: '随便说说' },
+  { label: '自由提问', value: '自由提问' },
   { label: '求助类', value: '求助类' },
   { label: '建议类', value: '建议类' },
   { label: '吐槽类', value: '吐槽类' }

@@ -165,4 +165,16 @@ export function deleteAnswerById(answerId) {
   })
 }
 
+/**
+ * 导出问题的回答列表 (CSV格式)
+ * @param {number} questionId - 问题ID
+ */
+export function exportAnswers(questionId) {
+  return request({
+    url: `/admin/answers/export/question/${questionId}`,
+    method: 'get',
+    responseType: 'blob' // 设置响应类型为blob以便下载文件
+  })
+}
+
 

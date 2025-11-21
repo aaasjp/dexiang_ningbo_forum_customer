@@ -170,7 +170,7 @@ watch(visible, (newVal) => {
 // 获取分类名称
 // const getCategoryName = (category) => {
 //   const categoryMap = {
-//     '随便说说': '随便说说',
+//     '自由提问': '自由提问',
 //     '求助类': '求助',
 //     '建议类': '建议',
 //     '吐槽类': '吐槽'
@@ -181,7 +181,7 @@ watch(visible, (newVal) => {
 // 获取分类样式类名
 const getCategoryClass = (category) => {
   const classMap = {
-    '随便说说': 'free',
+    '自由提问': 'free',
     '求助类': 'help',
     '建议类': 'suggest',
     '吐槽类': 'complain'
