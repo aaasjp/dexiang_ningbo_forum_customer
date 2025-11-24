@@ -81,6 +81,7 @@ import {
 } from '@element-plus/icons-vue'
 import Avatar from './Avatar.vue'
 import { getCurrentUserProfile } from '@/api/users'
+import { clearGwSession } from '@/utils/request'
 
 const router = useRouter()
 const route = useRoute()
@@ -112,10 +113,9 @@ const fetchUserInfo = async () => {
 // 处理下拉菜单命令
 const handleCommand = (command) => {
   if (command === 'logout') {
-    // 这里可以添加退出登录的逻辑
-    ElMessage.success('退出登录成功')
-    // 可以跳转到登录页或清除token等
-    // router.push('/login')
+    clearGwSession()
+    ElMessage.success('已退出登录')
+    router.replace('/login')
   }
 }
 
@@ -136,6 +136,7 @@ onMounted(() => {
 .layout-container {
   width: 100%;
   height: 100vh;
+  min-width: 1520px;
 }
 
 .sidebar {

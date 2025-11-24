@@ -6,5 +6,6 @@ export * from './users'
 export * from './points'
 export * from './department'
 export * from './logs'
+export * from './auth'
 
 

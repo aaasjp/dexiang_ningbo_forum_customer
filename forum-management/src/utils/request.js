@@ -1,29 +1,52 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import router from '@/router'
 
-// 从 URL 中获取 session 参数
-function getSessionFromUrl() {
-  const urlParams = new URLSearchParams(window.location.search)
-  return urlParams.get('session')
-}
+const GW_SESSION_STORAGE_KEY = 'gw_session'
 
-// 获取 GW_SESSION：优先从 URL 获取，如果没有则使用默认值
-function getGwSession() {
-  const urlSession = getSessionFromUrl()
-  if (urlSession) {
-    // URL 中的 session 可能已经编码，也可能未编码，这里确保编码
-    return encodeURIComponent(decodeURIComponent(urlSession))
+function safeGetFromStorage() {
+  try {
+    return window.localStorage.getItem(GW_SESSION_STORAGE_KEY) || ''
+  } catch (error) {
+    console.warn('无法读取 gw_session:', error)
+    return ''
   }
-  // 默认的 session（对中文进行编码以符合 HTTP header 规范）
-  return encodeURIComponent('appid=500883957,name=张三,depatment=人力资源部,orgId=2,jobTitle=管理员, gender=2, status=1,jobNo=staff001')
 }
 
-let GW_SESSION = getGwSession()
+function safeSetToStorage(value) {
+  try {
+    window.localStorage.setItem(GW_SESSION_STORAGE_KEY, value)
+  } catch (error) {
+    console.warn('无法写入 gw_session:', error)
+  }
+}
 
-// 导出函数以便在需要时重新获取 session
-export function refreshGwSession() {
-  GW_SESSION = getGwSession()
+function safeRemoveFromStorage() {
+  try {
+    window.localStorage.removeItem(GW_SESSION_STORAGE_KEY)
+  } catch (error) {
+    console.warn('无法移除 gw_session:', error)
+  }
+}
+
+let GW_SESSION = safeGetFromStorage()
+
+export function getGwSession() {
   return GW_SESSION
+}
+
+export function setGwSession(session) {
+  GW_SESSION = session || ''
+  if (session) {
+    safeSetToStorage(session)
+  }
+  request.defaults.headers['gw_session'] = GW_SESSION
+}
+
+export function clearGwSession() {
+  GW_SESSION = ''
+  safeRemoveFromStorage()
+  request.defaults.headers['gw_session'] = ''
 }
 
 // 创建 axios 实例
@@ -45,7 +68,7 @@ const request = axios.create({
 // 请求拦截器
 request.interceptors.request.use(
   config => {
-    if (!config.headers['gw_session']) {
+    if (GW_SESSION) {
       config.headers['gw_session'] = GW_SESSION
     }
     return config
@@ -82,9 +105,17 @@ request.interceptors.response.use(
     // 统一处理网络错误或其他异常
     let errorMessage = '服务异常'
     
-    // 如果有响应数据，尝试从中获取 detail
-    if (error.response && error.response.data) {
-      errorMessage = error.response.data.detail || errorMessage
+    if (error.response) {
+      if (error.response.status === 401) {
+        clearGwSession()
+        if (router.currentRoute.value.path !== '/login') {
+          router.replace({ path: '/login' })
+        }
+      }
+      
+      if (error.response.data) {
+        errorMessage = error.response.data.detail || errorMessage
+      }
     } else if (error.message) {
       // 如果是网络错误等，显示错误消息
       if (error.message.includes('timeout')) {
@@ -100,5 +131,3 @@ request.interceptors.response.use(
 )
 
 export default request
-
-
