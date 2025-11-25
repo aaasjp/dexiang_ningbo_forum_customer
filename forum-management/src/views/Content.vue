@@ -123,7 +123,7 @@
                     {{ row.is_illegal ? '取消违规标记' : '标记不当言论' }}
                   </el-dropdown-item>
                   <el-dropdown-item command="toggleOnline">
-                    {{ row.status === 'online' ? '下线' : '上线' }}
+                    {{ row.is_offline === 0 ? '下线' : '上线' }}
                   </el-dropdown-item>
                   <el-dropdown-item command="delete">删除</el-dropdown-item>
                 </el-dropdown-menu>
@@ -251,7 +251,10 @@ const fetchQuestionsList = async () => {
       page: currentPage.value,
       page_size: pageSize.value
     }
-    
+
+    if (selectedType.value) {
+      params.category = selectedType.value
+    }
     if (searchKeyword.value) {
       params.keyword = searchKeyword.value
     }
@@ -303,7 +306,7 @@ const fetchQuestionsList = async () => {
           favorites: item.favorite_count || 0,
           hours_remaining: item.hours_remaining || 0, // 转换为小时
           createTime: new Date(item.create_time).toLocaleString('zh-CN'),
-          status: item.is_offline === 1 ? 'offline' : 'online',
+          is_offline: item.is_offline || 0,
           is_featured: item.is_featured || 0,
           is_illegal: item.is_illegal || 0, // 违规标记
           resolveStatus: item.status, // 添加解决状态字段，1=已解决，2=未解决
@@ -334,14 +337,14 @@ watch([currentPage, pageSize], () => {
 // 处理状态切换
 const handleStatusChange = async (row) => {
   try {
-    const isOffline = row.status === 'offline' ? 1 : 0
+    const isOffline = row.is_offline === 1 ? 0 : 1
     await updateOfflineStatus(row.id, isOffline)
     ElMessage.success(isOffline === 1 ? '已下线' : '已上线')
     fetchQuestionsList()
   } catch (error) {
     console.error('更新状态失败:', error)
     // 恢复原状态
-    row.status = row.status === 'offline' ? 'online' : 'offline'
+    // row.status = row.status === 'offline' ? 'online' : 'offline'
   }
 }
 

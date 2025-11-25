@@ -93,6 +93,7 @@
           <div class="picker-column" ref="yearColumn">
             <!-- 上方占位 -->
             <div class="picker-item picker-placeholder"></div>
+            <div class="picker-item picker-placeholder"></div>
             <div 
               v-for="year in years" 
               :key="year"
@@ -105,9 +106,11 @@
             </div>
             <!-- 下方占位 -->
             <div class="picker-item picker-placeholder"></div>
+            <div class="picker-item picker-placeholder"></div>
           </div>
           <div class="picker-column" ref="monthColumn">
             <!-- 上方占位 -->
+            <div class="picker-item picker-placeholder"></div>
             <div class="picker-item picker-placeholder"></div>
             <div 
               v-for="month in 12" 
@@ -121,9 +124,11 @@
             </div>
             <!-- 下方占位 -->
             <div class="picker-item picker-placeholder"></div>
+            <div class="picker-item picker-placeholder"></div>
           </div>
           <div class="picker-column" ref="dayColumn">
             <!-- 上方占位 -->
+            <div class="picker-item picker-placeholder"></div>
             <div class="picker-item picker-placeholder"></div>
             <div 
               v-for="day in daysInMonth" 
@@ -136,6 +141,7 @@
               {{ String(day).padStart(2, '0') }}日
             </div>
             <!-- 下方占位 -->
+            <div class="picker-item picker-placeholder"></div>
             <div class="picker-item picker-placeholder"></div>
           </div>
         </div>
@@ -153,6 +159,7 @@
           <div class="picker-column" ref="genderColumn">
             <!-- 上方占位 -->
             <div class="picker-item picker-placeholder"></div>
+            <div class="picker-item picker-placeholder"></div>
             <!-- 性别选项 -->
             <div 
               v-for="option in genderOptions" 
@@ -165,6 +172,7 @@
               {{ option.label }}
             </div>
             <!-- 下方占位 -->
+            <div class="picker-item picker-placeholder"></div>
             <div class="picker-item picker-placeholder"></div>
           </div>
         </div>
@@ -840,6 +848,7 @@ onMounted(() => {
 .picker-placeholder {
   pointer-events: none;
   color: transparent !important;
+  scroll-snap-align: none !important;
 }
 
 </style>

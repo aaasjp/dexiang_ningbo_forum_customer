@@ -194,7 +194,8 @@ const otherMessages = computed(() => {
       title: msg.title,
       content: msg.content,
       time: formatTime(msg.create_time),
-      unread: !msg.is_read
+      unread: !msg.is_read,
+      message_type: msg.message_type
     }
   })
 })

@@ -9,6 +9,7 @@ export interface AnswerItem {
   images?: string[]
   answerer_code: string
   answerer_name: string
+  question_title?: string
   answerer_avatar?: string
   is_official: number
   is_pinned: number

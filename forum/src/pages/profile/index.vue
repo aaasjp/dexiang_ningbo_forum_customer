@@ -218,7 +218,7 @@ const displayPosts = computed(() => {
         avatar: '👤'
       },
       category: 'answer',
-      title: a.question_id ? `回答了问题 #${a.question_id}` : '回答',
+      title: a.question_id ? `回答了问题： ${a.question_title}` : '回答',
       content: a.content,
       time: a.create_time,
       solved: a.is_useful === 1,

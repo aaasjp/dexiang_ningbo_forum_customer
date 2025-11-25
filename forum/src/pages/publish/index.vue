@@ -50,6 +50,7 @@
             rows="4"
             @focus="handleInputFocus"
             @blur="handleInputBlur"
+            @input="handleInputChange"
           ></textarea>
 
           <!-- 图片上传区域 -->
@@ -617,6 +618,10 @@ const handleInputBlur = () => {
   }, 100)
 }
 
+// 输入框内容变化处理
+const handleInputChange = () => {
+  content.value = content.value.slice(0, 200)
+}
 // 页面点击处理
 const handlePageClick = (e: MouseEvent) => {
   const target = e.target as HTMLElement
