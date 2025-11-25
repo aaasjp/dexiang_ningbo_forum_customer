@@ -15,48 +15,55 @@
       <!-- 点击遮罩关闭菜单 -->
       <div v-if="activeMenuId" class="menu-overlay" @click="activeMenuId = null"></div>
       
-      <div v-if="loading" class="loading">加载中...</div>
-      <div v-else-if="acceptedAnswers.length === 0" class="empty">暂无被采纳的回答</div>
-      <div
-        v-else
-        v-for="answer in acceptedAnswers"
-        :key="answer.answer_id"
-        class="answer-card"
+      <InfiniteScroll
+        :loading="loading"
+        :no-more="noMore"
+        :is-empty="isEmpty"
+        :enable-pull-refresh="true"
+        empty-text="暂无被采纳的回答"
+        @load-more="loadMore"
+        @refresh="refresh"
       >
-        <div class="card-header">
-          <!-- 回答内容 -->
-          <div class="answer-content">{{ answer.content }}</div>
+        <div
+          v-for="answer in acceptedAnswers"
+          :key="answer.answer_id"
+          class="answer-card"
+        >
+          <div class="card-header">
+            <!-- 回答内容 -->
+            <div class="answer-content">{{ answer.content }}</div>
 
-          <!-- 回答图片 -->
-          <div class="answer-images" v-if="answer.images && answer.images.length > 0">
-            <img
-              v-for="(image, index) in answer.images"
-              :key="index"
-              class="image-item"
-              :class="`image-count-${answer.images.length}`"
-              :src="image" 
-              alt="回答图片"
-              @click="handleImageClick(image)"
-            />
-          </div>
+            <!-- 回答图片 -->
+            <div class="answer-images" v-if="answer.images && answer.images.length > 0">
+              <img
+                v-for="(image, index) in answer.images"
+                :key="index"
+                class="image-item"
+                :class="`image-count-${answer.images.length}`"
+                :src="image" 
+                alt="回答图片"
+                @click="handleImageClick(image)"
+              />
+            </div>
 
-          <!-- 更多操作按钮 -->
-          <div class="more-btn-wrapper">
-          <div class="more-btn" @click.stop="toggleMenu(answer.answer_id)">
-            <el-icon :size="20">
-                <MoreFilled />
-              </el-icon>
+            <!-- 更多操作按钮 -->
+            <div class="more-btn-wrapper">
+              <div class="more-btn" @click.stop="toggleMenu(answer.answer_id)">
+                <el-icon :size="20">
+                  <MoreFilled />
+                </el-icon>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 更多菜单 -->
-        <div v-if="activeMenuId === answer.answer_id" class="more-menu">
-          <div class="menu-item" @click="handleEdit(answer)">修改回答</div>
-          <div class="menu-item" @click="handleAddReply(answer)">追加回答</div>
-          <div class="menu-item" @click="handleDelete(answer)">删除回答</div>
+          <!-- 更多菜单 -->
+          <div v-if="activeMenuId === answer.answer_id" class="more-menu">
+            <div class="menu-item" @click="handleEdit(answer)">修改回答</div>
+            <div class="menu-item" @click="handleAddReply(answer)">追加回答</div>
+            <div class="menu-item" @click="handleDelete(answer)">删除回答</div>
+          </div>
         </div>
-      </div>
+      </InfiniteScroll>
     </div>
   </div>
 </template>
@@ -66,16 +73,32 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, MoreFilled } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
+import InfiniteScroll from '../../components/common/InfiniteScroll.vue'
 import { getMyUsefulAnswers, deleteAnswer, type AnswerItem } from '../../api/answer'
 import { useImageViewerStore } from '../../stores/imageViewer'
+import { useInfiniteScroll } from '../../composables/useInfiniteScroll'
 
 const router = useRouter()
 const imageViewerStore = useImageViewerStore()
 
-// 被采纳的回答数据
-const acceptedAnswers = ref<AnswerItem[]>([])
-const loading = ref(false)
 const activeMenuId = ref<number | null>(null)
+
+// 使用无限滚动 Hook
+const {
+  list: acceptedAnswers,
+  loading,
+  isEmpty,
+  noMore,
+  loadMore,
+  refresh
+} = useInfiniteScroll<AnswerItem>(
+  async (page: number, pageSize: number) => {
+    return await getMyUsefulAnswers(page, pageSize)
+  },
+  {
+    pageSize: 20
+  }
+)
 
 // 切换菜单
 const toggleMenu = (answerId: number) => {
@@ -86,27 +109,9 @@ const toggleMenu = (answerId: number) => {
   }
 }
 
-// 加载被采纳的回答
-const loadAcceptedAnswers = async () => {
-  try {
-    loading.value = true
-    const res = await getMyUsefulAnswers(1, 20)
-    if (res.code === 200) {
-      acceptedAnswers.value = res.data.items
-    } else {
-      //ElMessage.error(res.message || '获取回答失败')
-    }
-  } catch (error) {
-    console.error('获取回答失败:', error)
-    //ElMessage.error('获取回答失败')
-  } finally {
-    loading.value = false
-  }
-}
-
 // 页面加载时获取数据
 onMounted(() => {
-  loadAcceptedAnswers()
+  refresh()
 })
 
 // 返回上一页
@@ -142,7 +147,7 @@ const handleDelete = async (answer: AnswerItem) => {
     if (res.code === 200) {
       //ElMessage.success('删除成功')
       // 重新加载列表
-      loadAcceptedAnswers()
+      refresh()
     } else {
       //ElMessage.error(res.message || '删除失败')
     }
@@ -161,6 +166,9 @@ const handleImageClick = (imageUrl: string) => {
 </script>
 
 <style scoped>
+::v-deep .infinite-scroll-wrapper {
+  padding-bottom: 60px;
+}
 .answers-page {
   width: 100%;
   background: #fff;
@@ -367,14 +375,5 @@ const handleImageClick = (imageUrl: string) => {
 
 .menu-item.delete {
   color: #FF3C39;
-}
-
-/* 加载和空状态 */
-.loading,
-.empty {
-  padding: 60px 20px;
-  text-align: center;
-  color: #999;
-  font-size: 14px;
 }
 </style>

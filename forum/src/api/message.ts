@@ -100,8 +100,9 @@ export function getSystemMessages(page = 1, pageSize = 20) {
  * 标记消息为已读
  */
 export function markMessageAsRead(messageId: number, messageType: string) {
-  return post(`/api/messages/read/${messageId}`, {
-    message_type: messageType
+  return post(`/api/messages/read`, {
+    message_type: messageType,
+    message_id: messageId
   })
 }
 

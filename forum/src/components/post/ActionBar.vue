@@ -94,6 +94,7 @@ const onCommentSubmit = (text: string) => {
   max-width: 600px;
   background: #fff;
   padding: 8px 16px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
   border-top: 1px solid #F5F5F5;
   display: flex;
   align-items: center;

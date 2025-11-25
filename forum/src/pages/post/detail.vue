@@ -793,7 +793,10 @@ onMounted(async () => {
   background: #fff;
   overflow-x: hidden;
   padding-top: 48px;
-  padding-bottom: 70px;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  /* 禁止 iOS 弹簧效果 */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* 切换状态弹窗 */
