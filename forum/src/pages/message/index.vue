@@ -271,7 +271,7 @@ const goToDepartmentMessages = async () => {
 const handleMessageClick = async (message: any) => {
   // 标记消息为已读
   try {
-    await markMessageAsRead(message.id)
+    await markMessageAsRead(message.id, message.message_type)
     // 标记成功后，更新本地状态，移除红点
     const msgInList = personalMessages.value.find(m => m.message_id === message.id)
     if (msgInList) {
