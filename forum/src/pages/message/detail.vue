@@ -10,48 +10,55 @@
       <div class="header-title">{{ messageTitle }}</div>
     </div>
 
-    <!-- 消息列表 -->
-    <div class="message-list">
-      <div v-if="loading" class="loading">加载中...</div>
-      <div v-else-if="messageItems.length === 0" class="empty">暂无消息</div>
-      <div
-        v-else
-        v-for="item in messageItems"
-        :key="item.id"
-        class="message-card"
-        @click="handleItemClick(item)"
-      >
-        <!-- 顶部：标签和红点 -->
-        <div v-if="messageType === 'department'" class="message-top">
-          <div 
-            class="message-tag"
-            :class="{
-              'tag-help': item.unread,
-              'tag-suggest': !item.unread && item.id === '2',
-              'tag-warning': !item.unread && item.id === '3'
-            }"
-          >
-            {{ getTagText(item) }}
+    <!-- 消息列表 - 使用无限滚动 -->
+    <InfiniteScroll
+      :loading="loading"
+      :no-more="noMore"
+      :is-empty="isEmpty"
+      :enable-pull-refresh="true"
+      empty-text="暂无消息"
+      @load-more="loadMore"
+      @refresh="refresh"
+    >
+      <div class="message-list">
+        <div
+          v-for="item in messageItems"
+          :key="item.id"
+          class="message-card"
+          @click="handleItemClick(item)"
+        >
+          <!-- 顶部：标签和红点 -->
+          <div v-if="messageType === 'department'" class="message-top">
+            <div 
+              class="message-tag"
+              :class="{
+                'tag-help': item.unread,
+                'tag-suggest': !item.unread && item.id === '2',
+                'tag-warning': !item.unread && item.id === '3'
+              }"
+            >
+              {{ getTagText(item) }}
+            </div>
+           
+            <!-- 未读标识 -->
+            <div v-if="item.unread" class="unread-dot"></div>
           </div>
-         
-          <!-- 未读标识 -->
-          <div v-if="item.unread" class="unread-dot"></div>
-        </div>
 
-        <!-- 消息内容 -->
-        <div class="message-card-content">
-          <div class="message-card-header">
-            <div class="message-title">{{ item.title }}</div>
-            <div class="message-time">{{ item.time }}</div>
+          <!-- 消息内容 -->
+          <div class="message-card-content">
+            <div class="message-card-header">
+              <div class="message-title">{{ item.title }}</div>
+              <div class="message-time">{{ item.time }}</div>
+            </div>
+            <div v-if="item.content" class="message-text">
+              {{ item.content }}
+            </div>
           </div>
-          <div v-if="item.content" class="message-text">
-            {{ item.content }}
-          </div>
+          <!-- 官方消息的未读标识（右上角） -->
+          <div v-if="messageType !== 'department' && item.unread" class="unread-dot"></div>
         </div>
-        <!-- 官方消息的未读标识（右上角） -->
-        <div v-if="messageType !== 'department' && item.unread" class="unread-dot"></div>
       </div>
-    </div>
+    </InfiniteScroll>
   </div>
 </template>
 
@@ -59,6 +66,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
+import InfiniteScroll from '../../components/common/InfiniteScroll.vue'
 import {
   getPersonalMessages,
   getDepartmentMessages,
@@ -67,6 +75,7 @@ import {
   type MessageItem,
   type SystemMessage
 } from '../../api/message'
+import { useInfiniteScroll } from '../../composables/useInfiniteScroll'
 
 const router = useRouter()
 const route = useRoute()
@@ -75,40 +84,50 @@ const route = useRoute()
 const messageType = ref(route.query.type as string || 'system')
 const messageTitle = ref(route.query.title as string || '消息详情')
 
-// 消息列表
-const messages = ref<(MessageItem | SystemMessage)[]>([])
-const loading = ref(false)
+// 消息原始列表（用于更新已读状态）
+const rawMessages = ref<(MessageItem | SystemMessage)[]>([])
 
-// 加载消息列表
-const loadMessages = async () => {
-  try {
-    loading.value = true
-    
-    let res
-    if (messageType.value === 'personal') {
-      res = await getPersonalMessages({ page: 1, page_size: 50 })
-    } else if (messageType.value === 'department') {
-      res = await getDepartmentMessages({ page: 1, page_size: 50 })
-    } else {
-      res = await getSystemMessages(1, 50)
-    }
-    
-    if (res.code === 200) {
-      messages.value = res.data.items
-    } else {
-      //ElMessage.error(res.message || '获取消息失败')
-    }
-  } catch (error) {
-    console.error('获取消息失败:', error)
-    //ElMessage.error('获取消息失败')
-  } finally {
-    loading.value = false
+// 根据消息类型选择不同的 API
+const fetchMessages = async (page: number, pageSize: number) => {
+  let res
+  if (messageType.value === 'personal') {
+    res = await getPersonalMessages({ page, page_size: pageSize })
+  } else if (messageType.value === 'department') {
+    res = await getDepartmentMessages({ page, page_size: pageSize })
+  } else {
+    res = await getSystemMessages(page, pageSize)
   }
+  
+  if (res.code === 200) {
+    // 存储原始消息数据
+    if (page === 1) {
+      rawMessages.value = res.data.items
+    } else {
+      rawMessages.value.push(...res.data.items)
+    }
+  }
+  
+  return res
 }
+
+// 使用无限滚动 Hook
+const {
+  list: messages,
+  loading,
+  isEmpty,
+  noMore,
+  loadMore,
+  refresh
+} = useInfiniteScroll<MessageItem | SystemMessage>(
+  fetchMessages,
+  {
+    pageSize: 20
+  }
+)
 
 // 页面加载时获取数据
 onMounted(() => {
-  loadMessages()
+  refresh()
 })
 
 // 消息项列表（格式化）
@@ -153,10 +172,15 @@ const handleItemClick = async (item: any) => {
   // 标记为已读
   try {
     await markMessageAsRead(item.id, item.message_type)
-    // 更新原始数据源中的 is_read 状态，这样 computed 会自动更新
+    // 更新 messages 列表中的 is_read 状态，这样 computed 会自动更新
     const originalMessage = messages.value.find((msg: any) => msg.message_id === item.id)
     if (originalMessage) {
       (originalMessage as any).is_read = true
+    }
+    // 同时更新 rawMessages
+    const rawMessage = rawMessages.value.find((msg: any) => msg.message_id === item.id)
+    if (rawMessage) {
+      (rawMessage as any).is_read = true
     }
   } catch (error) {
     console.error('标记已读失败:', error)
@@ -316,12 +340,8 @@ const handleItemClick = async (item: any) => {
   background: #FF4D4F;
 }
 
-/* 加载和空状态 */
-.loading,
-.empty {
-  padding: 60px 20px;
-  text-align: center;
-  color: #999;
-  font-size: 14px;
+/* 无限滚动调整 */
+::v-deep .infinite-scroll-wrapper {
+  min-height: calc(100vh - 43px);
 }
 </style>

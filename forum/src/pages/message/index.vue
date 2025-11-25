@@ -5,71 +5,84 @@
       <div class="header-title">消息</div>
     </div>
 
-    <!-- 消息列表 -->
-    <div class="content">
-      <!-- 官方消息 -->
-      <div
-        class="message-item"
-        @click="goToSystemMessages"
-      >
-        <Avatar name="官方" :size="40" bgColor="#FF6B00" />
-        <div class="message-info">
-          <div class="message-header">
-            <span class="username">官方消息</span>
-            <span class="time" v-if="officialMessage">{{ officialMessage.time }}</span>
+    <!-- 消息列表 - 使用无限滚动包裹整个内容 -->
+    <InfiniteScroll
+      :loading="personalLoading"
+      :no-more="personalNoMore"
+      :is-empty="false"
+      :enable-pull-refresh="true"
+      @load-more="loadMorePersonal"
+      @refresh="handleRefresh"
+    >
+      <div class="content">
+        <!-- 官方消息 -->
+        <div
+          class="message-item"
+          @click="goToSystemMessages"
+        >
+          <Avatar name="官方" :size="40" bgColor="#FF6B00" />
+          <div class="message-info">
+            <div class="message-header">
+              <span class="username">官方消息</span>
+              <span class="time" v-if="officialMessage">{{ officialMessage.time }}</span>
+            </div>
+            <p class="message-content">
+              {{ officialMessage ? officialMessage.content : '暂无系统消息' }}
+            </p>
           </div>
-          <p class="message-content">
-            {{ officialMessage ? officialMessage.content : '暂无系统消息' }}
-          </p>
+          <div class="unread-dot" v-if="officialMessage && officialMessage.unread"></div>
         </div>
-        <div class="unread-dot" v-if="officialMessage && officialMessage.unread"></div>
-      </div>
 
-      <!-- 部门消息 -->
-      <div
-        class="message-item"
-        @click="goToDepartmentMessages"
-      >
-        <Avatar name="部门" :size="40" bgColor="#4A90E2" />
-        <div class="message-info">
-          <div class="message-header">
-            <span class="username">部门消息</span>
-            <span class="time" v-if="departmentMessage">{{ departmentMessage.time }}</span>
+        <!-- 部门消息 -->
+        <div
+          class="message-item"
+          @click="goToDepartmentMessages"
+        >
+          <Avatar name="部门" :size="40" bgColor="#4A90E2" />
+          <div class="message-info">
+            <div class="message-header">
+              <span class="username">部门消息</span>
+              <span class="time" v-if="departmentMessage">{{ departmentMessage.time }}</span>
+            </div>
+            <p class="message-content">
+              {{ departmentMessage ? departmentMessage.content : '暂无部门消息' }}
+            </p>
           </div>
-          <p class="message-content">
-            {{ departmentMessage ? departmentMessage.content : '暂无部门消息' }}
-          </p>
+          <div class="unread-dot" v-if="departmentMessage && departmentMessage.unread"></div>
         </div>
-        <div class="unread-dot" v-if="departmentMessage && departmentMessage.unread"></div>
-      </div>
 
-      <!-- 灰色间隔 -->
-      <div class="message-divider"></div>
+        <!-- 灰色间隔 -->
+        <div class="message-divider"></div>
 
-      <!-- 其他消息 -->
-      <div
-        class="message-item"
-        v-for="message in otherMessages"
-        :key="message.id"
-        @click="handleMessageClick(message)"
-      >
-        <!-- 头像：根据消息类型显示 -->
-        <Avatar 
-          :src="message.avatarUrl || undefined" 
-          :name="message.displayName"
-          :size="40"
-        />
-        
-        <div class="message-info">
-          <div class="message-header">
-            <span class="username">{{ message.displayName }}</span>
-            <span class="time">{{ message.time }}</span>
+        <!-- 其他消息列表 -->
+        <div class="other-messages-list">
+          <div v-if="personalIsEmpty" class="empty-message">暂无其他消息</div>
+          <div
+            v-else
+            class="message-item"
+            v-for="message in otherMessages"
+            :key="message.id"
+            @click="handleMessageClick(message)"
+          >
+            <!-- 头像：根据消息类型显示 -->
+            <Avatar 
+              :src="message.avatarUrl || undefined" 
+              :name="message.displayName"
+              :size="40"
+            />
+            
+            <div class="message-info">
+              <div class="message-header">
+                <span class="username">{{ message.displayName }}</span>
+                <span class="time">{{ message.time }}</span>
+              </div>
+              <p class="message-content">{{ message.content }}</p>
+            </div>
+            <div class="unread-dot" v-if="message.unread"></div>
           </div>
-          <p class="message-content">{{ message.content }}</p>
         </div>
-        <div class="unread-dot" v-if="message.unread"></div>
       </div>
-    </div>
+    </InfiniteScroll>
   </div>
 </template>
 
@@ -77,6 +90,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import Avatar from '../../components/common/Avatar.vue'
+import InfiniteScroll from '../../components/common/InfiniteScroll.vue'
 import { 
   getPersonalMessages, 
   getDepartmentMessages, 
@@ -87,6 +101,7 @@ import {
   type SystemMessage
 } from '../../api/message'
 import { useScrollKeepAlive } from '../../composables/useScrollKeepAlive'
+import { useInfiniteScroll } from '../../composables/useInfiniteScroll'
 
 defineOptions({
   name: 'Message'
@@ -96,27 +111,38 @@ useScrollKeepAlive()
 
 const router = useRouter()
 
-// 消息数据
-const personalMessages = ref<MessageItem[]>([])
+// 官方和部门消息数据
 const departmentMessages = ref<MessageItem[]>([])
 const systemMessages = ref<SystemMessage[]>([])
 const loading = ref(false)
 
-// 加载所有消息
-const loadMessages = async () => {
+// 使用无限滚动 Hook 加载个人消息
+const {
+  list: personalMessages,
+  loading: personalLoading,
+  isEmpty: personalIsEmpty,
+  noMore: personalNoMore,
+  loadMore: loadMorePersonal,
+  refresh: refreshPersonal
+} = useInfiniteScroll<MessageItem>(
+  async (page: number, pageSize: number) => {
+    return await getPersonalMessages({ page, page_size: pageSize })
+  },
+  {
+    pageSize: 20
+  }
+)
+
+// 加载官方和部门消息（只加载第一条用于预览）
+const loadPreviewMessages = async () => {
   try {
     loading.value = true
     
-    // 并行加载三种类型的消息
-    const [personalRes, deptRes, systemRes] = await Promise.all([
-      getPersonalMessages({ page: 1, page_size: 20 }),
-      getDepartmentMessages({ page: 1, page_size: 20 }),
-      getSystemMessages(1, 20)
+    // 并行加载部门和系统消息（只取第一条）
+    const [deptRes, systemRes] = await Promise.all([
+      getDepartmentMessages({ page: 1, page_size: 1 }),
+      getSystemMessages(1, 1)
     ])
-    
-    if (personalRes.code === 200) {
-      personalMessages.value = personalRes.data.items
-    }
     
     if (deptRes.code === 200) {
       departmentMessages.value = deptRes.data.items
@@ -127,7 +153,6 @@ const loadMessages = async () => {
     }
   } catch (error) {
     console.error('获取消息失败:', error)
-    //ElMessage.error('获取消息失败')
   } finally {
     loading.value = false
   }
@@ -135,8 +160,17 @@ const loadMessages = async () => {
 
 // 页面加载时获取数据
 onMounted(() => {
-  loadMessages()
+  loadPreviewMessages()
+  refreshPersonal()
 })
+
+// 下拉刷新处理
+const handleRefresh = async () => {
+  await Promise.all([
+    loadPreviewMessages(),
+    refreshPersonal()
+  ])
+}
 
 // 系统消息（取最近一条）
 const officialMessage = computed(() => {
@@ -413,5 +447,13 @@ const handleMessageClick = async (message: any) => {
   height: 8px;
   background: #F5F5F5;
   margin: 0;
+}
+
+/* 空消息提示 */
+.empty-message {
+  padding: 60px 20px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
 }
 </style>

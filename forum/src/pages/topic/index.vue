@@ -20,48 +20,49 @@
       />
     </div>
 
-    <!-- 话题列表 -->
-    <div class="content">
-      <div 
-        class="topic-item" 
-        v-for="(topic, index) in displayTopics" 
-        :key="topic.topic_id" 
-        @click="goToDetail(topic.topic_id)"
-      >
-        <!-- 排名标识 -->
-        <div class="topic-rank">
-          <div 
-            class="rank-badge"
-            :class="{
-              'rank-1': index === 0,
-              'rank-2': index === 1,
-              'rank-3': index === 2,
-              'rank-other': index >= 3
-            }"
-          >
-            {{ index + 1 }}
+    <!-- 话题列表 - 使用无限滚动支持下拉刷新 -->
+    <InfiniteScroll
+      :loading="loading"
+      :no-more="true"
+      :is-empty="displayTopics.length === 0"
+      :enable-pull-refresh="true"
+      empty-text="暂无话题"
+      @refresh="loadTopics"
+    >
+      <div class="content">
+        <div 
+          class="topic-item" 
+          v-for="(topic, index) in displayTopics" 
+          :key="topic.topic_id" 
+          @click="goToDetail(topic.topic_id)"
+        >
+          <!-- 排名标识 -->
+          <div class="topic-rank">
+            <div 
+              class="rank-badge"
+              :class="{
+                'rank-1': index === 0,
+                'rank-2': index === 1,
+                'rank-3': index === 2,
+                'rank-other': index >= 3
+              }"
+            >
+              {{ index + 1 }}
+            </div>
+          </div>
+
+          <!-- 话题信息 -->
+          <div class="topic-info">
+            <div class="topic-name">#{{ topic.title }}</div>
+          </div>
+
+          <!-- 参与数量 -->
+          <div class="topic-stats">
+            {{ formatCount(topic.question_count) }}参与
           </div>
         </div>
-
-        <!-- 话题信息 -->
-        <div class="topic-info">
-          <div class="topic-name">#{{ topic.title }}</div>
-        </div>
-
-        <!-- 参与数量 -->
-        <div class="topic-stats">
-          {{ formatCount(topic.question_count) }}参与
-        </div>
       </div>
-
-      <!-- 空状态 -->
-      <div v-if="displayTopics.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <img src="../../assets/images/empty/follow_empty.png" alt="暂无话题" width="130" height="130" />
-        </div>
-        <div class="empty-text">暂无话题</div>
-      </div>
-    </div>
+    </InfiniteScroll>
   </div>
 </template>
 
@@ -69,6 +70,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
+import InfiniteScroll from '../../components/common/InfiniteScroll.vue'
 import { getTopicList } from '../../api/topic'
 import type { Topic } from '../../api/topic'
 import { useScrollKeepAlive } from '../../composables/useScrollKeepAlive'
@@ -226,7 +228,6 @@ onMounted(() => {
   padding: 0;
   position: relative;
   z-index: 1;
-  margin-top: 98px; /* header(42px) + search-bar(56px) */
 }
 
 /* 话题项 */
@@ -333,41 +334,13 @@ white-space: nowrap;
   white-space: nowrap;
 }
 
-/* 空状态 */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 40px;
+/* 无限滚动调整 */
+::v-deep .infinite-scroll-wrapper {
+  margin-top: 98px;
 }
 
-.empty-icon {
-  margin-bottom: 30px;
-  animation: float 3s ease-in-out infinite;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.empty-icon img {
-  display: block;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.empty-text {
-  font-size: 14px;
-  color: #999;
-  text-align: center;
-  line-height: 1.6;
+::v-deep .infinite-scroll-wrapper .content {
+  margin-top: 0;
 }
 </style>
 

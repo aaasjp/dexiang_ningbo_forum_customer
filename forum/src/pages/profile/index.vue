@@ -5,80 +5,85 @@
       <div class="header-title">个人中心</div>
     </div>
 
-    <!-- 用户信息卡片 -->
-    <div class="user-card">
-      <Avatar :src="userProfile?.forum_avatar" :name="userProfile?.name" :size="56" />
-      <div class="user-info">
-        <div class="user-name-wrapper">
-          <div class="user-name">{{ userProfile?.name || '加载中...' }}</div>
-          <div class="user-badge" v-if="userProfile?.forum_tag && userProfile.forum_tag !== '普通用户'">{{ userProfile.forum_tag }}</div>
+    <!-- 整个页面使用无限滚动支持下拉刷新 -->
+    <InfiniteScroll
+      :loading="questionsLoading || answersLoading"
+      :no-more="true"
+      :is-empty="displayPosts.length === 0"
+      :enable-pull-refresh="true"
+      :empty-text="activeTab === 'questions' ? '暂无提问' : '暂无回答'"
+      @refresh="handleRefresh"
+    >
+      <!-- 用户信息卡片 -->
+      <div class="user-card">
+        <Avatar :src="userProfile?.forum_avatar" :name="userProfile?.name" :size="56" />
+        <div class="user-info">
+          <div class="user-name-wrapper">
+            <div class="user-name">{{ userProfile?.name || '加载中...' }}</div>
+            <div class="user-badge" v-if="userProfile?.forum_tag && userProfile.forum_tag !== '普通用户'">{{ userProfile.forum_tag }}</div>
+          </div>
+          <div class="user-desc">{{ userProfile?.self_introduction || '这个人很懒，什么都没留下' }}</div>
         </div>
-        <div class="user-desc">{{ userProfile?.self_introduction || '这个人很懒，什么都没留下' }}</div>
+        <div class="edit-btn" @click="goToInfo">编辑资料</div>
       </div>
-      <div class="edit-btn" @click="goToInfo">编辑资料</div>
-    </div>
 
-    <!-- 功能图标区 -->
-    <div class="action-icons">
-      <div class="action-item" @click="goToMentions">
-        <div class="action-icon">
-          <img src="../../assets/images/profile/at.png" alt="at" />
+      <!-- 功能图标区 -->
+      <div class="action-icons">
+        <div class="action-item" @click="goToMentions">
+          <div class="action-icon">
+            <img src="../../assets/images/profile/at.png" alt="at" />
+          </div>
+          <div class="action-label">@我</div>
         </div>
-        <div class="action-label">@我</div>
-      </div>
-      <div class="action-item" @click="goToFavorites">
-        <div class="action-icon">
-          <img src="../../assets/images/profile/collect.png" alt="star" />
+        <div class="action-item" @click="goToFavorites">
+          <div class="action-icon">
+            <img src="../../assets/images/profile/collect.png" alt="star" />
+          </div>
+          <div class="action-label">收藏</div>
         </div>
-        <div class="action-label">收藏</div>
-      </div>
-      <div class="action-item" @click="goToQuestions">
-        <div class="action-icon">
-          <img src="../../assets/images/profile/get.png" alt="pen" />
+        <div class="action-item" @click="goToQuestions">
+          <div class="action-icon">
+            <img src="../../assets/images/profile/get.png" alt="pen" />
+          </div>
+          <div class="action-label">被采纳</div>
         </div>
-        <div class="action-label">被采纳</div>
-      </div>
-      <div class="action-item" @click="goToPoints">
-        <div class="action-icon">
-          <img src="../../assets/images/profile/score.png" alt="award" />
+        <div class="action-item" @click="goToPoints">
+          <div class="action-icon">
+            <img src="../../assets/images/profile/score.png" alt="award" />
+          </div>
+          <div class="action-label">积分</div>
         </div>
-        <div class="action-label">积分</div>
       </div>
-    </div>
 
-    <!-- Tab 切换 -->
-    <div class="tabs">
-      <div
-        class="tab-item"
-        :class="{ active: activeTab === 'questions' }"
-        @click="activeTab = 'questions'"
-      >
-        提问
+      <!-- Tab 切换 -->
+      <div class="tabs">
+        <div
+          class="tab-item"
+          :class="{ active: activeTab === 'questions' }"
+          @click="activeTab = 'questions'"
+        >
+          提问
+        </div>
+        <div
+          class="tab-item"
+          :class="{ active: activeTab === 'answers' }"
+          @click="activeTab = 'answers'"
+        >
+          回答
+        </div>
       </div>
-      <div
-        class="tab-item"
-        :class="{ active: activeTab === 'answers' }"
-        @click="activeTab = 'answers'"
-      >
-        回答
-      </div>
-    </div>
 
-    <!-- 内容区域 -->
-    <div class="content">
-      <div v-if="questionsLoading || answersLoading" class="loading">加载中...</div>
-      <div v-else-if="displayPosts.length === 0" class="empty">
-        {{ activeTab === 'questions' ? '暂无提问' : '暂无回答' }}
+      <!-- 内容区域 -->
+      <div class="content">
+        <PostCard
+          v-for="post in displayPosts"
+          :key="post.id"
+          :post="post"
+          @click="handlePostClick(post)"
+          @like="handlePostLike"
+        />
       </div>
-      <PostCard
-        v-else
-        v-for="post in displayPosts"
-        :key="post.id"
-        :post="post"
-        @click="handlePostClick(post)"
-        @like="handlePostLike"
-      />
-    </div>
+    </InfiniteScroll>
   </div>
 </template>
 
@@ -87,6 +92,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import PostCard from '../../components/post/PostCard.vue'
 import Avatar from '../../components/common/Avatar.vue'
+import InfiniteScroll from '../../components/common/InfiniteScroll.vue'
 import { getUserProfile, type UserProfile } from '../../api/user'
 import { getMyQuestions, type QuestionItem, toggleLikeQuestion } from '../../api/question'
 import { getMyAnswers, type AnswerItem } from '../../api/answer'
@@ -204,6 +210,15 @@ onMounted(async () => {
   ])
 })
 
+// 下拉刷新处理
+const handleRefresh = async () => {
+  await loadUserProfile()
+  await Promise.all([
+    loadMyQuestions(),
+    loadMyAnswers()
+  ])
+}
+
 // 根据 tab 显示不同的帖子
 const displayPosts = computed(() => {
   if (activeTab.value === 'questions') {
@@ -297,6 +312,11 @@ const handlePostLike = async (post: Post) => {
   text-align: center;
 }
 
+/* 无限滚动调整 */
+::v-deep .infinite-scroll-wrapper {
+  margin-top: 43px; /* header height (padding + content) */
+}
+
 /* 用户信息卡片 */
 .user-card {
   background: #fff;
@@ -304,8 +324,6 @@ const handlePostLike = async (post: Post) => {
   display: flex;
   align-items: center;
   gap: 12px;
-  /* margin-bottom: 8px; */
-  margin-top: 43px; /* header height (padding + content) */
 }
 
 .user-info {
@@ -450,14 +468,5 @@ const handlePostLike = async (post: Post) => {
 /* 内容区域 */
 .content {
   background: #fff;
-}
-
-/* 加载和空状态 */
-.loading,
-.empty {
-  padding: 60px 20px;
-  text-align: center;
-  color: #999;
-  font-size: 14px;
 }
 </style>
