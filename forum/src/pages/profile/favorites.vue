@@ -151,7 +151,7 @@ onBeforeRouteLeave(() => {
 
 // 恢复滚动位置
 onActivated(() => {
-  const savedScrollTop = scrollPositions.value[activeTab.value]
+  const savedScrollTop = scrollPositions.value[activeTab.value] ?? 0
   console.log(`📍 准备恢复 ${activeTab.value} tab 滚动位置:`, savedScrollTop)
   
   if (savedScrollTop > 0) {
@@ -174,7 +174,7 @@ watch(activeTab, (newTab, oldTab) => {
   }
   
   // 恢复新 tab 的滚动位置
-  const savedScrollTop = scrollPositions.value[newTab]
+  const savedScrollTop = scrollPositions.value[newTab] ?? 0
   if (savedScrollTop > 0) {
     nextTick(() => {
       requestAnimationFrame(() => {
