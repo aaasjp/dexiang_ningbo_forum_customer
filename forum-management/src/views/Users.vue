@@ -253,7 +253,7 @@ const fetchUsersList = async () => {
     }
     
     if (selectedRole.value) {
-      params.tag_id = selectedRole.value
+      params.forum_tag = userTags.value.find(tag => tag.tag_id === selectedRole.value).tag_name
     }
     
     if (searchKeyword.value) {

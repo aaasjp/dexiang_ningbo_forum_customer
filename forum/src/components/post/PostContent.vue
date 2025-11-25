@@ -53,10 +53,13 @@
     </div>
 
     <!-- 话题标签 -->
-    <div v-if="topic" class="post-topic" @click="handleTopicClick">
-      <span class="topic-hash">#</span>
-      <span class="topic-text">{{ topic }}</span>
+    <div v-if="topics && topics.length > 0" class="post-topics">
+      <div v-for="(topic,index) in topics" :key="index" class="post-topic" @click="handleTopicClick(topic.topic_id)">
+        <span class="topic-hash">#</span>
+        <span class="topic-text">{{ topic.title }}</span>
+      </div>
     </div>
+    
 
     <!-- 解决状态按钮 (提问类型都显示，但只有自己的才能点击) -->
     <div v-if="showSolveStatus" class="solve-status-container">
@@ -152,12 +155,8 @@ const handleImageClick = (imageUrl: string) => {
 }
 
 // 处理话题点击 - 跳转到话题详情页
-const handleTopicClick = () => {
-  // 从 topics 数组中获取第一个话题的 ID
-  if (props.topics && props.topics.length > 0 && props.topics[0]) {
-    const topicId = props.topics[0].topic_id
-    router.push(`/topic/${topicId}`)
-  }
+const handleTopicClick = (topicId: number) => {
+  router.push(`/topic/${topicId}`)
 }
 
 // 暴露给父组件使用
@@ -322,6 +321,7 @@ defineExpose({
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  margin-right: 8px;
 }
 
 .post-topic:hover {
