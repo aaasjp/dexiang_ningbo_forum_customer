@@ -186,7 +186,7 @@ const handleConfirm = async () => {
     handleClose()
   } catch (error) {
     console.error('保存标签失败:', error)
-    ElMessage.error('保存标签失败')
+    // ElMessage.error('保存标签失败')
   }
 }
 

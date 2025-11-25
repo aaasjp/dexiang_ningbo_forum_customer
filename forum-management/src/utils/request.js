@@ -92,7 +92,7 @@ request.interceptors.response.use(
     // 如果返回的状态码不是 200，统一处理错误提示
     if (res.code !== 200) {
       // 优先显示 detail 字段的信息，如果没有则显示"服务异常"
-      const errorMessage = res.detail || '服务异常'
+      const errorMessage = res.message || '服务异常'
       ElMessage.error(errorMessage)
       return Promise.reject(new Error(errorMessage))
     }
