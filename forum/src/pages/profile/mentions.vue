@@ -109,13 +109,23 @@ const formatTime = (dateStr: string) => {
 
 // 处理点击
 const handleMentionClick = (question: QuestionItem) => {
-  router.push(`/post/detail?id=${question.question_id}`)
+  router.push({
+    path: '/post/detail',
+    query: {
+      id: question.question_id
+    }
+  })
 }
 
 // 写回答
 const handleAnswer = (question: QuestionItem, event: Event) => {
   event.stopPropagation()
-  router.push(`/post/detail?id=${question.question_id}`)
+  router.push({
+    path: '/post/detail',
+    query: {
+      id: question.question_id
+    }
+  })
 }
 </script>
 

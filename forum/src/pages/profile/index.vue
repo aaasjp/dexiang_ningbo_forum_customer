@@ -238,7 +238,12 @@ const goToQuestions = () => router.push('/profile/answers')
 
 // 处理帖子点击
 const handlePostClick = (post: Post) => {
-  router.push(`/post/detail?id=${post.id}`)
+  router.push({
+    path: '/post/detail',
+    query: {
+      id: post.id
+    }
+  })
 }
 
 // 处理帖子点赞

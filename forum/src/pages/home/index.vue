@@ -283,7 +283,12 @@ const loadFollowUsers = async () => {
 // 处理用户点击
 const handleUserClick = (user: any) => {
   // 跳转到用户主页
-  router.push(`/profile/user?code=${user.id}`)
+  router.push({
+    path: '/profile/user',
+    query: {
+      code: user.id
+    }
+  })
 }
 
 // 过滤帖子

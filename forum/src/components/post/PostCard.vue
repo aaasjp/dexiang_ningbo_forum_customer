@@ -155,7 +155,12 @@ const handleAuthorClick = () => {
     router.push('/profile')
   } else {
     // 否则跳转到他人主页
-    router.push(`/profile/user?code=${staffCode}`)
+    router.push({
+      path: '/profile/user',
+      query: {
+        code: staffCode
+      }
+    })
   }
 }
 

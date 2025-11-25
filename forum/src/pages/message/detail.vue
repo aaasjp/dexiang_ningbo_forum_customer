@@ -158,9 +158,19 @@ const handleItemClick = async (item: any) => {
   
   // 根据消息类型跳转
   if (item.target_type === 'question' && item.target_id) {
-    router.push(`/post/detail?id=${item.target_id}`)
+    router.push({
+      path: '/post/detail',
+      query: {
+        id: item.target_id
+      }
+    })
   } else if (item.target_type === 'answer' && item.target_id) {
-    router.push(`/post/detail?id=${item.target_id}`)
+    router.push({
+      path: '/post/detail',
+      query: {
+        id: item.target_id
+      }
+    })
   }
 }
 </script>

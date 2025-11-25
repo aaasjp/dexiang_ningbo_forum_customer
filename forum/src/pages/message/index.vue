@@ -300,7 +300,12 @@ const handleMessageClick = async (message: any) => {
   
   // question、answer、comment 类型跳转到对应的帖子详情
   if (['question', 'answer', 'comment'].includes(targetType) && targetId) {
-    router.push(`/post/detail?id=${targetId}`)
+    router.push({
+      path: '/post/detail',
+      query: {
+        id: targetId
+      }
+    })
   } else if (targetType === 'points') {
     // points 类型保持现有逻辑，不跳转或跳转到积分页面
     // 这里可以根据需求决定是否跳转

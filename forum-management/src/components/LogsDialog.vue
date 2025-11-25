@@ -50,13 +50,9 @@
               <el-table-column prop="sequence" label="序号" width="80" align="center" />
               <el-table-column prop="user_code" label="用户工号" width="120" />
               <el-table-column prop="user_name" label="用户姓名" width="120" />
-              <el-table-column prop="operation_type" label="操作类型" width="150">
-                <template #default="{ row }">
-                  <span>{{ formatOperationType(row.operation_type) }}</span>
-                </template>
-              </el-table-column>
+              <el-table-column prop="operation_type" label="操作类型" width="200" />
               <el-table-column prop="content" label="操作内容" min-width="200" show-overflow-tooltip />
-              <el-table-column prop="ip_address" label="IP地址" width="140" />
+              <!-- <el-table-column prop="ip_address" label="IP地址" width="140" /> -->
               <el-table-column prop="create_time" label="操作时间" width="180">
                 <template #default="{ row }">
                   <span>{{ formatTime(row.create_time) }}</span>

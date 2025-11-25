@@ -120,7 +120,12 @@ const toggleFollow = async (user: UserListItem) => {
 
 // 跳转到用户主页
 const goToUserProfile = (staffCode: string) => {
-  router.push(`/profile/user?code=${staffCode}`)
+  router.push({
+    path: '/profile/user',
+    query: {
+      code: staffCode
+    }
+  })
 }
 
 // 返回
