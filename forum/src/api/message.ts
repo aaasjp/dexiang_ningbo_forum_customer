@@ -3,7 +3,7 @@ import { get, post, del } from './request'
 // 消息类型
 export interface MessageItem {
   message_id: number
-  message_type: 'personal' | 'department' | 'system'
+  message_type: 'personal' | 'department' | 'system' | 'global'
   title: string
   content: string
   target_type?: string
@@ -109,7 +109,7 @@ export function markMessageAsRead(messageId: number, messageType: string) {
 /**
  * 标记所有消息为已读
  */
-export function markAllMessagesAsRead(messageType?: 'personal' | 'department' | 'system') {
+export function markAllMessagesAsRead(messageType?: 'personal' | 'department' | 'system' | 'global') {
   return post<{ count: number }>('/api/messages/read-all', null, {
     params: messageType ? { message_type: messageType } : undefined
   })
