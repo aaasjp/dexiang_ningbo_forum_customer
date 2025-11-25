@@ -118,24 +118,14 @@ const goBack = () => {
 const handleEdit = (answer: AnswerItem) => {
   activeMenuId.value = null
   // 跳转到编辑页面
-  router.push({
-    path: '/post/detail',
-    query: {
-      id: answer.question_id
-    }
-  })
+  router.push(`/post/${answer.question_id}`)
 }
 
 // 追加回答
 const handleAddReply = (answer: AnswerItem) => {
   activeMenuId.value = null
   // 跳转到问题详情页
-  router.push({
-    path: '/post/detail',
-    query: {
-      id: answer.question_id
-    }
-  })
+  router.push(`/post/${answer.question_id}`)
 }
 
 // 删除回答

@@ -203,31 +203,16 @@ const goBack = () => {
 // 处理回答点击
 const handleAnswerClick = (item: FavoriteItem) => {
   if (item.type === 'question') {
-    router.push({
-      path: '/post/detail',
-      query: {
-        id: item.id
-      }
-    })
+    router.push(`/post/${item.id}`)
   } else {
     // 跳转到问题详情页，并定位到该回答
-    router.push({
-      path: '/post/detail',
-      query: {
-        id: item.question_id
-      }
-    })
+    router.push(`/post/${item.id}`)
   }
 }
 
 // 处理话题点击
 const handleTopicClick = (topic: Topic) => {
-  router.push({
-    path: '/topic/detail',
-    query: {
-      id: topic.topic_id
-    }
-  })
+  router.push(`/topic/${topic.topic_id}`)
 }
 
 // 取消收藏回答/问题
