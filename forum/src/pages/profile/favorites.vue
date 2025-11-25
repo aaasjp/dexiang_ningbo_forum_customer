@@ -122,15 +122,75 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, watch, nextTick, onActivated } from 'vue'
+import { useRouter, onBeforeRouteLeave } from 'vue-router'
 import { ArrowLeft, MoreFilled } from '@element-plus/icons-vue'
 import { getMyFavorites, type FavoriteItem } from '../../api/question'
 import { getMyFavoriteTopics, type Topic } from '../../api/topic'
 import Avatar from '../../components/common/Avatar.vue'
 
+defineOptions({
+  name: 'Favorites'
+})
+
 const router = useRouter()
 const activeTab = ref<'answers' | 'topics'>('answers')
+
+// 为每个 tab 保存滚动位置
+const scrollPositions = ref<Record<string, number>>({
+  answers: 0,
+  topics: 0
+})
+
+// 保存当前 tab 的滚动位置
+onBeforeRouteLeave(() => {
+  const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop
+  scrollPositions.value[activeTab.value] = scrollTop
+  console.log(`💾 保存 ${activeTab.value} tab 滚动位置:`, scrollTop)
+})
+
+// 恢复滚动位置
+onActivated(() => {
+  const savedScrollTop = scrollPositions.value[activeTab.value]
+  console.log(`📍 准备恢复 ${activeTab.value} tab 滚动位置:`, savedScrollTop)
+  
+  if (savedScrollTop > 0) {
+    nextTick(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, savedScrollTop)
+        console.log(`✅ ${activeTab.value} tab 滚动位置已恢复:`, savedScrollTop, '当前位置:', window.scrollY)
+      })
+    })
+  }
+})
+
+// 监听 tab 切换，保存当前 tab 的滚动位置并恢复新 tab 的滚动位置
+watch(activeTab, (newTab, oldTab) => {
+  // 保存旧 tab 的滚动位置
+  if (oldTab) {
+    const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop
+    scrollPositions.value[oldTab] = scrollTop
+    console.log(`💾 切换 tab，保存 ${oldTab} 滚动位置:`, scrollTop)
+  }
+  
+  // 恢复新 tab 的滚动位置
+  const savedScrollTop = scrollPositions.value[newTab]
+  if (savedScrollTop > 0) {
+    nextTick(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, savedScrollTop)
+        console.log(`✅ 切换到 ${newTab} tab，恢复滚动位置:`, savedScrollTop)
+      })
+    })
+  } else {
+    // 如果没有保存的位置，滚动到顶部
+    nextTick(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0)
+      })
+    })
+  }
+})
 
 // 收藏的回答数据
 const favoriteAnswers = ref<FavoriteItem[]>([])

@@ -2,7 +2,7 @@
   <div class="app-container">
     <Layout>
       <router-view v-slot="{ Component }">
-        <keep-alive :include="['Home', 'Topic', 'Message', 'Profile']">
+        <keep-alive :include="['Home', 'Topic', 'Message', 'Profile', 'Favorites']">
           <component :is="Component" />
         </keep-alive>
       </router-view>
@@ -23,17 +23,7 @@ const userStore = useUserStore()
 // 应用初始化时获取用户信息
 onMounted(async () => {
   try {
-    // 检查 URL 中是否有 session 参数
-    const urlParams = window.location.hash
-    const sessionFromUrl = urlParams.split('?')[1]?.split('=')[1]
-    console.log("🚀 ~ sessionFromUrl:", sessionFromUrl)
-    
-    if (sessionFromUrl) {
-      // 如果 URL 中有 session 参数，刷新 MOCK_SESSION
-      refreshMockSession()
-      console.log('从 URL 获取到 session 参数，已更新 MOCK_SESSION')
-    }
-    
+    refreshMockSession()
     // 不管 localStorage 中有没有用户信息，都强制从服务器重新获取
     await userStore.fetchUserProfile(true)
     console.log('用户信息已更新到 localStorage')

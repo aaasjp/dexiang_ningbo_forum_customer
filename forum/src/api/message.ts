@@ -95,12 +95,6 @@ export function getSystemMessages(page = 1, pageSize = 20) {
   })
 }
 
-/**
- * 标记系统消息为已读
- */
-export function markSystemMessagesAsRead() {
-  return post('/api/messages/system/read')
-}
 
 /**
  * 标记消息为已读

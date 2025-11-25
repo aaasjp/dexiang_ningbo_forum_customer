@@ -82,7 +82,7 @@ import {
   getDepartmentMessages, 
   getSystemMessages,
   markMessageAsRead,
-  markSystemMessagesAsRead,
+  // markSystemMessagesAsRead,
   type MessageItem,
   type SystemMessage
 } from '../../api/message'
@@ -233,17 +233,6 @@ const formatTime = (dateStr: string) => {
 
 // 跳转到系统消息详情
 const goToSystemMessages = async () => {
-  // 标记系统消息为已读
-  try {
-    await markSystemMessagesAsRead()
-    // 标记成功后，更新本地状态，移除红点
-    systemMessages.value.forEach(msg => {
-      msg.is_read = true
-    })
-  } catch (error) {
-    console.error('标记系统消息已读失败:', error)
-  }
-  
   router.push({
     path: `/message/detail`,
     query: {
@@ -256,18 +245,18 @@ const goToSystemMessages = async () => {
 // 跳转到部门消息详情
 const goToDepartmentMessages = async () => {
   // 标记部门消息为已读（如果有第一条消息）
-  if (departmentMessages.value.length > 0) {
-    const firstMsg = departmentMessages.value[0]
-    if (firstMsg) {
-      try {
-        await markMessageAsRead(firstMsg.message_id)
-        // 标记成功后，更新本地状态，移除红点
-        firstMsg.is_read = true
-      } catch (error) {
-        console.error('标记部门消息已读失败:', error)
-      }
-    }
-  }
+  // if (departmentMessages.value.length > 0) {
+  //   const firstMsg = departmentMessages.value[0]
+  //   if (firstMsg) {
+  //     try {
+  //       await markMessageAsRead(firstMsg.message_id)
+  //       // 标记成功后，更新本地状态，移除红点
+  //       firstMsg.is_read = true
+  //     } catch (error) {
+  //       console.error('标记部门消息已读失败:', error)
+  //     }
+  //   }
+  // }
   
   router.push({
     path: `/message/detail`,
@@ -300,7 +289,7 @@ const handleMessageClick = async (message: any) => {
   
   // question、answer、comment 类型跳转到对应的帖子详情
   if (['question', 'answer', 'comment'].includes(targetType) && targetId) {
-    router.push(`/post/{targetId}`)
+    router.push(`/post/${targetId}`)
   } else if (targetType === 'points') {
     // points 类型保持现有逻辑，不跳转或跳转到积分页面
     // 这里可以根据需求决定是否跳转

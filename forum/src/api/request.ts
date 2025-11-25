@@ -7,8 +7,39 @@ import { ElMessage } from 'element-plus'
 
 // 从 URL 中获取 session 参数
 function getSessionFromUrl(): string | null {
-  const urlParams = window.location.hash.split('?')[1]?.split('=')[1] || null
-  return urlParams
+  const hash = window.location.hash
+  // 获取 session 字段，不能按照位置获取，需要格式化 window.location.hash 成对象，获取 session 字段对应的内容
+  
+  if (!hash) {
+    return null
+  }
+  
+  // 去掉 # 符号
+  const hashWithoutSharp = hash.substring(1)
+  
+  // 查找 ? 的位置，分离路径和查询参数
+  const queryIndex = hashWithoutSharp.indexOf('?')
+  if (queryIndex === -1) {
+    return null
+  }
+  
+  // 提取查询参数字符串
+  const queryString = hashWithoutSharp.substring(queryIndex + 1)
+  
+  // 解析查询参数成对象
+  const params: Record<string, string> = {}
+  const pairs = queryString.split('&')
+  
+  for (const pair of pairs) {
+    const [key, value] = pair.split('=')
+    if (key && value) {
+      // 解码 URL 编码的值
+      params[decodeURIComponent(key)] = decodeURIComponent(value)
+    }
+  }
+  
+  // 返回 session 字段的值
+  return params.session || null
 }
 
 // 获取 MOCK_SESSION：优先从 URL 获取，如果没有则使用默认值
@@ -16,7 +47,13 @@ function getMockSession(): string {
   const urlSession = getSessionFromUrl()
   if (urlSession) {
     // URL 中的 session 可能已经编码，也可能未编码，这里确保编码
+    localStorage.setItem('session', urlSession)
     return encodeURIComponent(decodeURIComponent(urlSession))
+  } else {
+    const localStorageSession = localStorage.getItem('session')
+    if (localStorageSession) {
+      return encodeURIComponent(decodeURIComponent(localStorageSession))
+    }
   }
   // 默认的 session（对中文进行编码以符合 HTTP header 规范）
   return encodeURIComponent('appid=500883957,name=王十二,depatment=人力资源部,orgId=2,jobTitle=普通员工, gender=2, status=1,jobNo=staff010')
@@ -40,7 +77,7 @@ export interface ApiResponse<T = any> {
 
 // 创建axios实例
 const instance: AxiosInstance = axios.create({
-  // baseURL: '/api',
+  baseURL: '/shsqltApi',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

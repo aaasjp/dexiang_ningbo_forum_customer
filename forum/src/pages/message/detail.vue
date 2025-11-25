@@ -33,6 +33,7 @@
           >
             {{ getTagText(item) }}
           </div>
+         
           <!-- 未读标识 -->
           <div v-if="item.unread" class="unread-dot"></div>
         </div>
@@ -47,7 +48,6 @@
             {{ item.content }}
           </div>
         </div>
-
         <!-- 官方消息的未读标识（右上角） -->
         <div v-if="messageType !== 'department' && item.unread" class="unread-dot"></div>
       </div>
@@ -152,6 +152,11 @@ const handleItemClick = async (item: any) => {
   // 标记为已读
   try {
     await markMessageAsRead(item.id)
+    // 更新原始数据源中的 is_read 状态，这样 computed 会自动更新
+    const originalMessage = messages.value.find((msg: any) => msg.message_id === item.id)
+    if (originalMessage) {
+      (originalMessage as any).is_read = true
+    }
   } catch (error) {
     console.error('标记已读失败:', error)
   }
