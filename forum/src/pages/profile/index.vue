@@ -212,7 +212,7 @@ const displayPosts = computed(() => {
   } else {
     // 转换回答为Post格式
     return myAnswers.value.map(a => ({
-      id: String(a.answer_id),
+      id: String(a.question_id),
       author: {
         name: a.answerer_name,
         avatar: '👤'

@@ -24,8 +24,9 @@ const userStore = useUserStore()
 onMounted(async () => {
   try {
     // 检查 URL 中是否有 session 参数
-    const urlParams = new URLSearchParams(window.location.search)
-    const sessionFromUrl = urlParams.get('session')
+    const urlParams = window.location.hash
+    const sessionFromUrl = urlParams.split('?')[1]?.split('=')[1]
+    console.log("🚀 ~ sessionFromUrl:", sessionFromUrl)
     
     if (sessionFromUrl) {
       // 如果 URL 中有 session 参数，刷新 MOCK_SESSION

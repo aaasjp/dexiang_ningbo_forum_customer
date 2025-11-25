@@ -7,8 +7,8 @@ import { ElMessage } from 'element-plus'
 
 // 从 URL 中获取 session 参数
 function getSessionFromUrl(): string | null {
-  const urlParams = new URLSearchParams(window.location.search)
-  return urlParams.get('session')
+  const urlParams = window.location.hash.split('?')[1]?.split('=')[1] || null
+  return urlParams
 }
 
 // 获取 MOCK_SESSION：优先从 URL 获取，如果没有则使用默认值
