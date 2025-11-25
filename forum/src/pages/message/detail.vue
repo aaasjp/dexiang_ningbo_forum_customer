@@ -120,7 +120,8 @@ const messageItems = computed(() => {
     time: formatTime(msg.create_time),
     unread: !msg.is_read,
     target_type: msg.target_type,
-    target_id: msg.target_id
+    target_id: msg.target_id,
+    message_type: msg.message_type
   }))
 })
 
@@ -151,7 +152,7 @@ const goBack = () => {
 const handleItemClick = async (item: any) => {
   // 标记为已读
   try {
-    await markMessageAsRead(item.id)
+    await markMessageAsRead(item.id, item.message_type)
     // 更新原始数据源中的 is_read 状态，这样 computed 会自动更新
     const originalMessage = messages.value.find((msg: any) => msg.message_id === item.id)
     if (originalMessage) {
