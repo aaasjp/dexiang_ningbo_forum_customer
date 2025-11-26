@@ -81,7 +81,7 @@ const instance: AxiosInstance = axios.create({
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
-    'gw_session': MOCK_SESSION
+    // 'gw_session': MOCK_SESSION
   }
 })
 
@@ -89,9 +89,9 @@ const instance: AxiosInstance = axios.create({
 instance.interceptors.request.use(
   (config) => {
     // 确保每个请求都带上gw_session
-    if (!config.headers['gw_session']) {
-      config.headers['gw_session'] = MOCK_SESSION
-    }
+    // if (!config.headers['gw_session']) {
+    //   config.headers['gw_session'] = MOCK_SESSION
+    // }
     return config
   },
   (error) => {
