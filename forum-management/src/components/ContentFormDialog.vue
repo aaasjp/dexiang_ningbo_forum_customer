@@ -305,15 +305,9 @@ const initFormData = () => {
   if (props.data) {
     const selectedIds = []
     
-    // 初始化部门 - 使用 related_dept_ids
-    if (props.data.related_dept_ids && props.data.related_dept_ids.length > 0) {
-      selectedIds.push(...props.data.related_dept_ids.map(deptId => `dept_${deptId}`))
-    }
-    
-    // 初始化人员 - 使用 related_staff_codes，需要在部门树中查找对应的部门ID
-    if (props.data.related_staff_codes && props.data.related_staff_codes.length > 0) {
-      // 等待部门树加载完成后再处理人员回填
-      // 这部分逻辑会在 watch departmentTreeData 中处理
+    // 初始化部门 - 使用 related_depts (对象数组，包含 dept_id 和 dept_name)
+    if (props.data.related_depts && props.data.related_depts.length > 0) {
+      selectedIds.push(...props.data.related_depts.map(dept => `dept_${dept.dept_id}`))
     }
     
     selectedDepartmentStaffIds.value = selectedIds
@@ -336,13 +330,13 @@ const loadDepartments = async () => {
     const res = await getDepartmentTree({})
     if (res.data && res.data.departments) {
       departmentTreeData.value = res.data.departments
-      // 部门树加载完成后，处理人员回填
-      if (props.data && props.data.related_staff_codes && props.data.related_staff_codes.length > 0) {
+      // 部门树加载完成后，处理人员回填 - 使用 related_staffs (对象数组，包含 staff_id, staff_code, staff_name)
+      if (props.data && props.data.related_staffs && props.data.related_staffs.length > 0) {
         const staffIds = []
-        props.data.related_staff_codes.forEach(staffCode => {
-          const deptId = findStaffDeptId(departmentTreeData.value, staffCode)
+        props.data.related_staffs.forEach(staff => {
+          const deptId = findStaffDeptId(departmentTreeData.value, staff.staff_code)
           if (deptId) {
-            staffIds.push(`staff_${deptId}_${staffCode}`)
+            staffIds.push(`staff_${deptId}_${staff.staff_code}`)
           }
         })
         // 合并部门和人员选择
