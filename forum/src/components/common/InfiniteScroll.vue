@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, onActivated, onDeactivated, watch } from 'vue'
 
 interface Props {
   // 是否正在加载
@@ -101,6 +101,9 @@ const emit = defineEmits<Emits>()
 const wrapperRef = ref<HTMLElement>()
 const isLoadingMore = ref(false)
 
+// 标记组件是否处于激活状态（用于 keep-alive）
+const isActive = ref(true)
+
 // 下拉刷新相关状态
 const pullStatus = ref<'idle' | 'pulling' | 'can-release' | 'refreshing'>('idle')
 const pullDistance = ref(0)
@@ -139,6 +142,9 @@ const checkReachBottom = () => {
 
 // 滚动事件处理
 const handleScroll = () => {
+  // 如果组件未激活，不处理滚动事件
+  if (!isActive.value) return
+  
   // 如果正在加载或已加载完，不触发
   if (props.loading || props.noMore || props.isEmpty) return
   
@@ -151,6 +157,8 @@ const handleScroll = () => {
 
 // 下拉刷新 - 触摸开始
 const handleTouchStart = (e: TouchEvent) => {
+  // 如果组件未激活，不处理触摸事件
+  if (!isActive.value) return
   if (!props.enablePullRefresh || !e.touches || !e.touches[0]) return
   
   const scrollTop = window.pageYOffset || document.documentElement.scrollTop
@@ -164,6 +172,8 @@ const handleTouchStart = (e: TouchEvent) => {
 
 // 下拉刷新 - 触摸移动
 const handleTouchMove = (e: TouchEvent) => {
+  // 如果组件未激活，不处理触摸事件
+  if (!isActive.value) return
   if (!props.enablePullRefresh || !isPulling.value || !e.touches || !e.touches[0]) return
   
   const currentY = e.touches[0].clientY
@@ -188,6 +198,8 @@ const handleTouchMove = (e: TouchEvent) => {
 
 // 下拉刷新 - 触摸结束
 const handleTouchEnd = () => {
+  // 如果组件未激活，不处理触摸事件
+  if (!isActive.value) return
   if (!props.enablePullRefresh || !isPulling.value) return
   
   isPulling.value = false
@@ -238,7 +250,8 @@ const throttle = (func: Function, delay: number) => {
 
 const throttledScroll = throttle(handleScroll, 200)
 
-onMounted(() => {
+// 添加事件监听器
+const addEventListeners = () => {
   window.addEventListener('scroll', throttledScroll)
   
   if (props.enablePullRefresh) {
@@ -246,9 +259,10 @@ onMounted(() => {
     window.addEventListener('touchmove', handleTouchMove, { passive: false })
     window.addEventListener('touchend', handleTouchEnd)
   }
-})
+}
 
-onUnmounted(() => {
+// 移除事件监听器
+const removeEventListeners = () => {
   window.removeEventListener('scroll', throttledScroll)
   
   if (props.enablePullRefresh) {
@@ -256,6 +270,28 @@ onUnmounted(() => {
     window.removeEventListener('touchmove', handleTouchMove)
     window.removeEventListener('touchend', handleTouchEnd)
   }
+}
+
+onMounted(() => {
+  addEventListeners()
+})
+
+onUnmounted(() => {
+  removeEventListeners()
+})
+
+// keep-alive 激活时重新添加事件监听器
+onActivated(() => {
+  isActive.value = true
+  addEventListeners()
+})
+
+// keep-alive 失活时移除事件监听器，避免多个页面同时响应滚动事件
+onDeactivated(() => {
+  isActive.value = false
+  removeEventListeners()
+  // 重置下拉刷新状态
+  resetPullRefresh()
 })
 
 // 暴露重置方法

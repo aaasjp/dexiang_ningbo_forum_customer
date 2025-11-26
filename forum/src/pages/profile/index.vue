@@ -8,7 +8,7 @@
     <!-- 整个页面使用无限滚动支持下拉刷新 -->
     <InfiniteScroll
       :loading="questionsLoading || answersLoading"
-      :no-more="true"
+      :no-more="displayPosts.length > 0"
       :is-empty="displayPosts.length === 0"
       :enable-pull-refresh="true"
       :empty-text="activeTab === 'questions' ? '暂无提问' : '暂无回答'"
