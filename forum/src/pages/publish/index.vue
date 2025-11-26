@@ -472,6 +472,7 @@ const loadEditData = async (questionId: number) => {
         const newSelectedMembers = new Map<string, Set<string>>()
         const allMentionedNames: string[] = []
         
+        // 首先处理部门
         if (data.related_dept_ids && data.related_dept_ids.length > 0) {
           data.related_dept_ids.forEach(deptId => {
             if (!newSelectedMembers.has(String(deptId))) {
@@ -484,20 +485,53 @@ const loadEditData = async (questionId: number) => {
           allMentionedNames.push(...deptNames)
         }
         
+        // 然后处理员工 - 正确分配到员工所属部门
         if (data.related_staff_codes && data.related_staff_codes.length > 0) {
-          // 这里简化处理，将员工放在第一个部门下
-          // 实际应该根据员工所属部门来分配
+          // 创建一个函数来查找员工所属的部门
+          const findStaffDepartment = (staffCode: string, depts: DepartmentInfo[]): number | null => {
+            for (const dept of depts) {
+              // 在当前部门的员工中查找
+              if (dept.staffs && dept.staffs.length > 0) {
+                const staff = dept.staffs.find(s => s.staff_code === staffCode)
+                if (staff) {
+                  return dept.dept_id
+                }
+              }
+              // 递归查找子部门
+              if (dept.children && dept.children.length > 0) {
+                const foundDeptId = findStaffDepartment(staffCode, dept.children)
+                if (foundDeptId) {
+                  return foundDeptId
+                }
+              }
+            }
+            return null
+          }
+
+          // 为每个员工找到其所属部门并正确分配
           data.related_staff_codes.forEach(staffCode => {
-            const firstDeptId = data.related_dept_ids?.[0]
-            if (firstDeptId) {
-              const deptKey = String(firstDeptId)
+            const staffDeptId = findStaffDepartment(staffCode, departments.value)
+            
+            if (staffDeptId) {
+              // 员工有明确的所属部门，分配到该部门下
+              const deptKey = String(staffDeptId)
               if (!newSelectedMembers.has(deptKey)) {
                 newSelectedMembers.set(deptKey, new Set())
               }
               newSelectedMembers.get(deptKey)?.add(staffCode)
+            } else {
+              // 如果找不到员工所属部门，分配到第一个部门（向后兼容）
+              const firstDeptId = data.related_dept_ids?.[0]
+              if (firstDeptId) {
+                const deptKey = String(firstDeptId)
+                if (!newSelectedMembers.has(deptKey)) {
+                  newSelectedMembers.set(deptKey, new Set())
+                }
+                newSelectedMembers.get(deptKey)?.add(staffCode)
+              }
             }
           })
-          
+
           // 将员工姓名添加到显示列表
           const staffNames = findStaffNamesByStaffCodes(data.related_staff_codes, departments.value)
           allMentionedNames.push(...staffNames)
