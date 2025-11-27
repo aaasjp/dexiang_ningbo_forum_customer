@@ -87,6 +87,7 @@ export interface ApiResponse<T = any> {
 // 创建axios实例
 const instance: AxiosInstance = axios.create({
   // baseURL: '/shsqltApi',
+  baseURL: '/shsqltApi',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
