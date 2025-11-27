@@ -1,6 +1,24 @@
 import request from '@/utils/request'
 
 /**
+ * 上传图片
+ * @param {File} file - 图片文件
+ */
+export function uploadImage(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  return request({
+    url: '/upload/image',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
+/**
  * 获取话题列表
  * @param {Object} params - 查询参数
  * @param {number} params.page - 页码

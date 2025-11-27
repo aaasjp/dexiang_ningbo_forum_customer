@@ -65,6 +65,7 @@ import { ref, watch } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
 import FormDialog from './FormDialog.vue'
 import { ElMessage } from 'element-plus'
+import { uploadImage } from '@/api/topics'
 
 const props = defineProps({
   modelValue: {
@@ -110,25 +111,43 @@ const formRules = {
   ]
 }
 
-const beforeUpload = (file) => {
+const beforeUpload = async (file) => {
   const isImage = ['image/png', 'image/jpg', 'image/jpeg'].includes(file.type)
   const isLt5M = file.size / 1024 / 1024 < 5
 
   if (!isImage) {
-    //ElMessage.error('只能上传 PNG/JPG 格式的图片！')
+    ElMessage.error('只能上传 PNG/JPG 格式的图片！')
     return false
   }
   if (!isLt5M) {
-    //ElMessage.error('图片大小不能超过 5MB！')
+    ElMessage.error('图片大小不能超过 5MB！')
     return false
   }
   
-  // 预览图片
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    formData.value.coverImage = e.target.result
+  try {
+    // 显示预览
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      formData.value.coverImage = e.target.result
+    }
+    reader.readAsDataURL(file)
+    
+    // 上传图片到服务器
+    const response = await uploadImage(file)
+    if (response.code === 200 && response.data.image_url) {
+      // 保存服务器返回的图片URL
+      formData.value.coverImage = response.data.image_url
+      ElMessage.success('图片上传成功')
+    } else {
+      throw new Error('上传失败')
+    }
+  } catch (error) {
+    console.error('图片上传失败:', error)
+    ElMessage.error('图片上传失败，请重试')
+    // 清除预览
+    formData.value.coverImage = ''
+    return false
   }
-  reader.readAsDataURL(file)
   
   return false // 阻止自动上传
 }

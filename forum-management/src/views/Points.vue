@@ -19,7 +19,7 @@
           <el-table-column prop="points" label="积分值" width="300" align="center" />
           <el-table-column label="操作" width="300" align="center">
             <template #default="{ row }">
-              <div class="action-buttons">
+              <!-- <div class="action-buttons">
                 <el-button type="warning" link @click="handleEdit(row)">编辑</el-button>
                 <el-dropdown popper-class="dark-dropdown" @command="handleCommand($event, row)">
                   <el-icon class="more-icon"><MoreFilled /></el-icon>
@@ -29,7 +29,8 @@
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
-              </div>
+              </div> -->
+              <div class="action-buttons" @click="handleDelete(row)">删除</div>
             </template>
           </el-table-column>
         </el-table>
@@ -171,11 +172,17 @@ const handleFormConfirm = async (data) => {
 }
 
 // 下拉菜单命令
-const handleCommand = (command, row) => {
-  if (command === 'delete') {
-    currentDeleteRow.value = row
-    showDeleteDialog.value = true
-  }
+// const handleCommand = (command, row) => {
+//   if (command === 'delete') {
+//     currentDeleteRow.value = row
+//     showDeleteDialog.value = true
+//   }
+// }
+
+// 处理删除
+const handleDelete = (row) => {
+  currentDeleteRow.value = row
+  showDeleteDialog.value = true
 }
 
 // 删除确认
@@ -262,6 +269,11 @@ onMounted(() => {
   padding-top: 24px;
   display: flex;
   justify-content: flex-end;
+}
+
+.action-buttons {
+  cursor: pointer;
+  color: #409EFF;
 }
 </style>
 
