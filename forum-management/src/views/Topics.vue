@@ -178,6 +178,12 @@ const handleEditTopic = (topic) => {
 // 话题表单提交
 const handleTopicFormConfirm = async (data) => {
   try {
+    // 检查封面图片是否为base64格式（本地预览图），如果是则提示用户重新上传
+    if (data.coverImage && data.coverImage.startsWith('data:')) {
+      ElMessage.error('请重新选择图片进行上传')
+      return
+    }
+
     if (isEdit.value) {
       // 编辑话题
       await updateTopic(currentEditTopic.value.topicId, {
@@ -199,6 +205,7 @@ const handleTopicFormConfirm = async (data) => {
     fetchTopicsList()
   } catch (error) {
     console.error('操作失败:', error)
+    ElMessage.error('操作失败，请重试')
   }
 }
 

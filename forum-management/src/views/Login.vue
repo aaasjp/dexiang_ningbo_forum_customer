@@ -76,17 +76,17 @@ const rules = {
 }
 
 const buildGwSession = (payload) => {
-  const parts = [
-    `appid=${APP_ID}`,
-    `name=${payload?.name ?? ''}`,
-    `department=${payload?.department ?? ''}`,
-    `orgId=${payload?.orgId ?? ''}`,
-    `jobTitle=${payload?.jobTitle ?? ''}`,
-    `gender=${payload?.gender ?? ''}`,
-    `status=${payload?.status ?? ''}`,
-    `jobNo=${payload?.jobNo ?? form.job_no}`
-  ]
-  return encodeURIComponent(parts.join(','))
+  const sessionData = {
+    appid: APP_ID,
+    name: payload?.name ?? '',
+    department: payload?.department ?? '',
+    orgId: payload?.orgId ?? '',
+    jobTitle: payload?.jobTitle ?? '',
+    gender: payload?.gender ?? '',
+    status: payload?.status ?? '',
+    jobNo: payload?.jobNo ?? form.job_no
+  }
+  return encodeURIComponent(JSON.stringify(sessionData))
 }
 
 const handleLogin = () => {

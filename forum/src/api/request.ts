@@ -56,7 +56,16 @@ function getMockSession(): string {
     }
   }
   // 默认的 session（对中文进行编码以符合 HTTP header 规范）
-  return encodeURIComponent('appid=500883957,name=王十二,depatment=人力资源部,orgId=2,jobTitle=普通员工, gender=2, status=1,jobNo=staff010')
+  return encodeURIComponent(JSON.stringify({
+    appid: '500883957',
+    name: '王十二',
+    department: '人力资源部',
+    orgId: '2',
+    jobTitle: '普通员工',
+    gender: '2',
+    status: '1',
+    jobNo: 'staff010'
+  }))
 }
 
 // 模拟的gw_session
