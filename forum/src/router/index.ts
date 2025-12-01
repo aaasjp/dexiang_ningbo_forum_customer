@@ -60,12 +60,6 @@ const routes = [
     meta: { showTabBar: false }
   },
   {
-    path: '/profile/home/:id?',
-    name: 'ProfileHome',
-    component: () => import('../pages/profile/home.vue'),
-    meta: { showTabBar: false }
-  },
-  {
     path: '/profile/favorites',
     name: 'Favorites',
     component: () => import('../pages/profile/favorites.vue'),

@@ -336,7 +336,7 @@ const goToUserProfile = () => {
     router.push('/profile')
   } else {
     // 否则跳转到他人主页
-    router.push(`/profile/home/${staffCode}`)
+    router.push(`/profile/user/${staffCode}`)
   }
 }
 
