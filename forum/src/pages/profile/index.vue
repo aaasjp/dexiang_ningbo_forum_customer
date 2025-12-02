@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import PostCard from '../../components/post/PostCard.vue'
 import Avatar from '../../components/common/Avatar.vue'
@@ -208,6 +208,11 @@ onMounted(async () => {
     loadMyQuestions(),
     loadMyAnswers()
   ])
+})
+
+
+onActivated(() => {
+  loadUserProfile()
 })
 
 // 下拉刷新处理
