@@ -8,13 +8,25 @@
       <!-- 时间筛选 -->
       <div class="filter-section">
         <el-select v-model="timeRange" placeholder="请选择时间" style="width: 200px; height: 44px" class="custom-select">
-          <el-option label="全部时间" value="all" />
-          <el-option label="一周" value="一周" />
-          <el-option label="一个月" value="一个月" />
-          <el-option label="3个月" value="3个月" />
-          <el-option label="半年" value="半年" />
-          <el-option label="一年" value="一年" />
+          <el-option label="今日" value="today" />
+          <el-option label="最近一周" value="week" />
+          <el-option label="最近一个月" value="month" />
+          <el-option label="自由选时间" value="custom" />
         </el-select>
+        <el-date-picker
+          v-if="timeRange === 'custom'"
+          v-model="customDateRange"
+          type="datetimerange"
+          range-separator="至"
+          start-placeholder="开始时间"
+          end-placeholder="结束时间"
+          format="YYYY-MM-DD HH:mm:ss"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          style="margin-left: 12px; width: 380px; height: 44px;"
+          class="custom-date-picker"
+          :disabled-date="disabledDate"
+          @change="handleCustomDateChange"
+        />
       </div>
 
       <!-- 统计卡片 -->
@@ -82,7 +94,8 @@ import { ref, onMounted, watch } from 'vue'
 import { getDashboardData } from '@/api/dashboard'
 import { ElMessage } from 'element-plus'
 
-const timeRange = ref('all')
+const timeRange = ref('today')
+const customDateRange = ref(null)
 const loading = ref(false)
 const stats = ref({
   activeUsers: '0',
@@ -93,6 +106,17 @@ const stats = ref({
 const departments = ref([])
 const topTopics = ref([])
 
+// 格式化日期时间为 YYYY-MM-DD HH:mm:ss 格式
+const formatDateTime = (date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
 // 获取时间范围参数
 const getTimeParams = () => {
   const now = new Date()
@@ -101,24 +125,50 @@ const getTimeParams = () => {
 
   switch (timeRange.value) {
     case 'today':
-      start_time = new Date(now.setHours(0, 0, 0, 0)).toISOString()
-      end_time = new Date(now.setHours(23, 59, 59, 999)).toISOString()
+      // 今日：当天 00:00:00 到当前时间
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+      start_time = formatDateTime(todayStart)
+      end_time = formatDateTime(now)
       break
     case 'week':
-      const weekStart = new Date(now.setDate(now.getDate() - now.getDay()))
-      start_time = new Date(weekStart.setHours(0, 0, 0, 0)).toISOString()
-      end_time = new Date().toISOString()
+      // 最近一周：7天前的 00:00:00 到当前时间
+      const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7, 0, 0, 0)
+      start_time = formatDateTime(weekStart)
+      end_time = formatDateTime(now)
       break
     case 'month':
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-      start_time = monthStart.toISOString()
-      end_time = new Date().toISOString()
+      // 最近一个月：30天前的 00:00:00 到当前时间
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30, 0, 0, 0)
+      start_time = formatDateTime(monthStart)
+      end_time = formatDateTime(now)
+      break
+    case 'custom':
+      // 自由选时间：使用用户选择的时间范围
+      if (customDateRange.value && customDateRange.value.length === 2) {
+        start_time = customDateRange.value[0]
+        end_time = customDateRange.value[1]
+      } else {
+        // 未选择时间时，不发送请求
+        return null
+      }
       break
     default:
       return {}
   }
 
   return { start_time, end_time }
+}
+
+// 处理自定义日期变化
+const handleCustomDateChange = () => {
+  if (customDateRange.value && customDateRange.value.length === 2) {
+    fetchDashboardData()
+  }
+}
+
+// 禁止选择今天之后的日期
+const disabledDate = (time) => {
+  return time.getTime() > Date.now()
 }
 
 // 格式化数字
@@ -134,8 +184,12 @@ const formatNumber = (num) => {
 // 获取 Dashboard 数据
 const fetchDashboardData = async () => {
   try {
-    loading.value = true
     const params = getTimeParams()
+    // 如果是自定义时间但未选择时间范围，则不发送请求
+    if (params === null) {
+      return
+    }
+    loading.value = true
     const res = await getDashboardData(params)
     
     if (res.data) {
@@ -174,7 +228,13 @@ const fetchDashboardData = async () => {
 }
 
 // 监听时间范围变化
-watch(timeRange, () => {
+watch(timeRange, (newVal) => {
+  // 如果切换到自定义模式，需要等用户选择时间后再请求
+  if (newVal === 'custom') {
+    // 清空之前的自定义时间选择
+    customDateRange.value = null
+    return
+  }
   fetchDashboardData()
 })
 
@@ -221,6 +281,8 @@ const getTopicItemClass = (rank) => {
 
 .filter-section {
   margin-bottom: 24px;
+  /* display: flex; */
+  /* align-items: center; */
 }
 
 .stats-cards {
@@ -434,6 +496,20 @@ const getTopicItemClass = (rank) => {
 .custom-select :deep(.el-icon) {
   font-size: 14px !important;
   color: #999 !important;
+}
+
+/* 自定义日期选择器样式 */
+.custom-date-picker :deep(.el-input__wrapper) {
+  height: 44px !important;
+  box-shadow: 0 0 0 1px #dcdfe6 inset !important;
+}
+
+.custom-date-picker :deep(.el-range-input) {
+  font-size: 14px;
+}
+
+.custom-date-picker :deep(.el-range-separator) {
+  color: #999;
 }
 </style>
 
